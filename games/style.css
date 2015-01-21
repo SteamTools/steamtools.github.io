@@ -1,0 +1,218 @@
+html, body {
+	height: 100%;
+}
+
+body{
+	background: url(../bg.png);
+}
+
+ul{
+	list-style-type: none;
+}
+
+li{
+	margin: 4px;
+	float: left;
+	padding: 4px;
+	height: 90px;
+	background: url(img/loading.gif) 26px 26px no-repeat, #ccc;
+	border-radius: 4px;
+	transition: background-color 0.2s, box-shadow 0.2s;
+
+}
+
+li.user{
+	width: 108px;
+	background: url(img/loading.gif) 26px 26px no-repeat, #ccc;
+}
+
+li.friend{
+	width: 80px;
+	background: url(img/loading.gif) 12px 26px no-repeat, #ccc;
+}
+
+li:hover{
+	background-color: #bdb;
+}
+
+li.user > img{
+	margin: -8px 22px 4px 22px;
+	border: 0px;
+	border-radius: 8px;
+}
+
+li.friend > img{
+	margin: -8px 8px 4px 8px;
+	border: 0px;
+	border-radius: 8px;
+}
+
+li.selected{
+	box-shadow: 0 0 10px #2be;
+}
+
+li.private{
+	background-color: #eaa;
+}
+
+p.name{
+	width: 80px;
+	white-space:nowrap;
+	text-align: center;
+	text-overflow: ellipsis;
+	overflow: hidden;
+	font-weight: bold;
+}
+
+li > a > i{
+	margin-top: 10px;
+	opacity: 0.3;
+}
+
+li > a > i:hover{
+	opacity: 0.6;
+}
+
+a > .game {
+	color: #333;
+}
+
+a:hover > .game {
+	text-decoration: none;
+}
+
+.left{
+	float: left;
+}
+
+.topbutton {
+	color: #159;
+	display: block;
+	position: absolute;
+	top: 10px;
+	font-weight: bold;
+	font-size: 12pt;
+	color: #159;
+	background-color: #CCC;
+	padding: 2px 8px;
+	border-radius: 3px;
+	box-shadow: 0px 3px 0px 0px #888;
+	border: 1px solid #666;
+	width: 75px;
+	text-align: center;
+	opacity: 0.8;
+}
+.topbutton:hover {background-color: #CDE; text-decoration: none;}
+.topbutton:active {top: 12px; box-shadow: 0px 1px 0px 0px #888;}
+
+#help {
+	width: 675px;
+	padding: 8px;
+	background-color: #EEE;
+	border: 4px double #888;
+	margin: auto;
+	margin-top: 10px;
+	font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+	text-align: left;
+}
+
+#container{
+	width: 1000px;
+	margin: 0 auto;
+}
+
+#user-selection{
+	float: left;
+	margin: 50px 0;
+	width: 548px;
+	background-color: #444846;
+	box-shadow: 0 0 6px 1px #999;
+	padding: 10px;
+	border-radius: 20px;
+}
+
+#game-list{
+	float: right;
+	width: 230px;
+	min-height: 400px;
+	padding: 10px;
+	margin: 20px 0;
+	background: #444846;
+	border-radius: 20px;
+	overflow: hidden;
+	box-shadow: 0 0 6px 1px #999;
+}
+
+#game-content{
+	width: 230px;
+	background-color: #444846;
+	overflow: hidden;
+	margin-left: 7px;
+}
+
+#addinput{
+	margin: 0 40px 10px 40px;
+}
+
+#importbtn{
+	display: inline-block;
+	margin: 0 205px;
+	margin-top: 4px;
+}
+
+#game-title{
+	font-size: 16px;
+	font-weight: bold;
+	color: #ccc;
+	text-align: center;
+}
+
+.game-text{
+	color: #ccc;
+	margin: 10px;
+}
+
+#filter-title{
+	text-align: center;
+	font-weight: bold;
+	color: #333;
+	padding: 2px;
+}
+
+#filter-panel{
+	width: 140px;
+	height: 245px;
+	float: right;
+	margin-top: 100px;
+	border-top-right-radius: 5px;
+	border-bottom-right-radius: 5px;
+	background: url(../simple.png);
+	box-shadow: 0 0 6px 0px #777;
+}
+
+#filter-panel > div{
+	margin: 5px 12px;
+}
+
+.content{
+	margin: 12px;
+	margin-top: 50px;
+}
+
+.game{
+	margin: 5px 0;
+	margin-right: 14px;
+	padding: 0 5px;
+	background-color: #ccc;
+	white-space:nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
+}
+
+.game:hover{
+	background-color: #B0D0DD;
+}/**/
+
+.label {
+	cursor: pointer;
+}
