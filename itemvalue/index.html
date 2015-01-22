@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en" ng-app="valueApp">
+<head>
+	<meta charset="UTF-8">
+	<title>Item Value Sorter</title>
+	<meta name="description" content="Load your Steam Community items and sort them by market value or filter them by type.">
+	<meta name="keywords" content="Steam,items,market,value,price,sort,inventory,emoticon,background,card,tf2,team fortress 2,dota 2,cs:go,counter-strike global offensive">
+	<meta name="author" content="Ehsan Kia">
+	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js"></script>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/seedrandom/2.3.6/seedrandom.min.js"></script>
+	<script src="ui-bootstrap-custom-tpls-0.7.0.min.js"></script>
+	<script src="main.js"></script>
+
+	<link rel="shortcut icon" href="/favicon.ico">
+	<link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" rel="stylesheet">
+	<link rel="stylesheet" href="style.css">
+</head>
+<body ng-controller="InvCtrl">
+	<a class="topbutton" style="left: 20px;" href="../">&laquo; Hub</a>
+	<a id="feedback" class="topbutton" style="right: 25px;" href="http://steamcommunity.com/id/Ph0X"
+		data-uv-trigger popover-placement="bottom" popover-trigger="show" popover-animation="true"
+		popover="Got a suggestion? Found a bug? Leave a feedback!">
+		Feedback
+	</a>
+
+	<div id="container">
+		<div style="float: left; margin-bottom: -100px;">
+			<a target="_blank" href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=DMWHYRC5KYZXC&lc=CA&item_name=EhsanKia&item_number=steam%2dwebapps&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted">
+				<img style="margin-bottom: 6px;" alt="Support via Paypal" src="/img/paypal_donate.gif"/>
+			</a><br>
+			<script src="http://coinwidget.com/widget/coin.js"></script>
+			<script>
+				CoinWidgetCom.go({wallet_address: "1JkBbGN5Ymje6iMRAwpyvB8SovvUyuTk8c",
+					counter: "hide", alignment: "br"});
+			</script>
+		</div>
+		<div class="adbox">
+			<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+			<!-- ItemValue Ad -->
+			<ins class="adsbygoogle"
+			     style="display:inline-block;width:300px;height:600px"
+			     data-ad-client="ca-pub-5094996988136058"
+			     data-ad-slot="2366712127"></ins>
+			<script>
+			(adsbygoogle = window.adsbygoogle || []).push({});
+			</script>
+		</div>
+
+		<div style="margin: 10px; font-weight: bold">Load your inventory and sort the items by market value</div>
+		<div style="padding: 0 10px;" class="btn-group">
+			<span class="input-prepend" style="margin-bottom:0">
+				<span class="add-on" style="width: 60px">Type</span>
+			</span>
+			<button type="button" class="btn" ng-model="appid" btn-radio="'753'">Community</button>
+			<button type="button" class="btn" ng-model="appid" btn-radio="'440'">TF2</button>
+			<button type="button" class="btn" ng-model="appid" btn-radio="'730'">CS:GO</button>
+			<button type="button" class="btn" ng-model="appid" btn-radio="'570'">Dota 2</button>
+		</div>
+		<br>
+		<form id="addinput" class="input-prepend input-append form-horizontal" style="margin-top: 10px">
+			<span class="add-on">SteamID</span>
+			<input class="span2" type="text" ng-model="UserID">
+			<button class="btn btn-inverse" ng-click="loadItems()"><i class="icon-user icon-white"></i> Fetch</button>
+		</form>
+		<div id="error">{{status}}</div>
+		<div id="help"></div>
+
+		<div ng-show="items.length">
+			<hr>
+			<span><b>Total:</b> {{(items | filter:dupesFilter | filter:typeFilter | filter:filterText | sumByKey:'price':'count') | currency:curIndex:fee}}
+				({{items | filter:dupesFilter | filter:typeFilter | filter:filterText | sumByKey:'count'}} items)</span>
+
+			<div style="margin: 0 8px" class="btn-group">
+				<span class="input-prepend" style="margin-bottom:0">
+					<span class="add-on" style="width: 60px">Currency</span>
+				</span>
+				<div class="input-group btn-group">
+					<div class="input-group-addon">Currency</div>
+					<div class="dropdown" dropdown>
+						<a class="btn btn-default" data-toggle="dropdown" href="#" dropdown-toggle>
+							{{ CDATA[curIndex].name }}
+						<b class="caret"></b></a>
+						<ul class="dropdown-menu" role="menu">
+							<li ng-repeat="currency in CDATA">
+								<a href="#" ng-click="setCurrency($index)">{{currency.name}}</a>
+							</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+
+			<button ng-class="{active: fee}" class="btn" ng-click="fee=!fee" ng-model="fee">Fees</button>
+			<button ng-class="{active: dupes}" class="btn" ng-click="dupes=!dupes" ng-model="dupes">Dupes</button>
+
+			<br>
+
+			<div class="btn-group" ng-show="appidLoaded == '753'">
+					<span class="input-prepend" style="margin-bottom:0">
+							<span class="add-on" style="width: 60px">Sub-type</span>
+					</span>
+					<button type="button" class="btn" ng-model="type" btn-radio="'0'">All</button>
+					<button type="button" class="btn" ng-model="type" btn-radio="'1'">Emoticon</button>
+					<button type="button" class="btn" ng-model="type" btn-radio="'2'">Background</button>
+					<button type="button" class="btn" ng-model="type" btn-radio="'3'">Card</button>
+					<button type="button" class="btn" ng-model="type" btn-radio="'4'">Booster</button>
+			</div>
+
+			<div class="input-prepend" style="margin: 6px">
+				<span class="add-on" style="width:50px">Filter</span>
+				<input class="span2" type="text" ng-model="filterText">
+			</div>
+
+
+			<br>
+
+			<div class="itemBox">
+				<a class="item" ng-repeat="i in items | filter:dupesFilter | filter:typeFilter | filter:filterText | orderBy:'price':1 | limitTo:pageLimit"
+					ng-style="{'border': '1px solid #' + i.color, 'background-color': '#' + i.bg}"
+					target="_blank" ng-href="{{LISTING + i.url}}">
+					<span ng-hide="i.count == 1" class="counter">x{{i.count}}</span>
+					<span ng-if="i.rarity || i.rcolor" class="rarity {{i.rarity + appidLoaded}}" ng-style="{'background-color': '#' + i.rcolor}"
+						tooltip-popup-delay='250' tooltip-placement="top" tooltip="{{i.rarity}}">.</span>
+						<img ng-src="{{ECONOMY + i.icon + '/62fx62f'}}" tooltip-popup-delay='250' tooltip-placement="top" tooltip="{{i.name}}"><br>
+						<span class="price">
+							{{((i.price || 'x') | currency:curIndex:fee) || 'N/A'}}
+						</span>
+				</a>
+			</div>
+			<br>
+			<button ng-show="(items | filter:dupesFilter | filter:typeFilter | filter:filterText).length > pageLimit" type="button" class="btn" ng-click="pageLimit=9999999">Show all</button>
+		</div>
+	</div>
+
+	<!-- Start of UserVoice code -->
+	<script>
+		UserVoice=window.UserVoice||[];
+		(function(){
+			var uv=document.createElement('script');
+			uv.type='text/javascript';
+			uv.async=true;
+			uv.src='//widget.uservoice.com/XTFNtBU14F9kxY4Wh9Wo0A.js';
+			var s=document.getElementsByTagName('script')[0];
+			s.parentNode.insertBefore(uv,s)
+		})();
+
+		UserVoice.push(['set', {
+			accent_color: '#448dd6',
+			trigger_color: 'white',
+			trigger_background_color: '#448dd6',
+			smartvote_enabled: false,
+			menu_enabled: false,
+			contact_title: "Bugs / Suggestions"
+		}]);
+
+		UserVoice.push(['identify', {}]);
+	</script>
+	<!-- End of UserVoice code -->
+
+	<!-- Start of Google Analytics code -->
+	<script>
+		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+		ga('create', 'UA-30619812-2', 'auto');
+		ga('require', 'linkid', 'linkid.js');
+		ga('send', 'pageview');
+	</script>
+	<!-- End of Google Analytics code -->
+
+	<!-- Start of StatCounter Code for Default Guide -->
+	<script type="text/javascript">
+		var sc_project=9905430;
+		var sc_invisible=1;
+		var sc_security="89ce89e8";
+		var scJsHost = (("https:" == document.location.protocol) ?
+		"https://secure." : "http://www.");
+		document.write("<sc"+"ript type='text/javascript' src='" +
+		scJsHost+
+		"statcounter.com/counter/counter.js'></"+"script>");
+	</script>
+	<noscript><div class="statcounter"><a title="create counter"
+	href="http://statcounter.com/free-hit-counter/"
+	target="_blank"><img class="statcounter"
+	src="http://c.statcounter.com/9905430/0/89ce89e8/1/"
+	alt="create counter"></a></div></noscript>
+	<!-- End of StatCounter Code for Default Guide -->
+
+</body>
+</html>

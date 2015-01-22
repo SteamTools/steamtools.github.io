@@ -1,0 +1,89 @@
+a.item {color: #5BD;}
+a.item:hover {text-decoration: none;}
+body {margin: 0; padding: 0; background-image: url(../bg.png);}
+html, body {
+	height: 97%;
+}
+button{outline: none !important;}
+hr{border-top: 1px solid #AAA;}
+#container {
+	width: 900px;
+	margin: auto;
+	text-align: center;
+	min-height: 100%;
+	background: url(../simple.png);
+	padding: 10px;
+	box-shadow: 0 0 12px 5px #666;
+}
+.center{text-align: center}
+.item{display: inline-block;
+	margin: 9px;
+	background-color: #292929;
+	border: 2px solid #3A3A3A;
+	padding: 12px 8px 4px 8px;
+	border-radius: 3px;
+	cursor: pointer;
+	min-width: 72px;
+	transition: opacity 0.1s;
+}
+.item:hover{opacity: 0.8;}
+.btn.active {border-bottom-right-radius: 3px; border-top-right-radius: 3px; border-color: #CCC;}
+.pbar{width: 600px; margin: 10px auto; margin-bottom: 20px; border: 1px solid #CCC;}
+.Uncommon753, .Foil753 {background-color: #AAA;}
+.Rare753 {background-color: #EE2;}
+.rarity {float: right; width: 10px; height: 10px; font-size: 0; border-radius: 5px; margin-top: -10px; margin-right: -6px;}
+.counter {float: left; width: 0; margin-top: -14px; margin-left: -6px;}
+.price {font-size: 9pt;}
+.topbutton {
+	color: #159;
+	display: block;
+	position: absolute;
+	top: 10px;
+	font-weight: bold;
+	font-size: 12pt;
+	color: #159;
+	background-color: #CCC;
+	padding: 2px 8px;
+	border-radius: 3px;
+	box-shadow: 0px 3px 0px 0px #888;
+	border: 1px solid #666;
+	width: 75px;
+	text-align: center;
+	opacity: 0.8;
+}
+.topbutton:hover {background-color: #CDE; text-decoration: none;}
+.topbutton:active {top: 12px; box-shadow: 0px 1px 0px 0px #888;}
+.popover {width: 130px; text-align: center;}
+.popover-content {padding: 4px 6px;}
+.adbox {
+	background: url(../simple.png) #EFEFEF;
+	float: right;
+	margin-right: -300px;
+	margin-top: 60px;
+	padding: 5px 0;
+	border-radius: 4px;
+}
+.itemBox{
+	background-color: #111;
+	border-radius: 5px;
+	margin: 8px;
+	padding: 8px;
+	text-align: left;
+}
+
+.Uncommon570 {background-color: #5e98d9}
+.Rare570 {background-color: #4b69ff}
+.Mythical570 {background-color: #8847ff}
+.Legendary570 {background-color: #d32ce6}
+.Ancient570 {background-color: #eb4b4b}
+.Immortal570 {background-color: #e4ae39}
+
+.dropdown {
+	margin-top: -20px;
+	margin-left: -2px;
+}
+
+.dropdown-menu {
+	min-width: 70px;
+	font-size: 14px;
+}
