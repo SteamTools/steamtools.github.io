@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="mosaticonApp">
+<head>
+	<meta charset="UTF-8">
+	<meta name="description" content="Generate a mosaic of your chosen image using the Steam emoticons you own.">
+	<meta name="keywords" content="Steam,mosaic,emoticons,image,inventory">
+	<meta name="author" content="Ehsan Kia">
+	<title>Mosaticon</title>
+
+	<link rel="shortcut icon" href="/favicon.ico">
+	<link href="bootstrap-2.1.0.min.css" rel="stylesheet">
+
+	<style>
+		a.item {color: #5BD;}
+		a.item:hover {text-decoration: none;}
+		body {margin: 0; padding: 0; background: url(/img/bg.png);}
+		html, body {
+			-webkit-user-select: none;
+			-moz-user-select: none;
+			-ms-user-select: none;
+			user-select: none;
+			height: 97%;
+		}
+		button{outline: none !important;}
+		hr{border-top: 1px solid #AAA;}
+		#container {
+			width: 1024px;
+			margin: auto;
+			text-align: center;
+			min-height: 100%;
+			background: url(/img/simple.png);
+			padding: 10px;
+			box-shadow: 0 0 12px 5px #666;
+		}
+		.topbutton {
+			color: #159;
+			display: block;
+			position: absolute;
+			top: 10px;
+			font-weight: bold;
+			font-size: 12pt;
+			color: #159;
+			background-color: #CCC;
+			padding: 2px 8px;
+			border-radius: 3px;
+			box-shadow: 0px 3px 0px 0px #888;
+			border: 1px solid #666;
+			width: 75px;
+			text-align: center;
+			opacity: 0.8;
+		}
+		.topbutton:hover {background-color: #CDE; text-decoration: none;}
+		.topbutton:active {top: 12px; box-shadow: 0px 1px 0px 0px #888;}
+		#stepbox{display: inline-block; vertical-align: top; display: inline-block;}
+		#preview {width: 600px; margin-top: 20px; display: inline-block;}
+		.btn{padding: 4px 8px;}
+		.btn.active {border-bottom-right-radius: 3px; border-top-right-radius: 3px; border-color: #CCC;}
+		.emotebox {width: 380px; text-align: center; background-color: #333; padding: 4px; border-radius: 3px; margin: 5px auto; color: white;}
+		.select {border: 1px solid #FFF; padding: 1px; margin: 0 !important;}
+		.emote {margin: 2px;}
+		.disable {opacity: 0.2;}
+		.popover {width: 130px; text-align: center;}
+		.popover-content {padding: 4px 6px;}
+		#error {color: white;}
+		#mosaic {background-color: rgb(25, 25, 25); padding: 8px; margin: auto; text-align: left;}
+		#mosaic img {width: 18px;}
+		select, input[type="file"] {height: 22px; line-height: initial; width: 200px;}
+		select, input[type="number"] {width: 32px; margin-top: 0px; padding: 0 4px 01px; padding-right: 1px; margin-bottom: 2px;}
+		.adbox {
+			background: url(/img/simple.png) #EFEFEF;
+			float: left;
+			margin-left: -300px;
+			margin-top: 60px;
+			padding: 5px 0;
+			border-radius: 4px;
+		}
+	</style>
+</head>
+<body ng-controller="mosaticonCtrl">
+	<a class="topbutton" style="left: 25px;" href="../">&laquo; Hub</a>
+	<a id="feedback" class="topbutton" style="right: 25px;" href="http://steamcommunity.com/id/Ph0X"
+		data-uv-trigger popover-placement="bottom" popover-trigger="show" popover-animation="true"
+		popover="Got a suggestion? Found a bug? Leave a feedback!">
+		Feedback
+	</a>
+
+	<div id="container">
+		<div style="float: right; margin-bottom: -100px;">
+			<a target="_blank" href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=DMWHYRC5KYZXC&lc=CA&item_name=EhsanKia&item_number=steam%2dwebapps&currency_code=USD&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted">
+				<img style="margin-bottom: 6px;" alt="Support via Paypal" src="/img/paypal_donate.gif"/>
+			</a><br>
+			<script src="http://coinwidget.com/widget/coin.js"></script>
+			<script>
+				CoinWidgetCom.go({wallet_address: "1JkBbGN5Ymje6iMRAwpyvB8SovvUyuTk8c",
+					counter: "hide", alignment: "br"});
+			</script>
+		</div>
+		<div class="adbox">
+			<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+			<!-- Mosaticon Ad -->
+			<ins class="adsbygoogle"
+			     style="display:inline-block;width:300px;height:600px"
+			     data-ad-client="ca-pub-5094996988136058"
+			     data-ad-slot="1947909728"></ins>
+			<script>
+			(adsbygoogle = window.adsbygoogle || []).push({});
+			</script>
+		</div>
+		<div id="stepbox" style="width: 400px">
+			<div style="margin: 10px"><b>Step one:</b> Load your emoticons</div>
+			<form id="addinput" class="input-prepend input-append form-horizontal">
+				<span class="add-on">SteamID</span>
+				<input class="span2" type="text" ng-model="UserID">
+				<button class="btn btn-inverse" ng-click="loadEmoticons()">Fetch Emoticons</button>
+			</form>
+			<div class="emotebox" ng-right-click="">
+				<span id="error">{{status}}</span>
+				<div id="help"></div>
+				<span style="color: white" ng-if="!status">{{emoticons.length}} emoticon(s) loaded<br></span>
+				<span ng-if="emoticons || !status" style="color: #999">(left click to select / right click to disable)<br></span>
+				<img class="emote" ng-repeat="e in emoticons | filter:{disable: false}"
+					ng-src="emotes/{{e.name}}" ng-click="selectEmote($event, e)" ng-right-click="toggleEmote(e)" draggable="false"
+					ng-class="{select: e.select}" tooltip-popup-delay='200' tooltip-placement="top" tooltip=":{{e.name}}:" />
+			</div>
+			<div class="emotebox" style="background-color: #633; padding: 0 4px;" ng-right-click="">
+				<img class="emote" ng-repeat="e in emoticons | filter:{disable: true}"
+					ng-src="emotes/{{e.name}}" ng-click="selectEmote($event, e)" ng-right-click="toggleEmote(e)" draggable="false"
+					ng-class="{select: e.select}" tooltip-popup-delay='200' tooltip-placement="top" tooltip=":{{e.name}}:" />
+			</div>
+			<div class="emotebox" style="background-color: #363; padding: 0 4px;" ng-right-click="">
+				<img class="emote" ng-repeat="e in usedEmotes"
+					ng-src="emotes/{{e.name}}" ng-click="selectEmote($event, e)" ng-right-click="toggleEmote(e)" draggable="false"
+					ng-class="{select: e.select}" tooltip-popup-delay='200' tooltip-placement="top" tooltip=":{{e.name}}:" />
+			</div>
+			<div ng-if="emoticons.length > 0" style="text-align: center">
+				<div class="btn-group" style="display: inline-block">
+					<button style="display: inline-block" class="btn" ng-click="disableAll()">Disable All</button>
+					<button style="display: inline-block" class="btn" ng-click="enableAll()">Enable All</button>
+				</div>
+				<div class="btn-group" style="display: inline-block">
+					<span class="input-prepend" style="margin-bottom:0; margin-left: 4px">
+						<span class="add-on" style="width: 40px">Sort</span>
+					</span>
+					<button type="button" class="btn" ng-model="sortMode" ng-click="sortByHue()" btn-radio="'hue'">Hue</button>
+					<button type="button" class="btn" ng-model="sortMode" ng-click="sortByLength()" btn-radio="'char'">Chars</button>
+					<button type="button" class="btn" ng-model="sortMode" ng-click="sortByGame()" btn-radio="'game'">Game</button>
+				</div>
+			</div>
+			<br>
+
+			<div ng-show="emoticons.length > 0">
+				<div style="margin-top: 20px;"><b>Step two:</b> Load Image or Blank Canvas</div>
+				<span class="btn btn-default btn-file" style="margin: 10px;">
+					<input type="file" id="imageLoader">
+				</span>
+				<button style="display: inline-block" class="btn" ng-click="blankCanvas()">Blank Canvas</button>
+				<br><br>
+				<canvas id="imageCanvas" width="200" ng-show="imageLoaded"></canvas>
+			</div>
+
+			<div ng-show="imageLoaded || blankLoaded">
+				<span>Width: </span> <input type="number" min="1" max="50" ng-model="width.value">
+				<input type="range" min="1" max="50" step="1" ng-model="width.value"
+					ng-mousedown="wSliderActive=1" ng-mouseup="wSliderActive=0; updateUpscale()">
+				<br>
+				<span>Height: </span> <input type="number" min="1" max="50" ng-model="height.value">
+				<input type="range" min="1" max="50" step="1" ng-model="height.value" ng-disabled="!blankLoaded"
+					ng-mousedown="hSliderActive=1" ng-mouseup="hSliderActive=0; updateUpscale()">
+			</div>
+		</div>
+		<div id="preview" ng-show="emoticons.length > 0">
+			<div class="btn-group" style="display: inline-block" ng-show="imageLoaded">
+				<span class="input-prepend" style="margin-bottom:0;">
+					<span class="add-on" style="width: 100px">Compare Mode</span>
+				</span>
+				<button type="button" class="btn" ng-model="compareMode" btn-radio="'rgb'">RGB</button>
+				<button type="button" class="btn" ng-model="compareMode" btn-radio="'lab'">Lab</button>
+				<button type="button" class="btn" ng-model="compareMode" btn-radio="'hsl'">HSL</button>
+			</div>
+			<div style="margin: 10px; display: inline-block" class="btn-group" ng-show="imageLoaded">
+				<span class="input-prepend" style="margin-bottom:0;">
+					<span class="add-on" style="width: 60px">Quality</span>
+				</span>
+				<button type="button" class="btn" ng-model="quality" btn-radio="'1'">1</button>
+				<button type="button" class="btn" ng-model="quality" btn-radio="'2'">2</button>
+				<button type="button" class="btn" ng-model="quality" btn-radio="'3'">3</button>
+			</div>
+			<br>
+			<button style="margin-top: 8px; display: inline-block" class="btn btn-inverse" ng-click="importMenu()">Import</button>
+			<button style="height: 40px; width: 55px; margin-top: 8px" type="button" class="btn" ng-model="tool" ng-click="undo()" ng-disabled="undoHistory.length == 0" ng-show="imageLoaded || blankLoaded">
+				<i class="icon-unshare"></i>
+			</button>
+			<div class="btn-group" style="margin: 8px; display: inline-block" ng-show="imageLoaded || blankLoaded">
+				<span class="input-prepend" style="margin-bottom:0">
+					<span class="add-on" style="width: 50px; height: 30px; line-height: 30px;">Tool</span>
+				</span>
+				<button style="height: 40px; width: 55px;" type="button" class="btn" ng-model="tool" btn-radio="'pen'"><i class="icon-pencil"></i></button>
+				<button style="height: 40px; width: 55px;" type="button" class="btn" ng-model="tool" btn-radio="'line'"><i class="icon-vector-path-line"></i></button>
+				<button style="height: 40px; width: 55px;" type="button" class="btn" ng-model="tool" btn-radio="'rect'"><i class="icon-vector-path-square"></i></button>
+				<button style="height: 40px; width: 55px;" type="button" class="btn" ng-model="tool" btn-radio="'circ'"><i class="icon-vector-path-circle"></i></button>
+			</div>
+			<button style="margin-top: 8px; display: inline-block" class="btn btn-inverse" ng-click="exportMosaic()">Export</button>
+			<br><br>
+			<div ng-mousemove="mouseMove($event)" ng-mousedown="mouseDown($event)" ng-mouseup="mouseUp()"
+				id="mosaic" ng-show="mosaic" ng-style="{'width': (width.value * 18) + 'px'}">
+				<div ng-repeat="row in mosaic track by $index" style="margin-top: -2px;">
+					<img ng-repeat="e in row track by $index"
+						ng-right-click="toggleEmote(e)"
+						ng-src="emotes/{{e.name}}" draggable="false"
+						onmousedown="if (event.preventDefault) event.preventDefault()">
+				</div>
+			</div>
+			<br>
+			<!-- <span><b>Character count:</b> {{mosaic | charSum}}</span> -->
+		</div>
+	</div>
+
+	<script type="text/ng-template" id="importMenu.html">
+		<div class="modal-header" style="text-align: center;">
+			<h3 class="modal-title">Import Mosaic</h3>
+		</div>
+		<div style="text-align: center;">
+			<textarea class="form-control" ng-model="data.text" style="width: 400px; height: 300px; margin: 10px"></textarea>
+		</div>
+		<div class="modal-footer" style="text-align: center">
+			<button class="btn btn-success" ng-click="importMosaic()">Import</button>
+		</div>
+	</script>
+
+	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.0-beta.13/angular.min.js"></script>
+	<script src="ui-bootstrap-custom-tpls-0.7.0.min.js"></script>
+	<script src="kdTree.min.js"></script>
+	<script src="colors.js"></script>
+	<script src="main.js"></script>
+
+	<!-- Start of UserVoice code -->
+	<script>
+		UserVoice=window.UserVoice||[];
+		(function(){
+			var uv=document.createElement('script');
+			uv.type='text/javascript';
+			uv.async=true;
+			uv.src='//widget.uservoice.com/XTFNtBU14F9kxY4Wh9Wo0A.js';
+			var s=document.getElementsByTagName('script')[0];
+			s.parentNode.insertBefore(uv,s)
+		})();
+
+		UserVoice.push(['set', {
+			accent_color: '#448dd6',
+			trigger_color: 'white',
+			trigger_background_color: '#448dd6',
+			smartvote_enabled: false,
+			menu_enabled: false,
+			contact_title: "Bugs / Suggestions"
+		}]);
+
+		UserVoice.push(['identify', {}]);
+	</script>
+	<!-- End of UserVoice code -->
+
+	<!-- Start of Google Analytics code -->
+	<script>
+		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+		ga('create', 'UA-30619812-2', 'auto');
+		ga('require', 'linkid', 'linkid.js');
+		ga('send', 'pageview');
+	</script>
+	<!-- End of Google Analytics code -->
+
+	<!-- Start of StatCounter Code for Default Guide -->
+	<script type="text/javascript">
+		var sc_project=9905430;
+		var sc_invisible=1;
+		var sc_security="89ce89e8";
+		var scJsHost = (("https:" == document.location.protocol) ?
+		"https://secure." : "http://www.");
+		document.write("<sc"+"ript type='text/javascript' src='" +
+		scJsHost+
+		"statcounter.com/counter/counter.js'></"+"script>");
+	</script>
+	<noscript><div class="statcounter"><a title="create counter"
+	href="http://statcounter.com/free-hit-counter/"
+	target="_blank"><img class="statcounter"
+	src="http://c.statcounter.com/9905430/0/89ce89e8/1/"
+	alt="create counter"></a></div></noscript>
+	<!-- End of StatCounter Code for Default Guide -->
+
+</body>
+</html>
