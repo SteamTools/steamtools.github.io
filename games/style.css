@@ -1,9 +1,10 @@
+
 html, body {
 	height: 100%;
 }
 
 body{
-	background: url(../bg.png);
+	background: url(/img/bg.png);
 }
 
 ul{
@@ -15,7 +16,7 @@ li{
 	float: left;
 	padding: 4px;
 	height: 90px;
-	background: url(img/loading.gif) 26px 26px no-repeat, #ccc;
+	background: url(/img/loading.gif) 26px 26px no-repeat, #ccc;
 	border-radius: 4px;
 	transition: background-color 0.2s, box-shadow 0.2s;
 
@@ -23,12 +24,12 @@ li{
 
 li.user{
 	width: 108px;
-	background: url(img/loading.gif) 26px 26px no-repeat, #ccc;
+	background: url(/img/loading.gif) 26px 26px no-repeat, #ccc;
 }
 
 li.friend{
 	width: 80px;
-	background: url(img/loading.gif) 12px 26px no-repeat, #ccc;
+	background: url(/img/loading.gif) 12px 26px no-repeat, #ccc;
 }
 
 li:hover{
@@ -186,7 +187,7 @@ a:hover > .game {
 	margin-top: 100px;
 	border-top-right-radius: 5px;
 	border-bottom-right-radius: 5px;
-	background: url(../simple.png);
+	background: url(/img/simple.png);
 	box-shadow: 0 0 6px 0px #777;
 }
 
@@ -211,7 +212,7 @@ a:hover > .game {
 
 .game:hover{
 	background-color: #B0D0DD;
-}/**/
+}
 
 .label {
 	cursor: pointer;
