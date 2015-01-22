@@ -439,15 +439,14 @@ function($scope, $http, $filter, $compile, $modal){
 		$scope.table.draw();
 	}, true);
 
-	if (localStorage.hasOwnProperty("lastUser")) {
-		$scope.UserID = localStorage.lastUser;
-		$scope.userLogin($scope.UserID);
-	} else if (getCookie("oauth_steamid") !== null) {
+	if (getCookie("oauth_steamid") !== null) {
 		$scope.UserID = getCookie("oauth_steamid");
 		$scope.userLogin(getCookie("oauth_steamid"));
+	} else if (localStorage.hasOwnProperty("lastUser") && localStorage.lastUser !== "undefined") {
+		$scope.UserID = localStorage.lastUser;
+		$scope.userLogin($scope.UserID);
 	}
 
-	if ($scope.UserID === "undefined") $scope.UserID = "";
 }]);
 
 
