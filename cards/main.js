@@ -441,6 +441,8 @@ function($scope, $http, $filter, $compile, $modal){
 	if (localStorage.hasOwnProperty("lastUser")) {
 		$scope.UserID = localStorage.lastUser;
 		$scope.userLogin($scope.UserID);
+	} else if (getCookie("oauth_steamid") !== null) {
+		$scope.userLogin(getCookie("oauth_steamid"));
 	}
 }]);
 
@@ -627,3 +629,9 @@ var LevelCalcCtrl = function($scope, $modalInstance) {
 		$modalInstance.dismiss('close');
 	};
 };
+
+function getCookie(name) {
+	var regexp = new RegExp("(?:^" + name + "|;\s*"+ name + ")=(.*?)(?:;|$)", "g");
+	var result = regexp.exec(document.cookie);
+	return (result === null) ? null : result[1];
+}
