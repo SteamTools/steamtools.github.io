@@ -193,6 +193,7 @@ function($scope, $http, $filter, $compile, $modal){
 		if (!$scope.dataLoaded) return;
 
 		$http.get("http://oauth.steam.tools/logout.php");
+		deleteCookie("oauth_steamid");
 
 		var row;
 		for (var i = 0; i < $scope.rows.length; i++) {
@@ -442,8 +443,11 @@ function($scope, $http, $filter, $compile, $modal){
 		$scope.UserID = localStorage.lastUser;
 		$scope.userLogin($scope.UserID);
 	} else if (getCookie("oauth_steamid") !== null) {
+		$scope.UserID = getCookie("oauth_steamid");
 		$scope.userLogin(getCookie("oauth_steamid"));
 	}
+
+	if ($scope.UserID === "undefined") $scope.UserID = "";
 }]);
 
 
@@ -634,4 +638,8 @@ function getCookie(name) {
 	var regexp = new RegExp("(?:^" + name + "|;\s*"+ name + ")=(.*?)(?:;|$)", "g");
 	var result = regexp.exec(document.cookie);
 	return (result === null) ? null : result[1];
+}
+
+function deleteCookie(name) {
+  document.cookie = name + '=; path=/; domain=.steam.tools; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
 }
