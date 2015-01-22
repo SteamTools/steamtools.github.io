@@ -192,7 +192,7 @@ function($scope, $http, $filter, $compile, $modal){
 	$scope.userLogout = function() {
 		if (!$scope.dataLoaded) return;
 
-		$http.get("logout.php");
+		$http.get("http://oauth.steam.tools/logout.php");
 
 		var row;
 		for (var i = 0; i < $scope.rows.length; i++) {
