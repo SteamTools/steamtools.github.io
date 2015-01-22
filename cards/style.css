@@ -1,0 +1,278 @@
+body {
+	font-size: 9pt;
+	background: url(/img/bg.png) #ddd;
+	opacity: 0;
+	-moz-transition: opacity 0.5s ease;
+	-o-transition: opacity 0.5s ease;
+	-webkit-transition: opacity 0.5s ease;
+	transition: opacity 0.5s ease;
+	overflow-x: hidden;
+}
+
+body.fade {
+	opacity: 1;
+}
+
+/* Top buttons */
+.topbutton {
+	color: #159;
+	display: block;
+	position: absolute;
+	top: 10px;
+	font-weight: bold;
+	font-size: 12pt;
+	color: #159;
+	background-color: #CCC;
+	padding: 1px 8px;
+	border-radius: 3px;
+	box-shadow: 0px 3px 0px 0px #888;
+	border: 1px solid #666;
+	text-align: center;
+	opacity: 0.8;
+	width: 95px;
+	z-index: 10;
+	margin-top: 0;
+	transition: margin-top 0.5s ease;
+}
+.topbutton:hover {background-color: #CDE; text-decoration: none;}
+.topbutton:active {top: 12px; box-shadow: 0px 1px 0px 0px #888;}
+@media (max-width:1300px) {
+	.topbutton {margin-top: -28px}
+	.topbutton:hover {margin-top: -8px}
+}
+
+/* Table styles */
+
+table {
+	max-width: none !important;
+}
+
+table.dataTable thead > tr > th {
+	padding-left: 10px;
+	padding-right: 14px;
+}
+
+.table-hover > tbody > tr:hover> td {
+	background-color: #FCFCD1;
+}
+
+input.input-sm {
+	height: 23px;
+	padding: 5px;
+	margin: 0 5px;
+}
+
+select.input-sm {
+	height: 24px;
+	line-height: 30px;
+	padding: 0 5px;
+}
+
+.dataTables_filter > label {
+	margin: 0;
+}
+
+.thirds {
+	width: 33%;
+	display: inline-block;
+	float: left;
+	box-sizing: border-box;
+	padding: 0 10px;
+}
+
+.dataTables_paginate {
+	height: 25px;
+}
+
+.pagination>li>a {
+	padding: 2px 11px;
+}
+
+div.dataTables_paginate ul.pagination {
+	margin: 6px 0 0 0;
+}
+
+div.dataTables_info {
+	font-size: 8pt;
+}
+
+.currency-menu {
+	margin-top: -6px;
+	text-align: center;
+}
+
+label.btn {
+	width: 42px;
+}
+
+#container {
+	min-height: 100%;
+	margin: auto;
+	padding: 15px;
+	max-width: 1024px;
+	background: url(/img/simple.png) #eee;
+	box-shadow: 0 0 12px 5px #666;
+}
+
+.game {
+	text-align: left;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	display: block;
+	max-width: 250px;
+}
+
+.center {
+	text-align: center;
+}
+
+th, td { white-space: nowrap; }
+
+/* Panel styles */
+.panel {
+	width: 180px;
+	position: absolute;
+	top: 40px;
+	padding: 10px;
+	line-height: 20px;
+	margin: 10px 0;
+	background: url(/img/simple.png) #eee;
+	box-shadow: 0 0 5px 1px #bbb;
+	transition: margin 0.7s ease;
+	z-index: 2;
+}
+
+.left {
+	left: 0;
+	border-bottom-right-radius: 5px;
+	border-top-right-radius: 5px;
+}
+
+.right {
+	right: 0;
+	border-bottom-left-radius: 5px;
+	border-top-left-radius: 5px;
+}
+
+.icon {
+	font-size: 30pt;
+	opacity: 0.3;
+	z-index: 1;
+	top: 100px;
+	position: absolute;
+	transition: all 0.7s ease;
+}
+
+.left .icon {left: -100px;}
+.right .icon {right: -100px;}
+
+@media (max-width:1400px) {
+	.right {margin-right: -170px;}
+	.left {margin-left: -170px;}
+	.right:hover {margin-right: 0;}
+	.left:hover {margin-left: 0;}
+	.left .icon {left: 185px; }
+	.right .icon {right: 185px;}
+	.left:hover .icon {left: -100px;}
+	.right:hover .icon {right: -100px;}
+}
+
+.panel h4 {
+	margin: 3px 0;
+}
+
+.openid {
+	text-align: center;
+	margin-top: 5px;
+}
+
+.status {
+	height: 20px;
+	margin-bottom: 8px;
+	color: #d9534f;
+	font-weight: bold;
+}
+
+input[type=checkbox] {
+	position: relative;;
+	top: 2px;
+	margin-left: 16px;
+}
+
+.help {
+	border-bottom: 1px dotted;
+	cursor: help;
+}
+
+.tooltip {
+	width: 120px;
+}
+
+.form-control {
+	height: 30px;
+}
+
+.btn {
+	padding: 4px 10px;
+}
+
+.stats {
+	padding-left: 10px;
+}
+
+.stats li {
+	list-style: none;
+}
+
+.stats li:before {
+	content: '\BB  ';
+	position: relative;
+	top: -1px;
+	left: -2px;
+	font-weight: bold
+
+}
+
+.worth-stat {
+	margin: -2px 0 2px 20px;
+	color: #888;
+}
+
+.COINWIDGETCOM_CONTAINER > a {
+	padding: 2px 10px !important;
+	height: 26px !important;
+	line-height: 18px;
+}
+
+.adbox {
+	text-align: center;
+	width: 160px;
+	margin-bottom: -10px;
+}
+
+/* UI bootstrap */
+.nav, .pagination, .carousel, .panel-title a { cursor: pointer; }
+
+/* Level calculator */
+#levelInfo {
+	width: 450px;
+	font-size: 13pt;
+	margin: auto;
+}
+
+.modal-footer {
+	padding: 10px;
+}
+
+.modal-header {
+	padding: 5px;
+}
+
+.dropdown {
+	margin-left: -3px;
+}
+
+.dropdown-menu {
+	min-width: 70px;
+}
