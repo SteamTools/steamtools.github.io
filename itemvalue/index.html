@@ -120,7 +120,7 @@
 					<span ng-hide="i.count == 1" class="counter">x{{i.count}}</span>
 					<span ng-if="i.rarity || i.rcolor" class="rarity {{i.rarity + appidLoaded}}" ng-style="{'background-color': '#' + i.rcolor}"
 						tooltip-popup-delay='250' tooltip-placement="top" tooltip="{{i.rarity}}">.</span>
-						<img ng-src="{{ECONOMY + i.icon + '/62fx62f'}}" tooltip-popup-delay='250' tooltip-placement="top" tooltip="{{i.name}}"><br>
+						<img ng-src="{{ECONOMY + i.icon + '/62fx62f'}}" tooltip-popup-delay='250' tooltip-placement="top" tooltip="{{i.name}}" class="itemicon"><br>
 						<span class="price">
 							{{((i.price || 'x') | currency:curIndex:fee) || 'N/A'}}
 						</span>

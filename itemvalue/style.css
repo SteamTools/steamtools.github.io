@@ -1,6 +1,6 @@
 a.item {color: #5BD;}
 a.item:hover {text-decoration: none;}
-body {margin: 0; padding: 0; background-image: url(../bg.png);}
+body {margin: 0; padding: 0; background-image: url(/img/bg.png);}
 html, body {
 	height: 97%;
 }
@@ -11,7 +11,7 @@ hr{border-top: 1px solid #AAA;}
 	margin: auto;
 	text-align: center;
 	min-height: 100%;
-	background: url(../simple.png);
+	background: url(/img/simple.png);
 	padding: 10px;
 	box-shadow: 0 0 12px 5px #666;
 }
@@ -25,6 +25,7 @@ hr{border-top: 1px solid #AAA;}
 	cursor: pointer;
 	min-width: 72px;
 	transition: opacity 0.1s;
+	text-align: center;
 }
 .item:hover{opacity: 0.8;}
 .btn.active {border-bottom-right-radius: 3px; border-top-right-radius: 3px; border-color: #CCC;}
@@ -56,7 +57,7 @@ hr{border-top: 1px solid #AAA;}
 .popover {width: 130px; text-align: center;}
 .popover-content {padding: 4px 6px;}
 .adbox {
-	background: url(../simple.png) #EFEFEF;
+	background: url(/img/simple.png) #EFEFEF;
 	float: right;
 	margin-right: -300px;
 	margin-top: 60px;
@@ -66,7 +67,7 @@ hr{border-top: 1px solid #AAA;}
 .itemBox{
 	background-color: #111;
 	border-radius: 5px;
-	margin: 8px;
+	margin: 2px;
 	padding: 8px;
 	text-align: left;
 }
@@ -86,4 +87,9 @@ hr{border-top: 1px solid #AAA;}
 .dropdown-menu {
 	min-width: 70px;
 	font-size: 14px;
+}
+
+.itemicon {
+	width: 62px;
+	height: 62px;
 }
