@@ -1,0 +1,216 @@
+@import url(http://fonts.googleapis.com/css?family=Raleway:300|Geo|Oswald:300);
+
+*, *:after, *:before { -webkit-box-sizing: border-box; -moz-box-sizing: border-box; box-sizing: border-box; }
+body, html { margin: 0; padding: 0; font-size: 100%;}
+
+.clearfix:before, .clearfix:after { display: table; content: " "; }
+.clearfix:after { clear: both; }
+
+body {
+	background-image: url(/img/bg.png);
+	color: #212121;
+	text-align: center;
+}
+
+#whitebg {
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: -1;
+	width: 100%;
+	height: 100%;
+	background-color: #d9dbdb;
+	transition: opacity 0.5s;
+}
+
+h1{
+	margin: 10px;
+	font-size: 50pt;
+	font-weight: 300;
+	font-family: 'Oswald', Calibri, Arial, sans-serif;
+}
+
+a {
+	color: #888;
+	text-decoration: none;
+}
+
+a:hover,
+a:active {
+	color: #333;
+}
+
+/* Demo Buttons Style */
+.grid {
+	margin: 0 auto;
+	max-width: 1400px;
+	list-style: none;
+	text-align: center;
+	padding: 0;
+}
+
+.grid li {
+	position: relative;
+	display: inline-block;
+	margin: 10px 9px;
+	padding: 0;
+	width: 350px;
+	text-align: left;
+}
+
+.grid figure {
+	position: relative;
+	margin: 0;
+}
+
+
+#affiliates {
+	color: #777;
+	font-weight: bold;
+	background-color: #444;
+	height: 25px;
+	font-size: 12pt;
+	font-family: 'Oswald', Calibri, Arial, sans-serif;
+}
+
+#affiliates a {
+	font-weight: normal;
+	color: #aaa;
+	padding-left: 20px;
+	transition: color 0.2s;
+}
+
+#affiliates a:hover {
+	color: #ddd;
+}
+
+.grid figure div {
+	padding-top: 64px;
+	width: 350px;
+	height: 180px;
+	text-align: center;
+	font-size: 32pt;
+	font-family: 'Geo', Calibri, Arial, sans-serif;
+}
+
+.c1{background-color: #59AF77;}
+.c2{background-color: #DB5C6A;}
+.c3{background-color: #FDFD8D;}
+.c4{background-color: #76AFBA;}
+.c5{background-color: #B8658D;}
+.c6{background-color: #77F;}
+
+.grid figcaption {
+	position: absolute;
+	top: 0;
+	left: 0;
+	padding: 20px;
+	background: #2A363B;
+	color: #aaa;
+	font-family: 'Raleway', Calibri, Arial, sans-serif;
+	font-size: 11pt;
+	font-weight: 200;
+}
+
+.grid figcaption h3 {
+	margin: 0;
+	padding: 0;
+	color: #FECEA8;
+}
+
+.grid figcaption a {
+	display: inline-block;
+	padding: 5px 10px;
+	border-radius: 2px;
+	background: #E84A5F;
+	color: #fff;
+	text-align: center;
+}
+
+.grid figcaption a:hover{
+	background: #FF847C;
+}
+
+/* Caption Style 3 */
+.cs-style-3 figure {
+	overflow: hidden;
+}
+
+.cs-style-3 figure div {
+	-webkit-transition: -webkit-transform 0.4s;
+	-moz-transition: -moz-transform 0.4s;
+	-ms-transition: -ms-transform 0.4s;
+	-o-transition: -o-transform 0.4s;
+	transition: transform 0.4s;
+}
+
+.cs-style-3 figure:hover div {
+	-webkit-transform: translateY(-53px);
+	-moz-transform: translateY(-53px);
+	-ms-transform: translateY(-53px);
+	-o-transform: translateY(-53px);
+	transform: translateY(-53px);
+}
+
+.cs-style-3 figcaption {
+	top: auto;
+	bottom: 0;
+	width: 350px;
+	height: 115px;
+	opacity: 0;
+	-webkit-transition: -webkit-transform 0.4s, opacity 0.1s 0.3s;
+	-moz-transition: -moz-transform 0.4s, opacity 0.1s 0.3s;
+	transition: transform 0.4s, opacity 0.1s 0.3s;
+	-webkit-transform: translateY(100%);
+	-moz-transform: translateY(100%);
+	-ms-transform: translateY(100%);
+	transform: translateY(100%);
+	-webkit-backface-visibility: hidden;
+	-moz-backface-visibility: hidden;
+	backface-visibility: hidden;
+}
+
+.cs-style-3 figure:hover figcaption{
+	opacity: 1;
+	-webkit-transition: -webkit-transform 0.4s, opacity 0.1s;
+	-moz-transition: -moz-transform 0.4s, opacity 0.1s;
+	transition: transform 0.4s, opacity 0.1s;
+	-webkit-transform: translateY(0px);
+	-moz-transform: translateY(0px);
+	-ms-transform: translateY(0px);
+	transform: translateY(0px);
+}
+
+.cs-style-3 figcaption a {
+	position: absolute;
+	right: 16px;
+	bottom: 16px;
+}
+
+#copyright {
+	position: fixed;
+	bottom: 8px;
+	width: 100%;
+	text-align: center;
+	font-size: 10pt;
+	line-height: 15px;
+	z-index: -1;
+}
+
+#copyright a {
+	font-weight: bold;
+	color: #333;
+	font-size: 12pt;
+}
+
+.rightbar {
+	margin-right: 4px;
+	border-right: 1px solid #555;
+	padding-right: 8px;
+	padding-bottom: 1px;
+}
+
+.logo {
+	margin-bottom: -125px;
+	fill: rgba(200, 100, 15, 0.3);
+}
