@@ -52,7 +52,6 @@ function($scope, $http, $location) {
 
 	$scope.userLogout = function() {
 		deleteCookie("oauth_steamid");
-		$http.get("http://oauth.steam.tools/logout.php");
 		$scope.user_status = "Login to filter owned items";
 		$scope.loggedIn = false;
 		$scope.owned = {};

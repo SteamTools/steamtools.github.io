@@ -192,7 +192,6 @@ function($scope, $http, $filter, $compile, $modal){
 	$scope.userLogout = function() {
 		if (!$scope.dataLoaded) return;
 
-		$http.get("http://oauth.steam.tools/logout.php");
 		deleteCookie("oauth_steamid");
 
 		var row;
