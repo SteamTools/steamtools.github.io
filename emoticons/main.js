@@ -8,7 +8,7 @@ function($scope, $http, $location) {
 	$scope.numLines = 20;
 	$scope.itemsPerLine = 0;
 
-	$http.get('data.json').success(function(data){
+	$http.get('http://cdn.steam.tools/data/emote.json').success(function(data){
 		$scope.emotes = data;
 
 		for (var i = 0; i < $scope.emotes.length; i++) {
@@ -18,7 +18,7 @@ function($scope, $http, $location) {
 		$scope.genDates();
 	});
 
-	$http.get('../dates.json').success(function(data){
+	$http.get('http://cdn.steam.tools/data/dates.json').success(function(data){
 		$scope.dates = data;
 		$scope.genDates();
 	});

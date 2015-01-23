@@ -11,7 +11,7 @@ function($scope, $http, $location) {
 	$scope.itemsPerLine = 0;
 	$scope.itemsReady = false;
 
-	$http.get('data.json').success(function(data){
+	$http.get('http://cdn.steam.tools/data/bg.json').success(function(data){
 		$scope.bg = data;
 
 		for (var i = 0; i < $scope.bg.length; i++) {
@@ -19,7 +19,7 @@ function($scope, $http, $location) {
 		}
 	});
 
-	$http.get('../dates.json').success(function(data){
+	$http.get('http://cdn.steam.tools/data/dates.json').success(function(data){
 		$scope.dates = data;
 	});
 
