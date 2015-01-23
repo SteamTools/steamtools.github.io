@@ -177,7 +177,7 @@ function mosaticonCtrl($scope, $http, $timeout, $filter, $modal) {
 			$scope.emoticons.remove(e);
 			$scope.process();
 		};
-		img.src = "emotes/" + e.name;
+		img.src = "http://cdn.stema.tools/emote/" + e.name;
 	};
 
 	$scope.getHue = function(hsl) {
