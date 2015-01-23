@@ -35,9 +35,10 @@ angular.module('mosaticonApp', ['ui.bootstrap'])
 
 		return sum;
 	};
-});
+})
 
-function mosaticonCtrl($scope, $http, $timeout, $filter, $modal) {
+.controller('CardCtrl', ['$scope', '$http', '$timeout', '$filter', '$modal',
+function($scope, $http, $timeout, $filter, $modal){
 	$scope.CDN = "http://cdn.steam.tools/emote";
 	$scope.width = new Size(30);
 	$scope.height = new Size(30);
@@ -645,7 +646,7 @@ function mosaticonCtrl($scope, $http, $timeout, $filter, $modal) {
 
 	var el = document.getElementById("container");
 	el.style.opacity = 1;
-}
+}]);
 
 function Size(v) {
 	var value = v;
