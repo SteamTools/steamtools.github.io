@@ -38,6 +38,7 @@ angular.module('mosaticonApp', ['ui.bootstrap'])
 });
 
 function mosaticonCtrl($scope, $http, $timeout, $filter, $modal) {
+	$scope.CDN = "http://cdn.steam.tools/emote";
 	$scope.width = new Size(30);
 	$scope.height = new Size(30);
 	$scope.status = "";
