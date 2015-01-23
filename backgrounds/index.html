@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en" ng-app="BGApp">
+<head>
+	<meta charset="UTF-8">
+	<meta name="description" content="Easily browse, filter and sort an up to date list of Steam backgrounds in one page.">
+	<meta name="keywords" content="Steam,backgrounds,list,sort">
+	<meta name="author" content="Ehsan Kia">
+	<title>Background Gallery</title>
+	<link rel="shortcut icon" href="/favicon.ico">
+	<link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.no-icons.min.css" rel="stylesheet">
+	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.6/angular.min.js"></script>
+	<script src="ng-infinite-scroll.min.js"></script>
+	<script src="main.js"></script>
+	<style>
+		body{text-align: center; padding-top: 10px; background-image: url(/img/bg.png);}
+		#items {
+			background-color: #222;
+			border-radius: 5px;
+			margin: auto;
+			padding: 5px 0;
+			margin-top: 10px;
+		}
+		.market:hover{ background-color: rgba(200,255,200,0.6); }
+		.bg:hover .market { opacity: 1; }
+		.bg:hover .name { opacity: 1; }
+		img{ transition: opacity 0.3s; }
+		.bg{
+			margin: 5px;
+			width: 256px;
+			height: 160px;
+			display: inline-block;
+			content:' ';
+			cursor: pointer;
+		}
+		.market {
+			opacity: 0;
+			display: block;
+			width: 80px;
+			height: 28px;
+			margin: auto;
+			background-color: rgba(255,255,255,0.5);
+			transition: opacity 0.2s;
+			text-decoration: none;
+			font-size: 20px;
+			color: #222;
+			z-index: 999;
+			line-height: 30px;
+			margin-top: 120px;
+		}
+
+		.name {
+			opacity: 0;
+			width: 200px;
+			padding: 3px;
+			margin-top: 15px;
+			transition: opacity 0.2s;
+			background-color: rgba(255,255,255,0.5);
+			float: left;
+			margin-left: 25px;
+		}
+
+		#help {
+			width: 675px;
+			padding: 8px;
+			background-color: #CCC;
+			border: 4px double #333;
+			margin: auto;
+			margin-bottom: 10px;
+			font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+			text-align: left;
+		}
+		#loading {
+			width: 200px;
+			text-align: center;
+			margin: auto;
+			font-size: 14pt;
+			font-weight: bold;
+			color: #333;
+			padding: 10px;
+		}
+		.topbutton {
+			color: #159;
+			display: block;
+			position: absolute;
+			top: 10px;
+			font-weight: bold;
+			font-size: 12pt;
+			color: #159;
+			background-color: #CCC;
+			padding: 2px 8px;
+			border-radius: 3px;
+			box-shadow: 0px 3px 0px 0px #888;
+			border: 1px solid #666;
+			width: 75px;
+			text-align: center;
+			opacity: 0.8;
+		}
+		.topbutton:hover {background-color: #CDE; text-decoration: none;}
+		.topbutton:active {top: 12px; box-shadow: 0px 1px 0px 0px #888;}
+	</style>
+</head>
+<body ng-controller="BGCtrl">
+	<a class="topbutton" style="left: 20px;" href="../">&laquo; Hub</a>
+	<a class="topbutton" style="right: 20px;" href="http://steamcommunity.com/id/Ph0X" data-uv-trigger>Feedback</a>
+
+	<div style="margin: 10px">
+		<div style="display: inline-block; vertical-align: top; margin-top: 7px;">
+			<a href='http://oauth.steam.tools/logout.php' ng-if="!loggedIn">
+				<img src='/img/steam_openid.png'/>
+			</a>
+			<button class="btn" ng-if="loggedIn" ng-click="userLogout()">Logout</button>
+		</div>
+		<div style="display: inline-block; margin: 0 15px">
+			<b>Number of items:</b> {{(bg | filter:ownTest).length}}
+			<br>
+			<i>{{user_status}}</i>
+		</div>
+	</div>
+
+	<div class="input-prepend" style="margin: 10px">
+		<span class="add-on" style="width:50px">Filter</span>
+		<input class="span2" type="text" ng-model="filterText" ng-model-options="{debounce: 250}">
+	</div>
+	<div class="input-prepend btn-group" style="margin: 10px">
+		<span class="add-on" style="width:50px">Order</span>
+		<button class="btn btn-inverse" ng-click="setOrder(byHue)">Hue</button>
+		<button class="btn btn-inverse" ng-click="setOrder(byBrightness)">Brightness</button>
+		<button class="btn btn-inverse" ng-click="setOrder(bySaturation)">Saturation</button>
+		<button class="btn btn-inverse" ng-click="setOrder(byName)">Name</button>
+		<button class="btn btn-inverse" ng-click="setOrder(byGame)">Game</button>
+		<button class="btn btn-inverse" ng-click="setOrder(byDate)">Date</button>
+		<button class="btn btn-inverse" ng-click="setOrder(byPrice)">Price</button>
+		<button class="btn btn-inverse" ng-click="setOrder(byRandom)">Random</button>
+	</div><br>
+
+	<div id="loading" ng-show="bg.length == 0">Loading...</div>
+	<div id="items" ng-show="bg.length > 0" ng-style="{'width': divWidth}">
+		<div class="bg" ng-repeat="b in bg | filter:ownTest | filter:filterText | orderBy:order:rev | limitTo:numLines*itemsPerLine"
+		ng-style="getStyle(b.pos)" title="{{b.name}}" ng-click="open(b.img, $event)">
+			<div class="name">{{b.name}}</div>
+			<a target="_blank" href="{{MARKET_URL + b.url}}" class="market">{{b.price | currency}}</a>
+		</div>
+	</div>
+
+	<!-- Start of UserVoice code -->
+	<script>
+		UserVoice=window.UserVoice||[];
+		(function(){
+			var uv=document.createElement('script');
+			uv.type='text/javascript';
+			uv.async=true;
+			uv.src='//widget.uservoice.com/XTFNtBU14F9kxY4Wh9Wo0A.js';
+			var s=document.getElementsByTagName('script')[0];
+			s.parentNode.insertBefore(uv,s)
+		})();
+
+		UserVoice.push(['set', {
+			accent_color: '#448dd6',
+			trigger_color: 'white',
+			trigger_background_color: '#448dd6',
+			smartvote_enabled: false,
+			menu_enabled: false,
+			contact_title: "Bugs / Suggestions"
+		}]);
+
+		UserVoice.push(['identify', {}]);
+	</script>
+	<!-- End of UserVoice code -->
+
+	<!-- Start of Google Analytics code -->
+	<script>
+		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+		ga('create', 'UA-30619812-2', 'auto');
+		ga('require', 'linkid', 'linkid.js');
+		ga('send', 'pageview');
+	</script>
+	<!-- End of Google Analytics code -->
+
+	<!-- Start of StatCounter Code for Default Guide -->
+	<script type="text/javascript">
+		var sc_project=9905430;
+		var sc_invisible=1;
+		var sc_security="89ce89e8";
+		var scJsHost = (("https:" == document.location.protocol) ?
+		"https://secure." : "http://www.");
+		document.write("<sc"+"ript type='text/javascript' src='" +
+		scJsHost+
+		"statcounter.com/counter/counter.js'></"+"script>");
+	</script>
+	<noscript><div class="statcounter"><a title="create counter"
+	href="http://statcounter.com/free-hit-counter/"
+	target="_blank"><img class="statcounter"
+	src="http://c.statcounter.com/9905430/0/89ce89e8/1/"
+	alt="create counter"></a></div></noscript>
+	<!-- End of StatCounter Code for Default Guide -->
+
+</body>
+</html>
