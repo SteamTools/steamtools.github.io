@@ -1,0 +1,70 @@
+html, body {
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+	height: 97%;
+}
+
+body {margin: 0; padding: 0; background: url(/img/bg.png);}
+button{outline: none !important;}
+hr{border-top: 1px solid #AAA;}
+a.item {color: #5BD;}
+a.item:hover {text-decoration: none;}
+
+#container {
+	width: 1024px;
+	margin: auto;
+	text-align: center;
+	min-height: 100%;
+	background: url(/img/simple.png);
+	padding: 10px;
+	box-shadow: 0 0 12px 5px #666;
+	opacity: 0;
+	transition: opacity 0.5s;
+}
+
+.topbutton {
+	color: #159;
+	display: block;
+	position: absolute;
+	top: 10px;
+	font-weight: bold;
+	font-size: 12pt;
+	color: #159;
+	background-color: #CCC;
+	padding: 2px 8px;
+	border-radius: 3px;
+	box-shadow: 0px 3px 0px 0px #888;
+	border: 1px solid #666;
+	width: 75px;
+	text-align: center;
+	opacity: 0.8;
+}
+
+.topbutton:hover {background-color: #CDE; text-decoration: none;}
+.topbutton:active {top: 12px; box-shadow: 0px 1px 0px 0px #888;}
+#stepbox{display: inline-block; vertical-align: top; display: inline-block;}
+#preview {width: 600px; margin-top: 20px; display: inline-block;}
+.btn{padding: 4px 8px;}
+.btn.active {border-bottom-right-radius: 3px; border-top-right-radius: 3px; border-color: #CCC;}
+.emotebox {width: 380px; text-align: center; background-color: #333; padding: 4px; border-radius: 3px; margin: 5px auto; color: white;}
+.select {border: 1px solid #FFF; padding: 1px; margin: 0 !important;}
+.emote {margin: 2px;}
+.disable {opacity: 0.2;}
+.popover {width: 130px; text-align: center;}
+.popover-content {padding: 4px 6px;}
+#error {color: white;}
+#mosaic {background-color: rgb(25, 25, 25); padding: 8px; margin: auto; text-align: left;}
+#mosaic img {width: 18px;}
+select, input[type="file"] {height: 22px; line-height: initial; width: 200px;}
+select, input[type="number"] {width: 32px; margin-top: 0px; padding: 0 4px 01px; padding-right: 1px; margin-bottom: 2px;}
+
+.adbox {
+	background: url(/img/simple.png) #EFEFEF;
+	float: left;
+	margin-left: -300px;
+	margin-top: 60px;
+	padding: 5px 0;
+	border-radius: 4px;
+}

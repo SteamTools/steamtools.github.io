@@ -642,6 +642,9 @@ function mosaticonCtrl($scope, $http, $timeout, $filter, $modal) {
 			$scope.resizeBlank();
 		}
 	});
+
+	var el = document.getElementById("container");
+	el.style.opacity = 1;
 }
 
 function Size(v) {
