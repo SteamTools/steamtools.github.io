@@ -392,7 +392,7 @@ function($scope, $http, $filter, $compile, $modal){
 
 	// Get and load set data from the server
 	$scope.dataLoaded = false;
-	var url = "http://storage.googleapis.com/stdownloader.appspot.com/set_data.json";
+	var url = "http://storage.googleapis.com/cdn.steam.tools/data/set_data.json";
 	$http.get(url).success(function(data){
 		$scope.dataLoaded = true;
 		$scope.data = data;
