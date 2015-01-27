@@ -12,14 +12,13 @@
 	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js"></script>
 	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular-resource.min.js"></script>
 	<script src="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/js/bootstrap.min.js"></script>
-	<script type="text/javascript" src="steam.js"></script>
 
 	<link rel="shortcut icon" href="/favicon.ico">
 	<link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" rel="stylesheet">
 	<link rel="stylesheet" type="text/css" href="jquery.mCustomScrollbar.css" media="all">
 	<link rel="stylesheet" type="text/css" href="style.css" media="all">
 </head>
-<body ng-controller="SteamCtrl">
+<body ng-controller="SteamCtrl" bg-cloak>
 	<a class="topbutton" style="left: 20px;" href="../">&laquo; Hub</a>
 	<a class="topbutton" style="right: 20px;" href="http://steamcommunity.com/id/Ph0X" data-uv-trigger>Feedback</a>
 
@@ -144,6 +143,8 @@
 			<button class="btn btn-primary" ng-click="addFriends()" ng-disabled="selectedFriends.length==0">Add Selected</button>
 		</div>
 	</div>
+
+	<script type="text/javascript" src="steam.js"></script>
 
 	<!-- Start of Google Analytics code -->
 	<script>
