@@ -149,6 +149,7 @@ function($scope, $http, $timeout, $filter, $modal){
 
 		var ctx = emoteCvs.getContext("2d");
 		var img = document.createElement("img");
+		img.crossOrigin = "Anonymous";
 		img.onload = function() {
 			var step, data, rgb, lab, hsl;
 			ctx.drawImage(img, 0, 0);
