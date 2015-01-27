@@ -20,8 +20,6 @@ a.item:hover {text-decoration: none;}
 	background: url(/img/simple.png);
 	padding: 10px;
 	box-shadow: 0 0 12px 5px #666;
-	opacity: 0;
-	transition: opacity 0.5s;
 }
 
 .topbutton {
