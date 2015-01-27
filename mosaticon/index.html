@@ -52,7 +52,7 @@
 				<span id="error">{{status}}</span>
 				<div id="help"></div>
 				<span style="color: white" ng-if="!status">{{emoticons.length}} emoticon(s) loaded<br></span>
-				<span ng-if="emoticons || !status" style="color: #999">(left click to select / right click to disable)<br></span>
+				<span ng-if="emoticons.length || !status" style="color: #999">(left click to select / right click to disable)<br></span>
 				<img class="emote" ng-repeat="e in emoticons | filter:{disable: false}"
 					ng-src="{{CDN}}/{{e.name}}" ng-click="selectEmote($event, e)" ng-right-click="toggleEmote(e)" draggable="false"
 					ng-class="{select: e.select}" tooltip-popup-delay='200' tooltip-placement="top" tooltip=":{{e.name}}:" />
