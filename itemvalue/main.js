@@ -140,7 +140,7 @@ function InvCtrl($scope, $http) {
 	$scope.fetchItems = function(user, appid){
 		Math.seedrandom(user);
 		user = encodeURIComponent(user);
-		var servers = ["item-value", "item-value2", "item-value4"];
+		var servers = ["item-value", "item-value2", "item-value3", "item-value4"];
 		var ind = Math.floor(Math.random() * servers.length);
 		ind = (ind + $scope.retries) % servers.length;
 		var domain = "http://" + servers[ind] + ".appspot.com";
