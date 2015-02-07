@@ -199,7 +199,7 @@ function InvCtrl($scope, $http) {
 				$scope.retries++;
 				$scope.fetchItems(user, appid);
 			} else {
-				$scope.status = "Something went wrong... Use feedback to contact me.";
+				$scope.status = "Something went wrong... try again later.";
 			}
 		});
 	};
