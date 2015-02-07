@@ -1,0 +1,67 @@
+==================================================================
+https://keybase.io/ehsankia
+--------------------------------------------------------------------
+
+I hereby claim:
+
+  * I am an admin of http://steam.tools
+  * I am ehsankia (https://keybase.io/ehsankia) on keybase.
+  * I have a public key with fingerprint 00CB 342D 7DE5 B7A7 052E  6FDF 6174 9B8C 5D4F A042
+
+To claim this, I am signing this object:
+
+{
+    "body": {
+        "key": {
+            "fingerprint": "00cb342d7de5b7a7052e6fdf61749b8c5d4fa042",
+            "host": "keybase.io",
+            "key_id": "61749b8c5d4fa042",
+            "kid": "010188818103f534b682a3c53df5bff6ec27914b9cc9440abbece8c6ca2a3a49c25a0a",
+            "uid": "19f11be39bb88d47b5b2477617176100",
+            "username": "ehsankia"
+        },
+        "service": {
+            "hostname": "steam.tools",
+            "protocol": "http:"
+        },
+        "type": "web_service_binding",
+        "version": 1
+    },
+    "ctime": 1423346855,
+    "expire_in": 157680000,
+    "prev": "55d091b9bc122c933a01794e778181ae0b8c908049264693ad07ff10554439c9",
+    "seqno": 8,
+    "tag": "signature"
+}
+
+which yields the PGP signature:
+
+-----BEGIN PGP MESSAGE-----
+Version: Keybase OpenPGP v2.0.1
+Comment: https://keybase.io/crypto
+
+yMIfAnicbZJrSFRBFMfX3C1bsiwIygWR20PDRWbunfvaih72IYqCQCLzsczMnbve
+1HvXu1fLQoIgqNgsKupDRAVFDyoqsrAseqhRYkK1Cz2QyMQgwiB6EVRzpb41H2aY
+c37//5lzmJ783EA4p6Nk4Tv71fdMTv+9JS2Bymz6zDaBOEabENsmNLDxw7TsBHOT
+rmV7QkwAgBIJiYZqMJmoWAWyyBTTMBWoIp1oVDaQiQEShahQ76R8BbchOMXKLYfH
++CVuGTz6H75hPAEggJqmQQ0CyZQlRBRNxBKVJcOUiWkqjIqqDhHRKdURApgQRplG
+FYo5hpFORRkDzO1axu2gbkJImKQTomkGUolMRKSqvDzkGwA+mGKujZsYp1l9CtsN
+FhbaowKPtlqU+SPwO/lLpDyGm8o9x2lMcWnSdTyHOo08Ue95yZiv89qSPriZkfhf
+izixbINPkQtamZuyHFuIQU5Sz/I9IRIlCSmaLEcFtiVpuSxu+YSsKhrgyy/DWrml
+LBtAh0QnFIoi1SUJA6jqiKmqPy7MAJ+nDjSAdFFBii5hA6imCYEsIyTpVBf8pppt
+R4hp/Jk44bdjJWzstbhMaL9/tyYYyAkHJoYm+P8gEJ5c8O93FIUm/QyCmdXW/bGD
+mx5l7OPFJ64JXnLp4b43cl90Sd7sbHXRvR/LLlyPkLN9HdcS2yvyFs/L3z23/dCp
+0UR6pOFWMPPhW9fWqnMBZXLk5KrQfuFY767qx7+f1sz7+eVtxfzn34eLT5fdLF1+
+ZMOcthUddaVfahtp8a+IcmHnWGZNb9HFkRkTdoPc+lnrXx7tqfhaOrR24MmD7rK8
+pqr4PnH12fj+sTvnBzvcE0rn0Dev8kXVtEL0eg3o/pithXt7P1wt/PzwUv/I1MFs
+ZG1zYejgjUz5sx3l6052FUxdnL49fOdHZLTOnbInfDl9/Mqi5mmf8u3OkjpgLdgT
+rHmfrdl4YODByunRlj/FNyZw
+=S+hF
+-----END PGP MESSAGE-----
+
+And finally, I am proving ownership of this host by posting or
+appending to this document.
+
+View my publicly-auditable identity here: https://keybase.io/ehsankia
+
+==================================================================
