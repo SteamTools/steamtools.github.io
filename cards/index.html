@@ -82,6 +82,12 @@
 				<span class="help" tooltip="Filter badges that can still be leveled up" tooltip-placement="right"
 					tooltip-popup-delay="150">Incomplete Badges</span>
 			</div>
+
+			<div ng-if="hasCompleteBadges">
+				<input type="checkbox" ng-disabled="userData.badges < 3" ng-model="filters.hide_incompleted">
+				<span class="help" tooltip="Filter badges that are completed" tooltip-placement="right"
+					tooltip-popup-delay="150">Complete Badges</span>
+			</div>
 			</div>
 			<br>
 

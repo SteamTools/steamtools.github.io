@@ -222,6 +222,7 @@ function($scope, $http, $filter, $compile, $modal){
 		$scope.filters.not_own_game = false,
 		$scope.filters.own_cards = false,
 		$scope.filters.hide_completed = false,
+		$scope.filters.hide_incompleted = false,
 
 		$scope.userLoaded = false;
 		$scope.UserID = "";
@@ -270,6 +271,7 @@ function($scope, $http, $filter, $compile, $modal){
 		'not_own_game': false,
 		'own_cards': false,
 		'hide_completed': false,
+		'hide_incompleted': false,
 		'hide_f2p': false,
 	};
 
@@ -362,6 +364,10 @@ function($scope, $http, $filter, $compile, $modal){
 			if (f.hide_completed) {
 				if (!row.foil && row.badge_lvl === 5) return false;
 				if (row.foil && row.badge_lvl === 1) return false;
+			}
+			if (f.hide_incompleted) {
+				if (!row.foil && row.badge_lvl < 5) return false;
+				if (row.foil && row.badge_lvl === 0) return false;
 			}
 
 			return true;
