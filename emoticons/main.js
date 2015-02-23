@@ -13,6 +13,8 @@ function($scope, $http, $location) {
 
 		for (var i = 0; i < $scope.emotes.length; i++) {
 			$scope.emotes[i].appid = $scope.emotes[i].url.split('-')[0].substr(4);
+			$scope.emotes[i].price = parseFloat($scope.emotes[i].price);
+			if ($scope.emotes[i].price) $scope.emotes[i].price = Infinity;
 		}
 
 		$scope.genDates();
