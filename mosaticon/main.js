@@ -467,9 +467,10 @@ function($scope, $http, $timeout, $filter, $modal){
 				}
 			}
 		} else if ($scope.tool === "move") {
-			var tmpEmote = $scope.mosaic[y1][x1];
-			if (!e.altKey) $scope.mosaic[y1][x1] = $scope.mosaic[y2][x2];
-			if (!e.shitKey) $scope.mosaic[y2][x2] = tmpEmote;
+			var emote1 = $scope.mosaic[y1][x1];
+			var emote2 = $scope.mosaic[y2][x2];
+			if (!e.shiftKey) $scope.mosaic[y1][x1] = emote2;
+			if (!e.altKey) $scope.mosaic[y2][x2] = emote1;
 		}
 	};
 
