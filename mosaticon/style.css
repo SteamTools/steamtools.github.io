@@ -45,6 +45,8 @@ a.item:hover {text-decoration: none;}
 #stepbox{display: inline-block; vertical-align: top; display: inline-block;}
 #preview {width: 600px; margin-top: 20px; display: inline-block;}
 .btn{padding: 4px 8px;}
+.tool-btn{height: 40px; width: 42px;}
+.action-btn{margin-top: 8px; padding: 9px 8px; display: inline-block}
 .btn.active {border-bottom-right-radius: 3px; border-top-right-radius: 3px; border-color: #CCC;}
 .emotebox {width: 380px; text-align: center; background-color: #333; padding: 4px; border-radius: 3px; margin: 5px auto; color: white;}
 .select {border: 1px solid #FFF; padding: 1px; margin: 0 !important;}
@@ -53,7 +55,7 @@ a.item:hover {text-decoration: none;}
 .popover {width: 130px; text-align: center;}
 .popover-content {padding: 4px 6px;}
 #error {color: white;}
-#mosaic {background-color: rgb(25, 25, 25); padding: 8px; margin: auto; text-align: left;}
+#mosaic {background-color: rgb(25,25,25); padding: 8px; margin: auto; text-align: left;}
 #mosaic img {width: 18px;}
 select, input[type="file"] {height: 22px; line-height: initial; width: 200px;}
 select, input[type="number"] {width: 32px; margin-top: 0px; padding: 0 4px 01px; padding-right: 1px; margin-bottom: 2px;}

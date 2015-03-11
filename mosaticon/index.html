@@ -46,7 +46,7 @@
 			<form id="addinput" class="input-prepend input-append form-horizontal">
 				<span class="add-on">SteamID</span>
 				<input class="span2" type="text" ng-model="UserID">
-				<button class="btn btn-inverse" ng-click="loadEmoticons()">Fetch Emoticons</button>
+				<button class="btn btn-inverse" ng-click="loadEmoticons()" tooltip-popup-delay='250' tooltip-placement="top" tooltip="test">Fetch Emoticons</button>
 			</form>
 			<div class="emotebox" ng-right-click="">
 				<span id="error">{{status}}</span>
@@ -121,20 +121,21 @@
 				<button type="button" class="btn" ng-model="quality" btn-radio="'3'">3</button>
 			</div>
 			<br>
-			<button style="margin-top: 8px; display: inline-block" class="btn btn-inverse" ng-click="importMenu()">Import</button>
-			<button style="height: 40px; width: 55px; margin-top: 8px" type="button" class="btn" ng-model="tool" ng-click="undo()" ng-disabled="undoHistory.length == 0" ng-show="imageLoaded || blankLoaded">
+			<button style="margin-top: 8px" type="button" class="btn tool-btn" ng-model="tool" ng-click="undo()" ng-disabled="undoHistory.length == 0" ng-show="imageLoaded || blankLoaded">
 				<i class="icon-unshare"></i>
 			</button>
 			<div class="btn-group" style="margin: 8px; display: inline-block" ng-show="imageLoaded || blankLoaded">
 				<span class="input-prepend" style="margin-bottom:0">
 					<span class="add-on" style="width: 50px; height: 30px; line-height: 30px;">Tool</span>
 				</span>
-				<button style="height: 40px; width: 55px;" type="button" class="btn" ng-model="tool" btn-radio="'pen'"><i class="icon-pencil"></i></button>
-				<button style="height: 40px; width: 55px;" type="button" class="btn" ng-model="tool" btn-radio="'line'"><i class="icon-vector-path-line"></i></button>
-				<button style="height: 40px; width: 55px;" type="button" class="btn" ng-model="tool" btn-radio="'rect'"><i class="icon-vector-path-square"></i></button>
-				<button style="height: 40px; width: 55px;" type="button" class="btn" ng-model="tool" btn-radio="'circ'"><i class="icon-vector-path-circle"></i></button>
+				<button type="button" class="btn tool-btn" ng-model="tool" btn-radio="'pen'" ><i class="icon-pencil"></i></button>
+				<button type="button" class="btn tool-btn" ng-model="tool" btn-radio="'line'"><i class="icon-vector-path-line"></i></button>
+				<button type="button" class="btn tool-btn" ng-model="tool" btn-radio="'rect'"><i class="icon-vector-path-square"></i></button>
+				<button type="button" class="btn tool-btn" ng-model="tool" btn-radio="'circ'"><i class="icon-vector-path-circle"></i></button>
+				<button type="button" class="btn tool-btn" ng-model="tool" btn-radio="'move'"><i class="icon-move"></i></button>
 			</div>
-			<button style="margin-top: 8px; display: inline-block" class="btn btn-inverse" ng-click="exportMosaic()">Export</button>
+			<button class="btn btn-inverse action-btn" ng-click="importMenu()">Import</button>
+			<button class="btn btn-inverse action-btn" ng-click="exportMosaic()">Export</button>
 			<br><br>
 			<div ng-mousemove="mouseMove($event)" ng-mousedown="mouseDown($event)" ng-mouseup="mouseUp()"
 				id="mosaic" ng-show="mosaic" ng-style="{'width': (width.value * 18) + 'px'}">
@@ -163,7 +164,7 @@
 	</script>
 
 	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.10/angular.min.js"></script>
-	<script src="ui-bootstrap-custom-tpls-0.7.0.min.js"></script>
+	<script src="ui-bootstrap-tpls-0.12.0.min.js"></script>
 	<script src="kdTree.min.js"></script>
 	<script src="colors.js"></script>
 	<script src="main.js"></script>
