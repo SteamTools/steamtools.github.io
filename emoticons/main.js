@@ -14,7 +14,7 @@ function($scope, $http, $location) {
 			data[i].price = data[i].price === null ? Infinity : parseFloat(data[i].price);
 		}
 
-		$scope.bg = data;
+		$scope.emotes = data;
 		$scope.genDates();
 	});
 

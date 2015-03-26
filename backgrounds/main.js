@@ -27,10 +27,10 @@ function($scope, $http, $location) {
 	});
 
 	$scope.genDates = function(){
-		if (!$scope.dates && !$scope.emotes) return;
+		if (!$scope.dates && !$scope.bg) return;
 
-		for (var i = 0; i < $scope.emotes.length; i++) {
-			var e = $scope.emotes[i];
+		for (var i = 0; i < $scope.bg.length; i++) {
+			var e = $scope.bg[i];
 			if ($scope.dates.hasOwnProperty(e.appid)) {
 				e.time = $scope.dates[e.appid];
 			} else {
