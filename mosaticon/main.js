@@ -361,7 +361,9 @@ function($scope, $http, $timeout, $filter, $modal){
 			result += "\n";
 		}
 		var data = "<pre>" + result + "</pre>";
-		window.open("data:text/html," + encodeURIComponent(data), "_blank");
+		// window.open("data:text/html," + encodeURIComponent(data), "_blank");
+		var exportWin = window.open("", "ExportWindow");
+		exportWin.document.write(data);
 	};
 
 	$scope.importMenu = function () {
