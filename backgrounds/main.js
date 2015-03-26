@@ -12,16 +12,32 @@ function($scope, $http, $location) {
 	$scope.itemsReady = false;
 
 	$http.get('http://cdn.steam.tools/data/bg.json').success(function(data){
-		$scope.bg = data;
-
-		for (var i = 0; i < $scope.bg.length; i++) {
-			$scope.bg[i].appid = $scope.bg[i].url.split('-')[0].substr(4);
+		for (var i = 0; i < data.length; i++) {
+			data[i].appid = data[i].url.split('-')[0].substr(4);
+			data[i].price = data[i].price === null ? Infinity : parseFloat(data[i].price);
 		}
+
+		$scope.bg = data;
+		$scope.genDates();
 	});
 
 	$http.get('http://cdn.steam.tools/data/dates.json').success(function(data){
 		$scope.dates = data;
+		$scope.genDates();
 	});
+
+	$scope.genDates = function(){
+		if (!$scope.dates && !$scope.emotes) return;
+
+		for (var i = 0; i < $scope.emotes.length; i++) {
+			var e = $scope.emotes[i];
+			if ($scope.dates.hasOwnProperty(e.appid)) {
+				e.time = $scope.dates[e.appid];
+			} else {
+				e.time = 9999999999;
+			}
+		}
+	};
 
 	$scope.owned = {};
 	$scope.loggedIn = false;
@@ -107,12 +123,7 @@ function($scope, $http, $location) {
 	$scope.byGame = function(e){ return e.game.toLowerCase(); };
 	$scope.byPrice = function(e){ return e.price; };
 	$scope.byRandom = function(e){ return e.name.hashCode(); };
-	$scope.byDate = function(e){
-		if ($scope.dates && $scope.dates.hasOwnProperty(e.appid))
-			return -$scope.dates[e.appid];
-		else
-			return -9999999999;
-	};
+	$scope.byDate = function(e){ return e.time;	};
 
 	$scope.order = $scope.byDate;
 	$scope.rev = false;

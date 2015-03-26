@@ -9,14 +9,12 @@ function($scope, $http, $location) {
 	$scope.itemsPerLine = 0;
 
 	$http.get('http://cdn.steam.tools/data/emote.json').success(function(data){
-		$scope.emotes = data;
-
-		for (var i = 0; i < $scope.emotes.length; i++) {
-			$scope.emotes[i].appid = $scope.emotes[i].url.split('-')[0].substr(4);
-			$scope.emotes[i].price = parseFloat($scope.emotes[i].price);
-			if (isNaN($scope.emotes[i].price)) $scope.emotes[i].price = Infinity;
+		for (var i = 0; i < data.length; i++) {
+			data[i].appid = data[i].url.split('-')[0].substr(4);
+			data[i].price = data[i].price === null ? Infinity : parseFloat(data[i].price);
 		}
 
+		$scope.bg = data;
 		$scope.genDates();
 	});
 
@@ -62,11 +60,18 @@ function($scope, $http, $location) {
 
 
 	$scope.genDates = function(){
-		if (!!$scope.dates && !!$scope.emotes){
-			for (var i = 0; i < $scope.emotes.length; i++) {
-				var utime = $scope.dates[$scope.emotes[i].appid];
+		if (!$scope.dates && !$scope.emotes) return;
+
+		for (var i = 0; i < $scope.emotes.length; i++) {
+			var e = $scope.emotes[i];
+			if ($scope.dates.hasOwnProperty(e.appid)) {
+				var utime = $scope.dates[e.appid];
 				var date = new Date(utime*1000);
-				$scope.emotes[i].date = date.toDateString().substr(4);
+				e.date = date.toDateString().substr(4);
+				e.time = $scope.dates[e.appid];
+			} else {
+				e.date = "???";
+				e.time = 9999999999;
 			}
 		}
 	};
@@ -108,12 +113,7 @@ function($scope, $http, $location) {
 	$scope.byPrice = function(e){ return e.price; };
 	$scope.byLength = function(e){ return e.name.length; };
 	$scope.byRandom = function(e){ return e.name.hashCode(); };
-	$scope.byDate = function(e){
-		if ($scope.dates && $scope.dates.hasOwnProperty(e.appid))
-			return -$scope.dates[e.appid];
-		else
-			return -9999999999;
-	};
+	$scope.byDate = function(e){ return e.time; };
 
 	$scope.order = $scope.byDate;
 	$scope.rev = false;
