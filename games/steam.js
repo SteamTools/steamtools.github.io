@@ -251,6 +251,10 @@ function SteamCtrl($scope, $resource, $http){
 		window.open("data:text/html," + encodeURIComponent(data), "_blank");
 	};
 
+	$scope.getGameName = function(appid) {
+		return $scope.gameData[appid].name;
+	};
+
 	function gamesLoaded(){
 		for (var i=0; i<$scope.selectedUsers.length ; i++){
 			var steamid = $scope.selectedUsers[i];

@@ -106,7 +106,7 @@
 				<img ng:switch-when="true" src="img/loading2.gif">
 			</ng:switch>
 			<div id="game-content">
-				<a ng-repeat="game in gameList | orderBy:'gameData[game].name'" adjust-size
+				<a ng-repeat="game in gameList | orderBy:getGameName" adjust-size
 					ng-href="http://store.steampowered.com/app/[[game]]" target="_blank">
 					<div class="game"  draggable="true" ng-bind-html-unsafe="gameData[game].name" scrollbar></div>
 				</a>
