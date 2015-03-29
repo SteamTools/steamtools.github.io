@@ -49,7 +49,8 @@ li.friend > img{
 }
 
 li.selected{
-	box-shadow: 0 0 10px #2be;
+	box-shadow: 0 0 10px #7F9;
+	background-color: #BDA;
 }
 
 li.private{
