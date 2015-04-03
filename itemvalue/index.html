@@ -67,7 +67,7 @@
 
 		<div ng-show="items.length">
 			<hr>
-			<span><b>Total:</b> {{(items | filter:dupesFilter | filter:typeFilter | filter:filterText | sumByKey:'price':'count') | currency:curIndex:fee}}
+			<span><b>Total:</b> {{(items | filter:dupesFilter | filter:typeFilter | filter:filterText | sumByKey:'price':'count':fee) | currency:curIndex:false}}
 				({{items | filter:dupesFilter | filter:typeFilter | filter:filterText | sumByKey:'count'}} items)</span>
 
 			<div style="margin: 0 8px" class="btn-group">

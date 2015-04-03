@@ -31,7 +31,7 @@ angular.module('valueApp', ['ui.bootstrap'])
 	});
 }])
 .filter('sumByKey', function() {
-	return function(data, key, mult) {
+	return function(data, key, mult, fee) {
 		if (data === undefined || key === undefined) {
 			return 0;
 		}
@@ -39,10 +39,17 @@ angular.module('valueApp', ['ui.bootstrap'])
 		var sum = 0;
 		for (var i = data.length - 1; i >= 0; i--) {
 			if (!data[i][key]) continue;
+			var val = data[i][key];
+			if (fee) {
+				var fee_cost = val * 0.1304;
+				fee_cost = Math.max(fee_cost, 0.02);
+				val -= fee_cost;
+			}
+
 			if (mult === undefined) {
-				sum += data[i][key];
+				sum += val;
 			} else {
-				sum += data[i][key] * data[i][mult];
+				sum += val * data[i][mult];
 			}
 		}
 
