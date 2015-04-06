@@ -421,7 +421,11 @@ function($scope, $http, $filter, $compile, $modal){
 		$scope.fixTableHeight();
 		$scope.table.rows.add($scope.rows).draw();
 	}).error(function() {
-		var error = "Error while loading set data.";
+		var error = "<br>Error while loading set data. Try the following:<br><br>";
+		error += "1. Do a full browser refresh (ctrl+F5)<br>";
+		error += "2. Test in a new browser or icognito/private browsing<br>";
+		error += "3. If you use HTTPS Everywhere, disable it on this site<br><br>";
+		error += "If none of these work, your government/ISP is blocking this site.<br><br>";
 		$scope.tableSettings.oLanguage.sEmptyTable = error;
 		$scope.table.draw();
 	});
