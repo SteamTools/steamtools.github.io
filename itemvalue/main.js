@@ -2,7 +2,7 @@ var CURRENCY_DATA = [  // Thanks to Enhanced Steam
 	{name: "USD", ratio: 1.0,		symbolFormat: "$",     right: false},
 	{name: "GBP", ratio: 0.6683,	symbolFormat: "£",     right: false},
 	{name: "EUR", ratio: 0.9305,	symbolFormat: "€",     right: true},
-	{name: "RUB", ratio: 0.5165,	symbolFormat: " pуб.", right: true},
+	{name: "RUB", ratio: 53.3867,	symbolFormat: " pуб.", right: true},
 	{name: "BRL", ratio: 3.0551,	symbolFormat: "R$ ",   right: false},
 	{name: "JPY", ratio: 119.088,	symbolFormat: "¥ ",    right: false},
 	{name: "NOK", ratio: 7.8268,	symbolFormat: " kr",   right: true},
