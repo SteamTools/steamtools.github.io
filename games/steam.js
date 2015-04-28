@@ -240,14 +240,15 @@ function SteamCtrl($scope, $resource, $http){
 	};
 
 	$scope.exportGames = function(){
-		var result = "";
+		var results = [];
 		for (var i = 0; i < $scope.gameList.length; i++) {
 			var appid = $scope.gameList[i];
 			var e = $scope.gameData[appid];
 			if (e === undefined) break;
-			result += e.name + "\n";
+			results.push(e.name);
 		}
-		var data = "<pre>" + result + "</pre>";
+		results.sort();
+		var data = "<pre>" + results.join("\n") + "</pre>";
 		window.open("data:text/html," + encodeURIComponent(data), "_blank");
 	};
 
