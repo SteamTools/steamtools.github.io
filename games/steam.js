@@ -32,7 +32,7 @@ SteamApp.directive('fadey', function() {
 });
 
 SteamApp.directive('adjustSize', function() {
-	return function(scope, element, attrs) {
+	return function(scope) {
 		if (scope.$last){
 			var h = $(window).height() - 150;
 			$("#game-content").height(h);
@@ -52,7 +52,7 @@ SteamApp.directive('adjustSize', function() {
 		});
 		$(window).resize(function(){
 			var games = $('.mCSB_container').children();
-			if (games.length == 0) return;
+			if (games.length === 0) return;
 			var h = $(window).height() - 150;
 			$("#game-content").height(h);
 		});
@@ -95,7 +95,7 @@ function SteamCtrl($scope, $resource, $http){
 		$scope.gameData = data;
 	});
 
-	$scope.userData = $resource('http://app.ehsankia.com/steam/info',
+	$scope.userData = $resource('http://st-games.appspot.com/info',
 							{callback:'JSON_CALLBACK'},
 							{getData: {method:'JSONP'} });
 
