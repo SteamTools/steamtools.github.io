@@ -126,7 +126,7 @@ function($scope, $http, $location) {
 	$scope.byDate = function(e){ return e.time;	};
 
 	$scope.order = $scope.byDate;
-	$scope.rev = false;
+	$scope.rev = true;
 
 	$scope.setOrder = function(orderFun) {
 		if ($scope.order === orderFun)
