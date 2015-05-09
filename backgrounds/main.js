@@ -75,7 +75,9 @@ function($scope, $http, $location) {
 
 
 	$scope.getStyle = function(p){
-		var url = "http://cdn.steam.tools/backgrounds/" + p[0] + ".jpg";
+		var cdn = p[0] >= 82 ? "cdn" : "cdn2";
+		var host = "http://" + cdn + ".steam.tools";
+		var url = host + "/backgrounds/" + p[0] + ".jpg";
 		var style = {
 			backgroundImage: "url(" + url + ")",
 			backgroundPosition: (p[1] * -256) + "px " + (p[2] * -160) + "px"
