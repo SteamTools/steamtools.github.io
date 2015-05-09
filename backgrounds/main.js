@@ -27,7 +27,7 @@ function($scope, $http, $location) {
 	});
 
 	$scope.genDates = function(){
-		if (!$scope.dates && !$scope.bg) return;
+		if (!$scope.dates || !$scope.bg) return;
 
 		for (var i = 0; i < $scope.bg.length; i++) {
 			var e = $scope.bg[i];
