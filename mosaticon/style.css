@@ -43,7 +43,7 @@ a.item:hover {text-decoration: none;}
 .topbutton:hover {background-color: #CDE; text-decoration: none;}
 .topbutton:active {top: 12px; box-shadow: 0px 1px 0px 0px #888;}
 #stepbox{display: inline-block; vertical-align: top; display: inline-block;}
-#preview {width: 600px; margin-top: 20px; display: inline-block;}
+#preview {width: 600px; margin-top: 60px; display: inline-block;}
 .btn{padding: 4px 8px;}
 .tool-btn{height: 40px; width: 42px;}
 .action-btn{margin-top: 8px; padding: 9px 8px; display: inline-block}

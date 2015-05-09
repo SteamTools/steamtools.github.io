@@ -1,3 +1,8 @@
+/* global kdTree */
+/* global RGB_to_HSL */
+/* global RGB_to_Lab */
+
+
 angular.module('mosaticonApp', ['ui.bootstrap'])
 .config(['$tooltipProvider', function($tooltipProvider){
     $tooltipProvider.setTriggers({
@@ -170,7 +175,7 @@ function($scope, $http, $timeout, $filter, $modal){
 					}
 				}
 			}
-			var obj = e['rgb1'].toObject();
+			var obj = e.rgb1.toObject();
 			obj.emote = e;
 			$scope.emoteTree.insert(obj);
 			e.hue = $scope.getHue(e.hsl1);
@@ -473,6 +478,15 @@ function($scope, $http, $timeout, $filter, $modal){
 			var emote2 = $scope.mosaic[y2][x2];
 			if (!e.shiftKey) $scope.mosaic[y1][x1] = emote2;
 			if (!e.altKey) $scope.mosaic[y2][x2] = emote1;
+		} else if ($scope.tool === "fill") {
+			var target = $scope.mosaic[y1][x1];
+			for (j = 0; j < $scope.mosaic.length; j++) {
+				for (i = 0; i < $scope.mosaic[j].length; i++) {
+					if ($scope.mosaic[j][i] === target) {
+						$scope.mosaic[j][i] = $scope.selectedEmote;
+					}
+				}
+			}
 		}
 	};
 
@@ -750,12 +764,12 @@ var ImportMenuCtrl = function($scope, $modalInstance) {
 		}
 
 		ms.mosaic = [];
-		for (var i = 0; i < rows.length; i++) {
+		for (i = 0; i < rows.length; i++) {
 			var row = rows[i].trim();
 			if (row === "") continue;
 			var emotes = row.replace(' ', '').slice(1,-1).split("::");
 			var emoteRow = [];
-			for (var j = 0; j < emotes.length; j++) {
+			for (j = 0; j < emotes.length; j++) {
 				if (emoteDict.hasOwnProperty(emotes[j]))
 					emoteRow.push(emoteDict[emotes[j]]);
 				else
@@ -765,8 +779,8 @@ var ImportMenuCtrl = function($scope, $modalInstance) {
 			ms.mosaic.push(emoteRow);
 		}
 
-		for (var i = 0; i < ms.mosaic.length; i++) {
-			for (var j = 0; j < ms.mosaic[i].length - width; j++) {
+		for (i = 0; i < ms.mosaic.length; i++) {
+			for (j = 0; j < ms.mosaic[i].length - width; j++) {
 				ms.mosaic[i].push(ms.selectedEmote);
 			}
 		}
