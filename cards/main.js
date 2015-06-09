@@ -1,3 +1,5 @@
+/* global moment */
+
 var CURRENCY_DATA = [  // Thanks to Enhanced Steam
 	{name: "USD", ratio: 1.0,		symbolFormat: "$",     right: false},
 	{name: "GBP", ratio: 0.6683,	symbolFormat: "£",     right: false},
@@ -106,6 +108,10 @@ function($scope, $http, $filter, $compile, $modal){
 			$scope.userData.games = (data.games !== null) ? 3 : 0;
 			$scope.userData.cards = (data.cards !== null) ? 3 : 0;
 			$scope.userData.badges = (data.badges !== null) ? 3 : 0;
+
+			if (data.cards === null) {
+				$scope.status = "Private inventory?";
+			}
 
 			$scope.importUserData();
 		}).error(function(){
