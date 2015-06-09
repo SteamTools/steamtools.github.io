@@ -110,7 +110,7 @@ function($scope, $http, $filter, $compile, $modal){
 			$scope.userData.badges = (data.badges !== null) ? 3 : 0;
 
 			if (data.cards === null) {
-				$scope.status = "Private inventory?";
+				$scope.user_status = "Private inventory?";
 			}
 
 			$scope.importUserData();
