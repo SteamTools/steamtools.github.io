@@ -11,14 +11,13 @@ item_hash = item_url.split('/')[-1]
 item_appid = item_url.split('/')[-2]
 parser = HTMLParser.HTMLParser()
 
-CURRENCIES = [1, 2, 3, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]
+CURRENCIES = [1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]
 prices = []
 for i in CURRENCIES:
     url = CURRENCY_URL.format(i, item_appid, item_hash)
     data = requests.get(url).json()
     price = data.get('lowest_price')
     price = parser.unescape(price)
-    print url
     try:
         print unicode(price)
     except:
