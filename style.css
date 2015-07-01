@@ -1,7 +1,7 @@
 @import url(http://fonts.googleapis.com/css?family=Raleway:300|Geo|Oswald:300);
 
 *, *:after, *:before { -webkit-box-sizing: border-box; -moz-box-sizing: border-box; box-sizing: border-box; }
-body, html { margin: 0; padding: 0; font-size: 100%;}
+body, html { margin: 0; padding: 0; height: 100%; font-size: 100%;}
 
 .clearfix:before, .clearfix:after { display: table; content: " "; }
 .clearfix:after { clear: both; }
@@ -21,6 +21,16 @@ body {
 	height: 100%;
 	background-color: #d9dbdb;
 	transition: opacity 0.5s;
+}
+
+#container {
+	margin: auto;
+	background: white;
+	width: 970px;
+	min-height:100%;
+	position:relative;
+	background: url(/img/simple.png);
+	box-shadow: 0 0 12px 5px #666;
 }
 
 h1{
@@ -43,7 +53,7 @@ a:active {
 /* Demo Buttons Style */
 .grid {
 	margin: 0 auto;
-	max-width: 1400px;
+	margin-top: 30px;
 	list-style: none;
 	text-align: center;
 	padding: 0;
@@ -52,9 +62,9 @@ a:active {
 .grid li {
 	position: relative;
 	display: inline-block;
-	margin: 10px 9px;
+	margin: 10px 10px;
 	padding: 0;
-	width: 350px;
+	width: 380px;
 	text-align: left;
 }
 
@@ -63,30 +73,42 @@ a:active {
 	margin: 0;
 }
 
+footer {
+	text-align: center;
+	font-size: 10pt;
+	line-height: 15px;
+	position:absolute;
+	bottom:0;
+	width:100%;
+	height:64px;
+}
 
-#affiliates {
+
+footer #affiliates {
 	color: #777;
 	font-weight: bold;
 	background-color: #444;
 	height: 25px;
 	font-size: 12pt;
 	font-family: 'Oswald', Calibri, Arial, sans-serif;
+	line-height: 25px;
+	margin-top: 6px;
 }
 
-#affiliates a {
+footer #affiliates a {
 	font-weight: normal;
 	color: #aaa;
 	padding-left: 20px;
 	transition: color 0.2s;
 }
 
-#affiliates a:hover {
+footer #affiliates a:hover {
 	color: #ddd;
 }
 
 .grid figure div {
 	padding-top: 64px;
-	width: 350px;
+	width: 380px;
 	height: 180px;
 	text-align: center;
 	font-size: 32pt;
@@ -155,7 +177,7 @@ a:active {
 .cs-style-3 figcaption {
 	top: auto;
 	bottom: 0;
-	width: 350px;
+	width: 380px;
 	height: 115px;
 	opacity: 0;
 	-webkit-transition: -webkit-transform 0.4s, opacity 0.1s 0.3s;
@@ -185,16 +207,6 @@ a:active {
 	position: absolute;
 	right: 16px;
 	bottom: 16px;
-}
-
-#copyright {
-	position: fixed;
-	bottom: 8px;
-	width: 100%;
-	text-align: center;
-	font-size: 10pt;
-	line-height: 15px;
-	z-index: -1;
 }
 
 #copyright a {

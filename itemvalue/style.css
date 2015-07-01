@@ -7,7 +7,7 @@ html, body {
 button{outline: none !important;}
 hr{border-top: 1px solid #AAA;}
 #container {
-	width: 900px;
+	width: 970px;
 	margin: auto;
 	text-align: center;
 	min-height: 100%;
