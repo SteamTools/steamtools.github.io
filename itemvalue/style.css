@@ -17,7 +17,7 @@ hr{border-top: 1px solid #AAA;}
 }
 .center{text-align: center}
 .item{display: inline-block;
-	margin: 9px;
+	margin: 8px;
 	background-color: #292929;
 	border: 2px solid #3A3A3A;
 	padding: 12px 8px 4px 8px;
@@ -68,7 +68,7 @@ hr{border-top: 1px solid #AAA;}
 	background-color: #111;
 	border-radius: 5px;
 	margin: 2px;
-	padding: 8px;
+	padding: 6px;
 	text-align: left;
 }
 
