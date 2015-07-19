@@ -4,7 +4,7 @@ angular
 function($scope, $http, $location) {
 	$scope.MARKET_URL = "http://steamcommunity.com/market/listings/";
 	$scope.ECON_URL = "http://cdn.steamcommunity.com/economy/image/";
-	$scope.INV_URL = "http://mosaticon.appspot.com/FetchBackgrounds?id=";
+	$scope.INV_URL = "http://mosaticon2.appspot.com/FetchBackgrounds?id=";
 	$scope.bg = [];
 
 	$scope.numLines = 20;

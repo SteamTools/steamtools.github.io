@@ -3,7 +3,7 @@ angular
 .controller('EmoteCtrl', ['$scope', '$http', '$location',
 function($scope, $http, $location) {
 	$scope.BASE_URL = "http://steamcommunity.com/market/listings/";
-	$scope.INV_URL = "http://mosaticon.appspot.com/FetchEmotes?id=";
+	$scope.INV_URL = "http://mosaticon2.appspot.com/FetchEmotes?id=";
 	$scope.emotes = [];
 	$scope.numLines = 20;
 	$scope.itemsPerLine = 0;

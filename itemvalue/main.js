@@ -82,6 +82,7 @@ angular.module('valueApp', ['ui.bootstrap'])
 });
 
 function InvCtrl($scope, $http) {
+	$scope.SERVERS = ["item-value", "item-value2", "item-value3", "item-value4", "item-value5", "item-value6"];
 	$scope.CDATA = CURRENCY_DATA;
 	$scope.ECONOMY = "http://cdn.steamcommunity.com/economy/image/";
 	$scope.LISTING = "http://steamcommunity.com/market/listings/";
@@ -148,10 +149,9 @@ function InvCtrl($scope, $http) {
 	$scope.fetchItems = function(user, appid){
 		Math.seedrandom(user);
 		user = encodeURIComponent(user);
-		var servers = ["item-value", "item-value2", "item-value3", "item-value4"];
-		var ind = Math.floor(Math.random() * servers.length);
-		ind = (ind + $scope.retries) % servers.length;
-		var domain = "http://" + servers[ind] + ".appspot.com";
+		var ind = Math.floor(Math.random() * $scope.SERVERS.length);
+		ind = (ind + $scope.retries) % $scope.SERVERS.length;
+		var domain = "http://" + $scope.SERVERS[ind] + ".appspot.com";
 		var url = domain + "/ParseInv?id=" + user + "&app=" + appid;
 		url += "&callback=JSON_CALLBACK";
 		$scope.status = "Loading...";
@@ -203,7 +203,7 @@ function InvCtrl($scope, $http) {
 			}
 
 		}).error(function(){
-			if ($scope.retries < 4) {
+			if ($scope.retries < $scope.SERVERS.length) {
 				$scope.retries++;
 				$scope.fetchItems(user, appid);
 			} else {
