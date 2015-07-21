@@ -125,7 +125,7 @@
 			<button style="margin-top: 8px" type="button" class="btn tool-btn" ng-model="tool" ng-click="undo()" ng-disabled="undoHistory.length == 0" ng-show="imageLoaded || blankLoaded">
 				<i class="icon-unshare"></i>
 			</button>
-			<div class="btn-group" style="margin: 8px; display: inline-block" ng-show="imageLoaded || blankLoaded">
+			<div class="btn-group" style="margin: 8px; margin-bottom: 0; display: inline-block" ng-show="imageLoaded || blankLoaded">
 				<span class="input-prepend" style="margin-bottom:0">
 					<span class="add-on" style="width: 50px; height: 30px; line-height: 30px;">Tool</span>
 				</span>
@@ -139,7 +139,7 @@
 			<button class="btn btn-inverse action-btn" ng-click="importMenu()">Import</button>
 			<button class="btn btn-inverse action-btn" ng-click="exportMosaic()">Export</button>
 			<br>
-			<div style="line-height: 8px; font-size: 10px;">Press <b>?</b> for keyboard shortcuts</div>
+			<div style="margin-bottom: -12px; font-size: 10px;">Press <b>?</b> for keyboard shortcuts</div>
 			<br>
 			<div ng-mousemove="mouseMove($event)" ng-mousedown="mouseDown($event)" ng-mouseup="mouseUp()"
 				id="mosaic" ng-show="mosaic" ng-style="{'width': (width.value * 18) + 'px'}">
