@@ -9,6 +9,7 @@
 
 	<link rel="shortcut icon" href="/favicon.ico">
 	<link href="bootstrap-2.1.0.min.css" rel="stylesheet">
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/angular-hotkeys/1.4.5/hotkeys.min.css" rel="stylesheet">
 	<link rel="stylesheet" href="style.css">
 </head>
 <body ng-controller="mosaticonCtrl" ng-cloak>
@@ -160,11 +161,13 @@
 			<textarea class="form-control" ng-model="data.text" style="width: 400px; height: 300px; margin: 10px"></textarea>
 		</div>
 		<div class="modal-footer" style="text-align: center">
+			<button class="btn" ng-click="closeModal()">Cancel</button>
 			<button class="btn btn-success" ng-click="importMosaic()">Import</button>
 		</div>
 	</script>
 
 	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.10/angular.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/angular-hotkeys/1.4.5/hotkeys.min.js"></script>
 	<script src="ui-bootstrap-tpls-0.12.0.min.js"></script>
 	<script src="kdTree.min.js"></script>
 	<script src="colors.js"></script>

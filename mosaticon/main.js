@@ -3,7 +3,7 @@
 /* global RGB_to_Lab */
 
 
-angular.module('mosaticonApp', ['ui.bootstrap'])
+angular.module('mosaticonApp', ['ui.bootstrap', 'cfp.hotkeys'])
 .config(['$tooltipProvider', function($tooltipProvider){
     $tooltipProvider.setTriggers({
         'mouseenter': 'mouseleave',
@@ -42,8 +42,8 @@ angular.module('mosaticonApp', ['ui.bootstrap'])
 	};
 })
 
-.controller('mosaticonCtrl', ['$scope', '$http', '$timeout', '$filter', '$modal',
-function($scope, $http, $timeout, $filter, $modal){
+.controller('mosaticonCtrl', ['$scope', '$http', '$timeout', '$filter', '$modal', 'hotkeys',
+function($scope, $http, $timeout, $filter, $modal, hotkeys){
 	$scope.CDN = "http://cdn.steam.tools/emote";
 	$scope.width = new Size(30);
 	$scope.height = new Size(30);
@@ -600,6 +600,7 @@ function($scope, $http, $timeout, $filter, $modal){
 
 	$scope.undoHistory = [];
 	$scope.undo = function() {
+		if ($scope.undoHistory.length === 0) return;
 		$scope.mosaic = $scope.undoHistory.pop();
 	};
 
@@ -635,6 +636,15 @@ function($scope, $http, $timeout, $filter, $modal){
 			$timeout($scope.displayEmoticons, 0);
 		}
 	};
+
+	// Hotkeys
+	hotkeys.add('ctrl+z', 'Undo last operation', $scope.undo);
+	hotkeys.add('q', 'Pen Tool', function(){$scope.tool = "pen";});
+	hotkeys.add('w', 'Line Tool', function(){$scope.tool = "line";});
+	hotkeys.add('e', 'Rectangle Tool', function(){$scope.tool = "rect";});
+	hotkeys.add('a', 'Circle Tool', function(){$scope.tool = "circ";});
+	hotkeys.add('s', 'Move Tool', function(){$scope.tool = "move";});
+	hotkeys.add('d', 'Bucket Tool', function(){$scope.tool = "fill";});
 
 	$scope.wSliderActive = false;
 	$scope.hSliderActive = false;
@@ -751,6 +761,10 @@ function FireEvent(ElementId, EventName) {
 
 var ImportMenuCtrl = function($scope, $modalInstance) {
 	$scope.data = {text: ""};
+
+	$scope.closeModal = function() {
+		$modalInstance.dismiss('close');
+	}
 
 	$scope.importMosaic = function() {
 		var ms = $scope.$parent;
