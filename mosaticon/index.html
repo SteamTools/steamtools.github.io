@@ -138,7 +138,9 @@
 			</div>
 			<button class="btn btn-inverse action-btn" ng-click="importMenu()">Import</button>
 			<button class="btn btn-inverse action-btn" ng-click="exportMosaic()">Export</button>
-			<br><br>
+			<br>
+			<div style="line-height: 8px; font-size: 10px;">Press <b>?</b> for keyboard shortcuts</div>
+			<br>
 			<div ng-mousemove="mouseMove($event)" ng-mousedown="mouseDown($event)" ng-mouseup="mouseUp()"
 				id="mosaic" ng-show="mosaic" ng-style="{'width': (width.value * 18) + 'px'}">
 				<div ng-repeat="row in mosaic track by $index" style="margin-top: -2px;">

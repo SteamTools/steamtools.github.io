@@ -638,7 +638,7 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 	};
 
 	// Hotkeys
-	hotkeys.add('ctrl+z', 'Undo last operation', $scope.undo);
+	hotkeys.add('ctrl+z', 'Undo', $scope.undo);
 	hotkeys.add('q', 'Pen Tool', function(){$scope.tool = "pen";});
 	hotkeys.add('w', 'Line Tool', function(){$scope.tool = "line";});
 	hotkeys.add('e', 'Rectangle Tool', function(){$scope.tool = "rect";});
