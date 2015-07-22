@@ -7,17 +7,19 @@ html, body {
 button{outline: none !important;}
 hr{border-top: 1px solid #AAA;}
 #container {
-	width: 970px;
+	width: 950px;
 	margin: auto;
+	position: relative;
 	text-align: center;
 	min-height: 100%;
 	background: url(/img/simple.png);
 	padding: 10px;
 	box-shadow: 0 0 12px 5px #666;
+	z-index: 1;
 }
 .center{text-align: center}
 .item{display: inline-block;
-	margin: 8px;
+	margin: 6px;
 	background-color: #292929;
 	border: 2px solid #3A3A3A;
 	padding: 12px 8px 4px 8px;
@@ -56,18 +58,10 @@ hr{border-top: 1px solid #AAA;}
 .topbutton:active {top: 12px; box-shadow: 0px 1px 0px 0px #888;}
 .popover {width: 130px; text-align: center;}
 .popover-content {padding: 4px 6px;}
-.adbox {
-	background: url(/img/simple.png) #EFEFEF;
-	float: right;
-	margin-right: -300px;
-	margin-top: 60px;
-	padding: 5px 0;
-	border-radius: 4px;
-}
 .itemBox{
 	background-color: #111;
 	border-radius: 5px;
-	margin: 2px;
+	margin: 1px;
 	padding: 6px;
 	text-align: left;
 }
@@ -92,4 +86,11 @@ hr{border-top: 1px solid #AAA;}
 .itemicon {
 	width: 62px;
 	height: 62px;
+}
+.adswitch_skin {
+	position: fixed !important;
+	top: 50px;
+	left: 50%;
+	margin-left: -821px;
+	z-index: 0;
 }

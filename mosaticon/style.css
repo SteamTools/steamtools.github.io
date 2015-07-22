@@ -13,13 +13,15 @@ a.item {color: #5BD;}
 a.item:hover {text-decoration: none;}
 
 #container {
-	width: 1024px;
+	width: 970px;
 	margin: auto;
 	text-align: center;
 	min-height: 100%;
 	background: url(/img/simple.png);
 	padding: 10px;
 	box-shadow: 0 0 12px 5px #666;
+	position: relative;
+	z-index: 1;
 }
 
 .topbutton {
@@ -43,7 +45,7 @@ a.item:hover {text-decoration: none;}
 .topbutton:hover {background-color: #CDE; text-decoration: none;}
 .topbutton:active {top: 12px; box-shadow: 0px 1px 0px 0px #888;}
 #stepbox{display: inline-block; vertical-align: top; display: inline-block;}
-#preview {width: 600px; margin-top: 60px; display: inline-block;}
+#preview {width: 560px; margin-top: 60px; display: inline-block;}
 .btn{padding: 4px 8px;}
 .tool-btn{height: 40px; width: 42px;}
 .action-btn{margin-top: 8px; padding: 9px 8px; display: inline-block}
@@ -60,11 +62,10 @@ a.item:hover {text-decoration: none;}
 select, input[type="file"] {height: 22px; line-height: initial; width: 200px;}
 select, input[type="number"] {width: 32px; margin-top: 0px; padding: 0 4px 01px; padding-right: 1px; margin-bottom: 2px;}
 
-.adbox {
-	background: url(/img/simple.png) #EFEFEF;
-	float: left;
-	margin-left: -300px;
-	margin-top: 60px;
-	padding: 5px 0;
-	border-radius: 4px;
+.adswitch_skin {
+	position: fixed !important;
+	top: 50px;
+	left: 50%;
+	margin-left: -821px;
+	z-index: 0;
 }

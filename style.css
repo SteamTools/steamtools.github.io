@@ -33,6 +33,14 @@ body {
 	box-shadow: 0 0 12px 5px #666;
 }
 
+.adswitch_skin {
+	position: fixed !important;
+	top: 50px;
+	left: 50%;
+	margin-left: -821px;
+	z-index: 0;
+}
+
 h1{
 	margin: 10px;
 	font-size: 50pt;
