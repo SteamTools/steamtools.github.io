@@ -97,6 +97,7 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 	$scope.fetchEmoticons = function(user) {
 		$scope.status = "Loading...";
 		$scope.orderBy = $filter('orderBy');
+		$scope.processedEmotes = false;
 
 		var url = "http://mosaticon.appspot.com/FetchEmotes?id=" + user;
 		url += "&callback=JSON_CALLBACK";
@@ -198,10 +199,12 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 		return hue;
 	};
 
+	$scope.processedEmotes = false;
 	$scope.process = function() {
 		$scope.processed += 1;
 		if ($scope.processed >= $scope.emoticons.length) {
 			$scope.emoticons = $scope.orderBy($scope.emoticons, 'hue');
+			$scope.processedEmotes = true;
 			$scope.status = "";
 			if (!$scope.imageLoaded) {
 				$timeout($scope.displayEmoticons, 0);
