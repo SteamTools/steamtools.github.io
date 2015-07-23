@@ -500,9 +500,10 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 		$scope.clicking = true;
 		$scope.mosaicCopy = $scope.mosaic.copy();
 
+		var container = document.getElementById("container");
 		var mdiv = document.getElementById("mosaic");
-		$scope.startX = e.pageX - mdiv.offsetLeft - 8;
-		$scope.startY = e.pageY - mdiv.offsetTop - 8;
+		$scope.startX = e.pageX - container.offsetLeft - mdiv.offsetLeft - 9;
+		$scope.startY = e.pageY - container.offsetTop - mdiv.offsetTop - 9;
 
 		$scope.mouseMove(e);
 	};
