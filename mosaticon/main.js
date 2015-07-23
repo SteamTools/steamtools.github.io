@@ -383,9 +383,10 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 	$scope.mouseMove = function(e) {
 		if (!$scope.clicking) return;
 
+		var container = document.getElementById("container");
 		var mdiv = document.getElementById("mosaic");
-		var x = e.pageX - mdiv.offsetLeft - 8;
-		var y = e.pageY - mdiv.offsetTop - 8;
+		var x = e.pageX - container.offsetLeft - mdiv.offsetLeft - 9;
+		var y = e.pageY - container.offsetTop - mdiv.offsetTop - 9;
 		var x1 = Math.max(0, Math.min(Math.floor(x/18), $scope.mosaic[0].length - 1));
 		var y1 = Math.max(0, Math.min(Math.floor(y/18), $scope.mosaic.length - 1));
 
