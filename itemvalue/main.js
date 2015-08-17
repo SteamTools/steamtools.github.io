@@ -96,6 +96,7 @@ function InvCtrl($scope, $http) {
 		'440': "TF2",
 		'730': "CS:GO",
 		'570': "Dota 2"
+		'295110': "H1Z1"
 	};
 
 	if (localStorage.hasOwnProperty("lastUser")) {
@@ -223,7 +224,7 @@ function InvCtrl($scope, $http) {
 
 		var name = hash.slice(0, pos);
 		var appid = hash.slice(pos + 1);
-		var validIDs = ["753", "570", "440", "730"];
+		var validIDs = ["753", "570", "440", "730", "295110"];
 		if (validIDs.indexOf(appid) < 0) return;
 
 		$scope.UserID = name;
