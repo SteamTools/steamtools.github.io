@@ -101,12 +101,12 @@ function InvCtrl($scope, $http) {
 		'753': "Community",
 		'440': "TF2",
 		'730': "CS:GO",
-		'570': "Dota 2"
+		'570': "Dota 2",
 		'295110': "H1Z1"
 	};
 
 	if (localStorage.hasOwnProperty("lastUser")) {
-		$scope.UserID = localStorage.lastUser.replace('/', '');;
+		$scope.UserID = localStorage.lastUser.replace('/', '');
 	}
 
 	if (localStorage.hasOwnProperty("lastAppid")) {
@@ -145,7 +145,7 @@ function InvCtrl($scope, $http) {
 	$scope.dupesFilter = function(item) {
 		if (!$scope.dupes) return true;
 		return item.count > 1;
-	}
+	};
 
 	$scope.retries = 0;
 	$scope.fetchItems = function(user, appid){
