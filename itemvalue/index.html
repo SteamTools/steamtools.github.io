@@ -105,7 +105,7 @@
 
 			<div class="itemBox">
 				<a class="item" ng-repeat="i in items | filter:dupesFilter | filter:typeFilter | filter:filterText | orderBy:'price':1 | limitTo:pageLimit"
-					ng-style="{'border': '1px solid #' + i.color, 'background-color': '#' + i.bg}"
+					ng-style="{'border': '2px solid #' + i.color, 'background-color': '#' + i.bg}"
 					target="_blank" ng-href="{{LISTING + i.url}}">
 					<span ng-hide="i.count == 1" class="counter">x{{i.count}}</span>
 					<span ng-if="i.rarity || i.rcolor" class="rarity {{i.rarity + appidLoaded}}" ng-style="{'background-color': '#' + i.rcolor}"
