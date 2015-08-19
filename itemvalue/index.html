@@ -16,12 +16,14 @@
 	<link rel="stylesheet" href="style.css">
 </head>
 <body ng-controller="InvCtrl" ng-cloak>
-	<a class="topbutton" style="left: 20px;" href="../">&laquo; Hub</a>
-	<a id="feedback" class="topbutton" style="right: 25px;" href="http://steamcommunity.com/id/Ph0X"
-		data-uv-trigger popover-placement="bottom" popover-trigger="show" popover-animation="true"
-		popover="Got a suggestion? Found a bug? Leave feedback!">
-		Feedback
-	</a>
+	<a class="corner topbutton" style="left: 25px;" href="../">&laquo; Hub</a>
+	<div class="corner" style="right: 25px;">
+		<a target="_blank" href="https://twitter.com/toolssteam"><img src="/img/twitter.png" alt="Twitter"></a>
+		<a target="_blank" href="http://steamcommunity.com/groups/steam_tools"><img src="/img/steam.png" alt="Steam Group"></a>
+		<a class="topbutton" id="feedback"  href="http://steamcommunity.com/id/Ph0X"
+			data-uv-trigger popover-placement="bottom" popover-trigger="show" popover-animation="true"
+			popover="Got a suggestion? Found a bug? Leave feedback!">Feedback</a>
+	</div>
 
 	<div id="container">
 		<div style="float: left; margin-bottom: -100px; margin-top: 40px;">
@@ -35,7 +37,7 @@
 			</script>
 		</div>
 
-		<div style="margin: 10px; font-weight: bold">Load your inventory and sort the items by market value</div>
+		<div style="margin: 6px; font-weight: bold">Load your inventory and sort the items by market value</div>
 		<div style="padding: 0 10px;" class="btn-group">
 			<span class="input-prepend" style="margin-bottom:0">
 				<span class="add-on" style="width: 60px">Type</span>
@@ -97,14 +99,14 @@
 
 			<div class="input-prepend" style="margin: 6px">
 				<span class="add-on" style="width:50px">Filter</span>
-				<input class="span2" type="text" ng-model="filterText">
+				<input class="span3" type="text" ng-model="filterText">
 			</div>
 
 
 			<br>
 
 			<div class="itemBox">
-				<a class="item" ng-repeat="i in items | filter:dupesFilter | filter:typeFilter | filter:filterText | orderBy:'price':1 | limitTo:pageLimit"
+				<a class="item" ng-repeat="i in items | filter:dupesFilter | filter:typeFilter | filter:filterText | orderBy:'price':1 | limitTo:iconLimit"
 					ng-style="{'border': '2px solid #' + i.color, 'background-color': '#' + i.bg}"
 					target="_blank" ng-href="{{LISTING + i.url}}">
 					<span ng-hide="i.count == 1" class="counter">x{{i.count}}</span>
@@ -116,7 +118,7 @@
 						</span>
 				</a>
 			</div>
-			<button style="margin: 8px;"ng-show="(items | filter:dupesFilter | filter:typeFilter | filter:filterText).length > pageLimit" type="button" class="btn" ng-click="pageLimit=9999999">Show all</button>
+			<button style="margin: 5px;"ng-show="(items | filter:dupesFilter | filter:typeFilter | filter:filterText).length > iconLimit" type="button" class="btn" ng-click="iconLimit=9999999">Show all</button>
 		</div>
 	</div>
 

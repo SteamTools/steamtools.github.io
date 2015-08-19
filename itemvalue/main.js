@@ -95,7 +95,7 @@ function InvCtrl($scope, $http) {
 	$scope.curIndex = 0;
 	$scope.fee = false;
 	$scope.dupes = false;
-	$scope.pageLimit = 120;
+	$scope.iconLimit = 54;
 
 	$scope.typeMap = {
 		'753': "Community",
@@ -149,6 +149,11 @@ function InvCtrl($scope, $http) {
 
 	$scope.retries = 0;
 	$scope.fetchItems = function(user, appid){
+		$scope.iconLimit = 54;
+		$scope.status = "Loading...";
+		var help = document.getElementById("help");
+		help.innerHTML = "";
+
 		Math.seedrandom(user);
 		user = encodeURIComponent(user);
 		var ind = Math.floor(Math.random() * $scope.SERVERS.length);
@@ -156,11 +161,10 @@ function InvCtrl($scope, $http) {
 		var domain = "http://" + $scope.SERVERS[ind] + ".appspot.com";
 		var url = domain + "/ParseInv?id=" + user + "&app=" + appid;
 		url += "&callback=JSON_CALLBACK";
-		$scope.status = "Loading...";
+
 		$http.jsonp(url).success(function(data){
 			$scope.type = "0";
 
-			var help = document.getElementById("help");
 			if (data.help === 1) {
 				help.innerHTML = "Make sure your " +
 					"<a href='http://steamcommunity.com/my/edit/settings'" +

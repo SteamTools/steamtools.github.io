@@ -18,12 +18,14 @@
 	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.21/angular.min.js"></script>
 </head>
 <body ng-controller="CardCtrl" ng-cloak ng-class="{fade: true}">
-	<a class="topbutton" style="left: 20px;" href="../">&laquo; Hub</a>
-	<a id="feedback" class="topbutton" style="right: 25px;" href="http://steamcommunity.com/id/Ph0X"
-		data-uv-trigger popover-placement="bottom" popover-trigger="show" popover-animation="true"
-		popover="Got a suggestion? Found a bug? Leave feedback!">
-		Feedback
-	</a>
+	<a class="corner topbutton" style="left: 25px;" href="../">&laquo; Hub</a>
+	<div class="corner" style="right: 25px;">
+		<a target="_blank" href="https://twitter.com/toolssteam"><img src="/img/twitter.png" alt="Twitter"></a>
+		<a target="_blank" href="http://steamcommunity.com/groups/steam_tools"><img src="/img/steam.png" alt="Steam Group"></a>
+		<a class="topbutton" id="feedback"  href="http://steamcommunity.com/id/Ph0X"
+			data-uv-trigger popover-placement="bottom" popover-trigger="show" popover-animation="true"
+			popover="Got a suggestion? Found a bug? Leave feedback!">Feedback</a>
+	</div>
 
 	<div class="panel left">
 		<span class="icon glyphicon glyphicon-cog"></span>

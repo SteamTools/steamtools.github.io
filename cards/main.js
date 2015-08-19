@@ -439,6 +439,8 @@ function($scope, $http, $filter, $compile, $modal){
 
 	if (localStorage.hasOwnProperty("curIndex")) {
 		$scope.curIndex = parseInt(localStorage.curIndex, 10);
+		if (!$scope.CDATA.hasOwnProperty($scope.curIndex))
+			$scope.curIndex = 0;
 	}
 	// Update table whenever currency is changed
 	$scope.$watch('curIndex', function(){

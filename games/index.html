@@ -19,8 +19,14 @@
 	<link rel="stylesheet" type="text/css" href="style.css" media="all">
 </head>
 <body ng-controller="SteamCtrl" ng-cloak>
-	<a class="topbutton" style="left: 20px;" href="../">&laquo; Hub</a>
-	<a class="topbutton" style="right: 20px;" href="http://steamcommunity.com/id/Ph0X" data-uv-trigger>Feedback</a>
+	<a class="corner topbutton" style="left: 25px;" href="../">&laquo; Hub</a>
+	<div class="corner" style="right: 25px;">
+		<a target="_blank" href="https://twitter.com/toolssteam"><img src="/img/twitter.png" alt="Twitter"></a>
+		<a target="_blank" href="http://steamcommunity.com/groups/steam_tools"><img src="/img/steam.png" alt="Steam Group"></a>
+		<a class="topbutton" id="feedback"  href="http://steamcommunity.com/id/Ph0X"
+			data-uv-trigger popover-placement="bottom" popover-trigger="show" popover-animation="true"
+			popover="Got a suggestion? Found a bug? Leave feedback!">Feedback</a>
+	</div>
 
 	<script>
 	UserVoice=window.UserVoice||[];

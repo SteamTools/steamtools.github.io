@@ -65,11 +65,15 @@
 			padding: 5px 0;
 			margin-top: 10px;
 		}
+		.corner {
+			position: absolute;
+			opacity: 0.8;
+			z-index: 10;
+			top: 10px;
+		}
 		.topbutton {
 			color: #159;
-			display: block;
-			position: absolute;
-			top: 10px;
+			display: inline-block;
 			font-weight: bold;
 			font-size: 12pt;
 			color: #159;
@@ -80,8 +84,9 @@
 			border: 1px solid #666;
 			width: 75px;
 			text-align: center;
-			opacity: 0.8;
+			margin: 0 3px;
 		}
+		.corner img:hover {opacity: 0.8;}
 		.topbutton:hover {background-color: #CDE; text-decoration: none;}
 		.topbutton:active {top: 12px; box-shadow: 0px 1px 0px 0px #888;}
 	</style>
@@ -89,8 +94,14 @@
 	<?php include_once("../sc.php") ?>
 </head>
 <body ng-controller="EmoteCtrl" ng-cloak>
-	<a class="topbutton" style="left: 20px;" href="../">&laquo; Hub</a>
-	<a class="topbutton" style="right: 20px;" href="http://steamcommunity.com/id/Ph0X" data-uv-trigger>Feedback</a>
+	<a class="corner topbutton" style="left: 25px;" href="../">&laquo; Hub</a>
+	<div class="corner" style="right: 25px;">
+		<a target="_blank" href="https://twitter.com/toolssteam"><img src="/img/twitter.png" alt="Twitter"></a>
+		<a target="_blank" href="http://steamcommunity.com/groups/steam_tools"><img src="/img/steam.png" alt="Steam Group"></a>
+		<a class="topbutton" id="feedback"  href="http://steamcommunity.com/id/Ph0X"
+			data-uv-trigger popover-placement="bottom" popover-trigger="show" popover-animation="true"
+			popover="Got a suggestion? Found a bug? Leave feedback!">Feedback</a>
+	</div>
 
 	<div style="margin: 10px">
 		<div style="display: inline-block; vertical-align: top; margin-top: 7px;">
