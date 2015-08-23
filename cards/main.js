@@ -94,6 +94,7 @@ function($scope, $http, $filter, $compile, $modal){
 				return;
 			}
 
+			document.location.hash = '/' + $scope.UserID;
 			localStorage.lastUser = $scope.UserID;
 			$scope.user = data;
 			$scope.userGames = {};
@@ -457,9 +458,13 @@ function($scope, $http, $filter, $compile, $modal){
 		$scope.table.draw();
 	}, true);
 
-	if (getCookie("oauth_steamid") !== null) {
+	var hash = document.location.hash.slice(1).replace('/', '');
+	if (hash && hash.trim().length > 0) {
+		$scope.UserID = hash;
+		$scope.userLogin($scope.UserID);
+	} else if (getCookie("oauth_steamid") !== null) {
 		$scope.UserID = getCookie("oauth_steamid");
-		$scope.userLogin(getCookie("oauth_steamid"));
+		$scope.userLogin($scope.UserID);
 	} else if (localStorage.hasOwnProperty("lastUser") && localStorage.lastUser !== "undefined") {
 		$scope.UserID = localStorage.lastUser;
 		$scope.userLogin($scope.UserID);
