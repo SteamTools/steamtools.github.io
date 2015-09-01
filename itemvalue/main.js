@@ -82,7 +82,7 @@ angular.module('valueApp', ['ui.bootstrap'])
 	};
 });
 
-function InvCtrl($scope, $http) {
+function InvCtrl($scope, $http, $filter) {
 	$scope.SERVERS = ["item-value", "item-value2", "item-value3", "item-value4", "item-value5", "item-value6"];
 	$scope.CDATA = CURRENCY_DATA;
 	$scope.ECONOMY = "http://cdn.steamcommunity.com/economy/image/";
@@ -96,6 +96,7 @@ function InvCtrl($scope, $http) {
 	$scope.fee = false;
 	$scope.dupes = false;
 	$scope.iconLimit = 54;
+	$scope.useTable = false;
 
 	$scope.typeMap = {
 		'753': "Community",
@@ -104,29 +105,6 @@ function InvCtrl($scope, $http) {
 		'570': "Dota 2",
 		'295110': "H1Z1"
 	};
-
-	if (localStorage.hasOwnProperty("lastUser")) {
-		$scope.UserID = localStorage.lastUser.replace('/', '');
-	}
-
-	if (localStorage.hasOwnProperty("lastAppid")) {
-		$scope.appid = localStorage.lastAppid;
-	}
-
-	if (window.localStorage !== undefined && !localStorage.feedbackPrompt) {
-		setTimeout(function(){
-			FireEvent("feedback", "show");
-			localStorage.feedbackPrompt = true;
-		}, 100000);
-	}
-
-	if (localStorage.curIndex) $scope.curIndex = localStorage.curIndex;
-	if (localStorage.appid) $scope.appid = localStorage.appid;
-	$scope.$watch('curIndex', function(){localStorage.curIndex = $scope.curIndex;});
-	$scope.$watch('appid', function(){localStorage.appid = $scope.appid;});
-
-	if (!$scope.CDATA.hasOwnProperty($scope.curIndex))
-		$scope.curIndex = 0;
 
 	$scope.setCurrency = function(i) {
 		$scope.curIndex = i;
@@ -188,12 +166,21 @@ function InvCtrl($scope, $http) {
 
 			$scope.appidLoaded = appid;
 			$scope.items = data.items;
+			$scope.rows = [];
 
 			if ($scope.items.length > 0) {
 				for (var i = 0; i < $scope.items.length; i++) {
 					var item = $scope.items[i];
 					item.price = parseFloat(item.price);
+					$scope.rows.push(new Item(item));
 				}
+
+				$scope.table.clear();
+				$scope.table.columns().visible(false);
+				$scope.table.columns($scope.visCols[appid]).visible(true);
+				$scope.table.columns.adjust().draw(false);
+				$scope.table.rows.add($scope.rows).draw();
+
 				var url = "http://steamcommunity.com/";
 				if (data.name.length === 17 && !isNaN(data.name)) {
 					url += "profiles/" + data.name;
@@ -223,6 +210,124 @@ function InvCtrl($scope, $http) {
 		else return q.type === $scope.TYPES[$scope.type];
 	};
 
+	$scope.formatCurrency = function(data, type) {
+		// Only perform if it's for displaying
+		if (type !== "display"){
+			return isNaN(data) ? 9999999 : data;
+		}
+		return $filter('currency')(data, $scope.curIndex, $scope.fee);
+	};
+
+	$scope.qualitySort = function(data, type) {
+		if (type === "sort") return QUALITY_SORT[data[0]] || 0;
+		return addColor(data[0], data[1]);
+	};
+
+	$scope.raritySort = function(data, type) {
+		if (type === "sort") return RARITY_SORT[data[0]] || 0;
+		return addColor(data[0], data[1]);
+	};
+
+	$scope.tableColumns = [
+	/* 1*/ {data: 'image', title: "Image", width: "30px", orderable: false},
+	/* 0*/ {data: 'name', title: "Item Name", width: "250px", render: overflow},
+	/* 1*/ {data: 'game', title: "Game", width: "250px", render: overflow},
+	/* 2*/ {data: 'type', title: "Type", width: "80px"},
+	/* 3*/ {data: 'quality', title: "Quality", width: "80px", render: $scope.qualitySort, orderSequence: ['desc', 'asc']},
+	/* 4*/ {data: 'rarity', title: "Rarity", width: "80px", render: $scope.raritySort, orderSequence: ['desc', 'asc']},
+	/* 5*/ {data: 'count', title: "Count", width: "40px", orderSequence: ['desc', 'asc']},
+	/* 6*/ {data: 'price', title: "Price", width: "60px", orderSequence: ['desc', 'asc'], render: $scope.formatCurrency},
+	];
+
+	$scope.visCols = {
+		'753': [1, 2, 3, 5, 6, 7],
+		'440': [0, 1, 4, 6, 7],
+		'730': [0, 1, 5, 6, 7],
+		'570': [0, 1, 4, 5, 6, 7],
+		'295110': [0, 1, 3, 6, 7],
+	};
+
+	// Create the table
+	$scope.table = $('#item_table').DataTable({
+		dom: "t<'row'<'col-xs-6'i><'col-xs-6'p>>",
+		pageLength: 40,
+		autoWidth: false,
+		scrollX: true,
+		scrollY: "auto",
+		stateSave: true,
+		order: [[3, 'desc']],
+		scrollCollapse: true,
+		deferRender: true,
+		language: {
+			emptyTable: "Loading item data..."
+		},
+		columnDefs: [
+			{class: "center", targets: "_all"},
+		],
+		columns: $scope.tableColumns,
+		drawCallback: function( settings ) {
+			$(".icon:not(.hover-zoom)").thumbPopup();
+		}
+	});
+
+	// Add custom filter for all the set filtering
+	$.fn.dataTableExt.afnFiltering.push(
+		function(settings, data, dataIndex) {
+			var row = $scope.rows[dataIndex];
+
+			var result = true;
+
+			if ($scope.dupes) {
+				result = result && row.count > 1;
+			}
+
+			if ($scope.type !== "0") {
+				result = result && row.type === $scope.TYPES[$scope.type];
+			}
+
+			return result;
+		}
+	);
+
+
+	if (localStorage.hasOwnProperty("lastUser")) {
+		$scope.UserID = localStorage.lastUser.replace('/', '');
+	}
+
+	if (localStorage.hasOwnProperty("lastAppid")) {
+		$scope.appid = localStorage.lastAppid;
+	}
+
+	if (window.localStorage !== undefined && !localStorage.feedbackPrompt) {
+		setTimeout(function(){
+			FireEvent("feedback", "show");
+			localStorage.feedbackPrompt = true;
+		}, 100000);
+	}
+
+	if (localStorage.curIndex) $scope.curIndex = localStorage.curIndex;
+	if (localStorage.appid) $scope.appid = localStorage.appid;
+	if (localStorage.useTable) $scope.useTable = JSON.parse(localStorage.useTable);
+	$scope.$watch('appid', function(){localStorage.appid = $scope.appid;});
+	$scope.$watch('useTable', function(){localStorage.useTable = $scope.useTable;});
+	$scope.$watch('fee', function(){$scope.table.rows().invalidate();});
+	$scope.$watch('dupes', function(){$scope.table.draw();});
+	$scope.$watch('type', function(){$scope.table.draw();});
+	$scope.$watch('curIndex', function(){
+		localStorage.curIndex = $scope.curIndex;
+		$scope.table.rows().invalidate();
+	});
+	$scope.$watch('filterText', function(v){
+			$scope.table.search(v);
+			$scope.table.draw();
+	});
+
+	if (!$scope.CDATA.hasOwnProperty($scope.curIndex))
+		$scope.curIndex = 0;
+
+
+
+
 	(function() {
 		var hash = document.location.hash.slice(1);
 		if (!hash || hash.trim().length === 0) return;
@@ -241,8 +346,30 @@ function InvCtrl($scope, $http) {
 		$scope.appid = appid;
 		$scope.loadItems();
 	})();
-
 }
+
+// Set class holding all the information about a set
+function Item(data) {
+	var market_link = "http://steamcommunity.com/market/listings/" + data.url;
+	this.name = "<a href='" + market_link + "' target='_blank'><span style='color: #";
+	this.name = this.name +  data.color + "'>" + data.name + "</span></a>";
+	this.game = data.game || null;
+	this.type = data.type || null;
+	this.rarity = [data.rarity, data.rcolor];
+	this.quality = [data.quality, data.qcolor];
+	this.count = data.count;
+	this.price = data.price;
+	var image_url = "http://cdn.steamcommunity.com/economy/image/" + data.icon + "/360fx360f";
+	this.image = "<i class='icon icon-fullscreen icon-white' src='" + image_url + "'></i>";
+}
+
+function addColor(text, color) {
+	if (text)
+		return "<span style='color: #" + color + "'>" + text + "</span>";
+	else
+		return null;
+}
+
 
 function FireEvent(ElementId, EventName) {
     if(document.getElementById(ElementId) !== null) {
@@ -256,3 +383,58 @@ function FireEvent(ElementId, EventName) {
         }
     }
 }
+
+// Little hack to have overflow ellipsis
+function overflow(data) {
+	return '<span class="name">' + data + '</span>';
+}
+
+
+var RARITY_SORT = {
+	"Common": 10,
+	"Uncommon": 20,
+	"Rare": 30,
+
+	"Base Grade": 10,
+	"Consumer Grade": 20,
+	"Industrial Grade": 30,
+	"Mil-Spec Grade": 40,
+	"High Grade": 50,
+	"Restricted": 60,
+	"Remarkable": 70,
+	"Classified": 80,
+	"Exotic": 85,
+	"Covert": 90,
+	"Contraband": 95,
+	"Extraordinary": 99,
+
+	"Standard": 10,
+	"Inscribed": 20,
+	"Genuine": 30,
+	"Corrupted": 40,
+	"Frozen": 50,
+	"Exalted": 60,
+	"Heroic": 70,
+	"Elder": 80,
+	"Unusual": 90,
+	"Autographed": 100,
+
+};
+
+var QUALITY_SORT = {
+	"Unique": 10,
+	"Vintage": 20,
+	"Strange": 30,
+	"Genuine": 40,
+	"Haunted": 50,
+	"Decorated Weapon": 60,
+	"Unusual": 70,
+
+	"Common": 10,
+	"Uncommon": 20,
+	"Rare": 30,
+	"Mythical": 40,
+	"Immortal": 50,
+	"Legendary": 60,
+	"Arcana": 70,
+};
