@@ -144,7 +144,12 @@
 		<button class="btn btn-inverse" ng-click="setOrder(byRandom)">Random</button>
 	</div><br>
 
+	<div id="switch_placeholder_f37c7b4999258037274f1c470dc41520" class="switch_placeholder" style="margin: auto; margin-top: 10px"></div>
+	<script> (__scads = window.__scads || []).push({"z":3189,"targetId":"switch_placeholder_f37c7b4999258037274f1c470dc41520","domain":"delivery.e.switchadhub.com","width":"728","height":"90"}); </script>
+	<script async src="//delivery.e.switchadhub.com/adserver/sat.js?v=2"></script>
+
 	<div id="loading" ng-show="bg.length == 0">Loading...</div>
+
 	<div id="items" ng-show="bg.length > 0" ng-style="{'width': divWidth}">
 		<div class="bg" ng-repeat="b in bg | filter:ownTest | filter:filterText | orderBy:order:rev | limitTo:numLines*itemsPerLine"
 		ng-style="getStyle(b.pos)" title="{{b.name}}" ng-click="open(b.img, $event)">
