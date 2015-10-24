@@ -34,7 +34,7 @@ SteamApp.directive('fadey', function() {
 SteamApp.directive('adjustSize', function() {
 	return function(scope) {
 		if (scope.$last){
-			var h = $(window).height() - 150;
+			var h = $(window).height() - 250;
 			$("#game-content").height(h);
 		}
 	};
@@ -53,7 +53,7 @@ SteamApp.directive('adjustSize', function() {
 		$(window).resize(function(){
 			var games = $('.mCSB_container').children();
 			if (games.length === 0) return;
-			var h = $(window).height() - 150;
+			var h = $(window).height() - 250;
 			$("#game-content").height(h);
 		});
 	});
