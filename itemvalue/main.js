@@ -189,7 +189,10 @@ function InvCtrl($scope, $http, $filter) {
 				}
 				url += "/inventory/#" + $scope.appidLoaded;
 				$scope.status = "";
-				help.innerHTML = "<a href='" + url + "' target='_blank'>Inventory Loaded</a>";
+				var html = "<a href='" + url + "' target='_blank'>Inventory</a>";
+				html += "| <a href='http://steamrep.com/search?q=" + data.name + "' target='_blank'>SteamRep</a>";
+				help.innerHTML = html;
+
 			} else {
 				var type = $scope.typeMap[$scope.appid];
 				$scope.status = "No " + type + " items found.";
