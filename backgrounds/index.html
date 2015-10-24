@@ -147,7 +147,7 @@
 		<button class="btn btn-inverse" ng-click="setOrder(byPrice)">Price</button>
 		<button class="btn btn-inverse" ng-click="setOrder(byRandom)">Random</button>
 	</div><br>
-	<div style="width: 700px; margin: auto; margin-top: -12px">
+	<div style="width: 700px; margin: auto; margin-top: -12px" ng-show="showRange">
 		<span style="font-weight: bold; font-size: 14pt">{{orderName}}: </span>
 		<div class="slider" range-slider min="0" max="100" model-min="lMin" model-max="lMax"></div>
 	</div>

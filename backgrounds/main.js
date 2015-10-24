@@ -32,7 +32,7 @@ angular
 			}
 
 			if (newMin <= data && data <= newMax)
-				newList.push(data);
+				newList.push(input[i]);
 		}
 		return newList;
 	};
@@ -177,10 +177,18 @@ function($scope, $http, $location) {
 	$scope.byDate = function Date(e){ return e.time;	};
 
 	$scope.order = $scope.byDate;
+	$scope.showRange = true;
 	$scope.rev = true;
 
 	$scope.setOrder = function(orderFun) {
-		$scope.limits.type = orderFun.name;
+		var t = orderFun.name;
+		$scope.limits.type = t;
+		if (t === "Random" || t === "Name" || t === "Game") {
+			$scope.showRange = false;
+		} else {
+			$scope.showRange = true;
+		}
+
 		if ($scope.order === orderFun)
 			$scope.rev = !$scope.rev;
 		else {
