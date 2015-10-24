@@ -189,6 +189,9 @@ function($scope, $http, $location) {
 			$scope.showRange = true;
 		}
 
+		$scope.limits.min = 0;
+		$scope.limits.max = 100;
+
 		if ($scope.order === orderFun)
 			$scope.rev = !$scope.rev;
 		else {

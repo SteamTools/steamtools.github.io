@@ -148,7 +148,7 @@
 		<button class="btn btn-inverse" ng-click="setOrder(byRandom)">Random</button>
 	</div><br>
 	<div style="width: 700px; margin: auto; margin-top: -12px" ng-show="showRange">
-		<span style="font-weight: bold; font-size: 14pt">{{orderName}}: </span>
+		<span style="font-weight: bold; font-size: 14pt">{{limits.type}}: </span>
 		<div class="slider" range-slider min="0" max="100" model-min="limits.min" model-max="limits.max"></div>
 	</div>
 
@@ -159,7 +159,7 @@
 	<div id="loading" ng-show="bg.length == 0">Loading...</div>
 
 	<div id="items" ng-show="bg.length > 0" ng-style="{'width': divWidth}">
-		<div class="bg" ng-repeat="b in bg | filter:ownTest | filter:filterText | range:limits | orderBy:order:rev | limitTo:numLines*itemsPerLine"
+		<div class="bg" ng-repeat="b in bg | filter:ownTest | filter:filterText | orderBy:order:rev | range:limits | limitTo:numLines*itemsPerLine"
 		ng-style="getStyle(b.pos)" title="{{b.name}}" ng-click="open(b.img, $event)">
 			<div class="name">{{b.name}}</div>
 			<a target="_blank" href="{{MARKET_URL + b.url}}" class="market">{{b.price | currency}}</a>
