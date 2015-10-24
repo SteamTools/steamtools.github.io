@@ -1,5 +1,42 @@
 angular
-.module('BGApp', [])
+.module('BGApp', ['ui-rangeSlider'])
+.filter('range', function() {
+	return function(input, limits) {
+		var newMin, newMax;
+		if (limits.type === "Random" || limits.type === "Name" || limits.type === "Game") {
+			return input;
+		} else if (limits.type === "Hue" || limits.type === "Brightness" || limits.type === "Saturation") {
+			newMin = limits.min / 100 * 255;
+			newMax = limits.max / 100 * 255;
+		} else if (limits.type === "Price") {
+			newMin = limits.min / 100 * limits.maxPrice;
+			newMax = limits.max / 100 * limits.maxPrice;
+		} else if (limits.type === "Date") {
+			newMin = limits.min / 100 * limits.dateRange;
+			newMax = limits.max / 100 * limits.dateRange;
+		}
+
+		var data = 0;
+		var newList = [];
+		for (var i = 0; i < input.length; i++) {
+			if (limits.type === "Hue") {
+				data = input[i].hls[0];
+			} else if (limits.type === "Brightness") {
+				data = input[i].hls[1];
+			} else if (limits.type === "Saturation") {
+				data = input[i].hls[2];
+			} else if (limits.type === "Price") {
+				data = input[i].price;
+			} else if (limits.type === "Date") {
+				data = input[i].time;
+			}
+
+			if (newMin <= data && data <= newMax)
+				newList.push(data);
+		}
+		return newList;
+	};
+})
 .controller('BGCtrl', ['$scope', '$http', '$location',
 function($scope, $http, $location) {
 	$scope.MARKET_URL = "http://steamcommunity.com/market/listings/";
@@ -7,16 +44,28 @@ function($scope, $http, $location) {
 	$scope.INV_URL = "http://mosaticon2.appspot.com/FetchBackgrounds?id=";
 	$scope.bg = [];
 
+	$scope.limits = {
+		min: 0,
+		max: 100,
+		type: 'Date',
+		dateRange: (Date.now()/1000) - 1368590400,
+		maxPrice: 400,
+	};
+
 	$scope.numLines = 20;
 	$scope.itemsPerLine = 0;
 	$scope.itemsReady = false;
 
 	$http.get('http://cdn.steam.tools/data/bg.json').success(function(data){
+		var maxPrice = 0;
 		for (var i = 0; i < data.length; i++) {
 			data[i].appid = data[i].url.split('-')[0].substr(4);
 			data[i].price = data[i].price === null ? Infinity : parseFloat(data[i].price);
+			if (data[i].price < 1000 && data[i].price > maxPrice)
+				maxPrice = data[i].price;
 		}
 
+		$scope.limits.maxPrice = maxPrice;
 		$scope.bg = data;
 		$scope.genDates();
 	});
@@ -32,9 +81,9 @@ function($scope, $http, $location) {
 		for (var i = 0; i < $scope.bg.length; i++) {
 			var e = $scope.bg[i];
 			if ($scope.dates.hasOwnProperty(e.appid)) {
-				e.time = $scope.dates[e.appid];
+				e.time = $scope.dates[e.appid] - 1368590400;
 			} else {
-				e.time = 9999999999;
+				e.time = $scope.limits.dateRange - 1;
 			}
 		}
 	};
@@ -118,19 +167,20 @@ function($scope, $http, $location) {
 		document.body.appendChild(img);
 	};
 
-	$scope.byHue = function(e){ return e.hls[0]; };
-	$scope.byBrightness = function(e){ return -e.hls[1]; };
-	$scope.bySaturation = function(e){ return e.hls[2]; };
-	$scope.byName = function(e){ return e.name.toLowerCase(); };
-	$scope.byGame = function(e){ return e.game.toLowerCase(); };
-	$scope.byPrice = function(e){ return e.price; };
-	$scope.byRandom = function(e){ return e.name.hashCode(); };
-	$scope.byDate = function(e){ return e.time;	};
+	$scope.byHue = function Hue(e){ return e.hls[0]; };
+	$scope.byBrightness = function Brightness(e){ return -e.hls[1]; };
+	$scope.bySaturation = function Saturation(e){ return e.hls[2]; };
+	$scope.byName = function Name(e){ return e.name.toLowerCase(); };
+	$scope.byGame = function Game(e){ return e.game.toLowerCase(); };
+	$scope.byPrice = function Price(e){ return e.price; };
+	$scope.byRandom = function Random(e){ return e.name.hashCode(); };
+	$scope.byDate = function Date(e){ return e.time;	};
 
 	$scope.order = $scope.byDate;
 	$scope.rev = true;
 
 	$scope.setOrder = function(orderFun) {
+		$scope.limits.type = orderFun.name;
 		if ($scope.order === orderFun)
 			$scope.rev = !$scope.rev;
 		else {

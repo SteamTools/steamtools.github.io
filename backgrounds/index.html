@@ -8,9 +8,8 @@
 	<title>Background Gallery</title>
 	<link rel="shortcut icon" href="/favicon.ico">
 	<link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.no-icons.min.css" rel="stylesheet">
-	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.6/angular.min.js"></script>
-	<script src="ng-infinite-scroll.min.js"></script>
-	<script src="main.js"></script>
+	<link href="angular.rangeSlider.css" rel="stylesheet">
+
 	<style>
 		body{text-align: center; padding-top: 10px; background-image: url(/img/bg.png);}
 		#items {
@@ -99,6 +98,11 @@
 			text-align: center;
 			margin: 0 3px;
 		}
+		.slider {
+			display: inline-block;
+    		width: 500px;
+			margin-bottom: -7px;
+		}
 		.corner img:hover {opacity: 0.8;}
 		.topbutton:hover {background-color: #CDE; text-decoration: none;}
 		.topbutton:active {top: 12px; box-shadow: 0px 1px 0px 0px #888;}
@@ -143,6 +147,10 @@
 		<button class="btn btn-inverse" ng-click="setOrder(byPrice)">Price</button>
 		<button class="btn btn-inverse" ng-click="setOrder(byRandom)">Random</button>
 	</div><br>
+	<div style="width: 700px; margin: auto; margin-top: -12px">
+		<span style="font-weight: bold; font-size: 14pt">{{orderName}}: </span>
+		<div class="slider" range-slider min="0" max="100" model-min="lMin" model-max="lMax"></div>
+	</div>
 
 	<div id="switch_placeholder_f37c7b4999258037274f1c470dc41520" class="switch_placeholder" style="margin: auto; margin-top: 10px"></div>
 	<script> (__scads = window.__scads || []).push({"z":3189,"targetId":"switch_placeholder_f37c7b4999258037274f1c470dc41520","domain":"delivery.e.switchadhub.com","width":"728","height":"90"}); </script>
@@ -151,12 +159,18 @@
 	<div id="loading" ng-show="bg.length == 0">Loading...</div>
 
 	<div id="items" ng-show="bg.length > 0" ng-style="{'width': divWidth}">
-		<div class="bg" ng-repeat="b in bg | filter:ownTest | filter:filterText | orderBy:order:rev | limitTo:numLines*itemsPerLine"
+		<div class="bg" ng-repeat="b in bg | filter:ownTest | filter:filterText | range:limits | orderBy:order:rev | limitTo:numLines*itemsPerLine"
 		ng-style="getStyle(b.pos)" title="{{b.name}}" ng-click="open(b.img, $event)">
 			<div class="name">{{b.name}}</div>
 			<a target="_blank" href="{{MARKET_URL + b.url}}" class="market">{{b.price | currency}}</a>
 		</div>
 	</div>
+
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.js"></script>
+	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.6/angular.min.js"></script>
+	<script src="ng-infinite-scroll.min.js"></script>
+	<script src="angular.rangeSlider.js"></script>
+	<script src="main.js"></script>
 
 	<!-- Start of UserVoice code -->
 	<script>
