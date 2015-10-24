@@ -189,7 +189,7 @@ function InvCtrl($scope, $http, $filter) {
 				}
 				url += "/inventory/#" + $scope.appidLoaded;
 				$scope.status = "";
-				var html = "<a href='" + url + "' target='_blank'>Inventory</a>";
+				var html = "<a href='" + url + "' target='_blank'>Inventory</a> ";
 				html += "| <a href='http://steamrep.com/search?q=" + data.name + "' target='_blank'>SteamRep</a>";
 				help.innerHTML = html;
 
