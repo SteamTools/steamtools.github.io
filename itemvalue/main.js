@@ -99,11 +99,15 @@ function InvCtrl($scope, $http, $filter) {
 	$scope.useTable = false;
 
 	$scope.typeMap = {
-		'753': "Community",
+		'753': "Steam",
 		'440': "TF2",
 		'730': "CS:GO",
 		'570': "Dota 2",
-		'295110': "H1Z1"
+		'295110': "H1Z1",
+		'252490': "Rust",
+		'304930': "Unturned",
+		'218620': "PAYDAY 2",
+		'238460': "BBT",
 	};
 
 	$scope.setCurrency = function(i) {
@@ -248,6 +252,10 @@ function InvCtrl($scope, $http, $filter) {
 		'730': [0, 1, 5, 6, 7],
 		'570': [0, 1, 4, 5, 6, 7],
 		'295110': [0, 1, 3, 6, 7],
+		'252490': [0, 1, 6, 7],
+		'218620': [0, 1, 6, 7],
+		'304930': [0, 1, 6, 7],
+		'238460': [0, 1, 6, 7],
 	};
 
 	// Create the table
@@ -268,7 +276,7 @@ function InvCtrl($scope, $http, $filter) {
 			{class: "center", targets: "_all"},
 		],
 		columns: $scope.tableColumns,
-		drawCallback: function( settings ) {
+		drawCallback: function() {
 			$(".icon:not(.hover-zoom)").thumbPopup();
 		}
 	});
@@ -342,7 +350,7 @@ function InvCtrl($scope, $http, $filter) {
 
 		var name = hash.slice(0, pos);
 		var appid = hash.slice(pos + 1);
-		var validIDs = ["753", "570", "440", "730", "295110"];
+		var validIDs = ["753", "570", "440", "730", "295110", "252490", "304930", "218620", "238460"];
 		if (validIDs.indexOf(appid) < 0) return;
 
 		$scope.UserID = name;
