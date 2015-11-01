@@ -134,10 +134,7 @@
 					</span>
 			</a>
 		</div>
-		<button style="margin: 5px;"ng-show="(items | filter:dupesFilter | filter:typeFilter | filter:filterText).length >	iconLimit" type="button" class="btn" ng-click="iconLimit=9999999" ng-hide="useTable">Show all</button>
-
-
-
+		<button style="margin: 5px;" ng-show="(items | filter:dupesFilter | filter:typeFilter | filter:filterText).length > iconLimit && !useTable" type="button" class="btn" ng-click="iconLimit=9999999">Show all</button>
 		</div>
 	</div>
 
