@@ -1,6 +1,7 @@
 from __future__ import division
 import HTMLParser
 import requests
+import time
 import re
 
 CURRENCY_URL = "http://steamcommunity.com/market/priceoverview/?currency={}&appid={}&market_hash_name={}"
@@ -11,28 +12,46 @@ item_hash = item_url.split('/')[-1]
 item_appid = item_url.split('/')[-2]
 parser = HTMLParser.HTMLParser()
 
-CURRENCIES = [1, 2, 3, 5, 7, 8, 9, 10, 11, 12, 13, 14, 17, 19, 20, 22]
+CURRENCIES = [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 19, 20, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]
+CURRENCIES.reverse()
+
 prices = []
-for i in CURRENCIES:
+while CURRENCIES:
+    i = CURRENCIES.pop()
     url = CURRENCY_URL.format(i, item_appid, item_hash)
-    data = requests.get(url).json()
+    r = requests.get(url)
+
+    if r.status_code != 200:
+        print i, "bad status code"
+        CURRENCIES.append(i)
+        time.sleep(10)
+        continue
+
+    try:
+        data = r.json()
+    except:
+        print i, "non json:", r.content
+        continue
+
+    if 'success' in data and not data['success']:
+        print i, "success false"
+        continue
+
+    if 'lowest_price' not in data:
+        print i, "no lowest price"
+        continue
+
     price = data.get('lowest_price')
     price = parser.unescape(price)
-    try:
-        print unicode(price)
-    except:
-        pass
-
     price = re.sub('[^0-9]', '', price)
     price = int(price)
     if i == 5:
         price *= 100
     prices.append(price)
+    print i, "added"
 
-ratios = []
 for p in prices:
     r = round(p / prices[0], 4)
-    ratios.append(r)
+    print r
 
-print ratios
 raw_input()

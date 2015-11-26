@@ -1,35 +1,46 @@
 var CURRENCY_DATA = [  // Thanks to Enhanced Steam
 	{name: "USD", ratio: 1.0,		symbolFormat: "$",     right: false},
-	{name: "GBP", ratio: 0.652,		symbolFormat: "£",     right: false},
-	{name: "EUR", ratio: 0.9065,	symbolFormat: "€",     right: true},
-	{name: "RUB", ratio: 62.2265,	symbolFormat: " pуб.", right: true},
-	{name: "BRL", ratio: 3.9322,	symbolFormat: "R$ ",   right: false},
-	{name: "JPY", ratio: 121.0019,	symbolFormat: "¥ ",    right: false},
-	{name: "NOK", ratio: 8.4008,	symbolFormat: " kr",   right: true},
-	{name: "IDR", ratio: 13614.9115,symbolFormat: "Rp ",   right: false},
-	{name: "MYR", ratio: 4.2356,	symbolFormat: "RM",    right: false},
-	{name: "PHP", ratio: 46.4527,	symbolFormat: "P",     right: false},
-	{name: "SGD", ratio: 1.3947,	symbolFormat: "S$",    right: false},
-	{name: "THB", ratio: 35.4656,	symbolFormat: "฿",     right: false},
-	{name: "TRY", ratio: 2.8847,	symbolFormat: " TL",   right: true},
-	{name: "MXN", ratio: 16.5665,	symbolFormat: "Mex$ ", right: false},
-	{name: "CAD", ratio: 1.3205,	symbolFormat: "CDN$ ", right: false},
-	{name: "NZD", ratio: 1.4826,	symbolFormat: "NZ$ ",  right: false},
+	{name: "GBP", ratio: 0.6633,	symbolFormat: "£",     right: false},
+	{name: "EUR", ratio: 0.9456,	symbolFormat: "€",     right: true},
+	{name: "CHF", ratio: 1.0218,	symbolFormat: "CHF ",  right: false},
+	{name: "RUB", ratio: 65.855601,	symbolFormat: " pуб.", right: true},
+	{name: "BRL", ratio: 3.7829,	symbolFormat: "R$ ",   right: false},
+	{name: "JPY", ratio: 122.6986,	symbolFormat: "¥ ",    right: false},
+	{name: "NOK", ratio: 8.6621,	symbolFormat: " kr",   right: true},
+	{name: "IDR", ratio: 13685.3509,symbolFormat: "Rp ",   right: false},
+	{name: "MYR", ratio: 4.2069,	symbolFormat: "RM",    right: false},
+	{name: "PHP", ratio: 46.9515,	symbolFormat: "P",     right: false},
+	{name: "SGD", ratio: 1.4062,	symbolFormat: "S$",    right: false},
+	{name: "THB", ratio: 35.7106,	symbolFormat: "฿",     right: false},
+	{name: "KRW", ratio: 1143.2884,	symbolFormat: "₩ ",    right: false},
+	{name: "TRY", ratio: 2.8786,	symbolFormat: " TL",   right: true},
+	{name: "MXN", ratio: 16.5746,	symbolFormat: "Mex$ ", right: false},
+	{name: "CAD", ratio: 1.3335,	symbolFormat: "CDN$ ", right: false},
+	{name: "NZD", ratio: 1.5235,	symbolFormat: "NZ$ ",  right: false},
+	{name: "CNY", ratio: 6.3961,	symbolFormat: "¥ ",    right: false},
+	{name: "INR", ratio: 66.3192,	symbolFormat: "₹ ",    right: false},
+	{name: "CLP", ratio: 714.3439,	symbolFormat: "CLP$ ", right: false},
+	{name: "PEN", ratio: 3.3773,	symbolFormat: "S/.",   right: false},
+	{name: "COL", ratio: 3100.2591,	symbolFormat: "COL$ ", right: false},
+	{name: "ZAR", ratio: 14.113,	symbolFormat: "R ",    right: false},
+	{name: "HKD", ratio: 7.7502,	symbolFormat: "HK$ ",  right: false},
+	{name: "NTD", ratio: 32.4516,	symbolFormat: "NT$ ",  right: false},
+	{name: "SAR", ratio: 3.7604,	symbolFormat: " SR",   right: true},
+	{name: "AED", ratio: 3.6766,	symbolFormat: " AED",  right: true},
 
 	{name: "PLN", ratio: 3.87,		symbolFormat: "zł",    right: true},
 	{name: "VND", ratio: 22312.50,	symbolFormat: "₫",     right: false},
-	{name: "KRW", ratio: 1136.14,	symbolFormat: "₩",     right: false},
 	{name: "UAH", ratio: 22.75,		symbolFormat: "₴",     right: true},
 	{name: "AUD", ratio: 1.39,		symbolFormat: "A$ ",   right: false},
 ];
 
 angular.module('valueApp', ['ui.bootstrap'])
 .config(['$tooltipProvider', function($tooltipProvider){
-    $tooltipProvider.setTriggers({
-        'mouseenter': 'mouseleave',
-        'click': 'click',
-        'focus': 'blur',
-        'show': 'mouseleave'
+	$tooltipProvider.setTriggers({
+		'mouseenter': 'mouseleave',
+		'click': 'click',
+		'focus': 'blur',
+		'show': 'mouseleave'
 	});
 }])
 .filter('sumByKey', function() {
@@ -383,16 +394,16 @@ function addColor(text, color) {
 
 
 function FireEvent(ElementId, EventName) {
-    if(document.getElementById(ElementId) !== null) {
-        if(document.getElementById(ElementId).fireEvent) {
-            document.getElementById(ElementId).fireEvent('on' + EventName);
-        }
-        else {
-            var evObj = document.createEvent('Events');
-            evObj.initEvent(EventName, true, false);
-            document.getElementById(ElementId).dispatchEvent(evObj);
-        }
-    }
+	if(document.getElementById(ElementId) !== null) {
+		if(document.getElementById(ElementId).fireEvent) {
+			document.getElementById(ElementId).fireEvent('on' + EventName);
+		}
+		else {
+			var evObj = document.createEvent('Events');
+			evObj.initEvent(EventName, true, false);
+			document.getElementById(ElementId).dispatchEvent(evObj);
+		}
+	}
 }
 
 // Little hack to have overflow ellipsis
