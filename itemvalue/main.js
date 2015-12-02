@@ -120,6 +120,7 @@ function InvCtrl($scope, $http, $filter) {
 		'304930': "Unturned",
 		'218620': "PAYDAY 2",
 		'238460': "BBT",
+		'321360': "Primal Carnage: Extinction",
 	};
 
 	$scope.setCurrency = function(i) {
@@ -268,6 +269,7 @@ function InvCtrl($scope, $http, $filter) {
 		'218620': [0, 1, 6, 7],
 		'304930': [0, 1, 6, 7],
 		'238460': [0, 1, 6, 7],
+		'321360': [0, 1, 6, 7],
 	};
 
 	// Create the table
@@ -362,7 +364,7 @@ function InvCtrl($scope, $http, $filter) {
 
 		var name = hash.slice(0, pos);
 		var appid = hash.slice(pos + 1);
-		var validIDs = ["753", "570", "440", "730", "295110", "252490", "304930", "218620", "238460"];
+		var validIDs = ["753", "570", "440", "730", "295110", "252490", "304930", "218620", "238460", "321360"];
 		if (validIDs.indexOf(appid) < 0) return;
 
 		$scope.UserID = name;
