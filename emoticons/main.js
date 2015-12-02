@@ -47,8 +47,12 @@ function($scope, $http, $location) {
 		});
 	};
 
+	$scope.reverseOwn = false;
 	$scope.ownTest = function(item) {
-		return !$scope.owned.hasOwnProperty(item.name);
+		if ($scope.reverseOwn)
+			return $scope.owned.hasOwnProperty(item.name);
+		else
+			return !$scope.owned.hasOwnProperty(item.name);
 	};
 
 	$scope.userLogout = function() {

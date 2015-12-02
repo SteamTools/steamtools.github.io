@@ -114,6 +114,9 @@
 			<b>Number of items:</b> {{(emotes | filter:ownTest).length}}
 			<br>
 			<i>{{user_status}}</i>
+			<span ng-if="loggedIn">
+				(<a href="#" ng-click="reverseOwn=!reverseOwn">reverse</a>)
+			</span>
 		</div>
 	</div>
 
