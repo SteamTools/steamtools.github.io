@@ -174,9 +174,15 @@ function InvCtrl($scope, $http, $filter) {
 			}
 
 			if (!data || data.success === false){
-				$scope.status = "Failed: " + data.reason;
-				delete localStorage.lastUser;
-				return;
+				if (data.retry && $scope.retries < $scope.SERVERS.length) {
+					$scope.status = "Something went wrong, retrying...";
+					$scope.retries++;
+					$scope.fetchItems(user, appid);
+				} else {
+					$scope.status = "Failed: " + data.reason;
+					delete localStorage.lastUser;
+					return;
+				}
 			}
 
 			document.location.hash = '/' + data.name + "-" + $scope.appid;
