@@ -157,7 +157,7 @@
 		<div ng-repeat="e in emotes | filter:ownTest | filter:filterText | orderBy:order:rev | limitTo:numLines*itemsPerLine"
 			title="{{e.name}}" class="box">
 			<span ng-show="date" style="font-size: 8px">{{e.date}}</span>
-			<a class="emote" ng-class="{small: small}" ng-style="getStyle(e.pos)" href="{{BASE_URL + e.url}}" target="_blank"></a>
+			<a class="emote" ng-class="{small: small}" ng-style="getStyle(e.pos)" ng-href="{{BASE_URL + e.url}}" target="_blank"></a>
 			<span ng-show="names">{{e.name}}</span>
 		</a>
 	</div>

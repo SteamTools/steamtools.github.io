@@ -165,7 +165,7 @@
 		<div class="bg" ng-repeat="b in bg | filter:ownTest | filter:filterText | orderBy:order:rev | range:limits | limitTo:numLines*itemsPerLine"
 		ng-style="getStyle(b.pos)" title="{{b.name}}" ng-click="open(b.img, $event)">
 			<div class="name">{{b.name}}</div>
-			<a target="_blank" href="{{MARKET_URL + b.url}}" class="market">{{b.price | currency}}</a>
+			<a target="_blank" ng-href="{{MARKET_URL + b.url}}" class="market">{{b.price | currency}}</a>
 		</div>
 	</div>
 
