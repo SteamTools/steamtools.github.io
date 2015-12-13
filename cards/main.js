@@ -532,10 +532,10 @@ function generateLinks(game, appid, isFoil, steamid) {
 	if (isFoil) badge_link += "?border=1";
 
 	var links = "";
-	links += "<a ng-href='" + badge_link + "' target='_blank'>[B]</a> ";
-	links += "<a ng-href='" + store_link + "' target='_blank'>[S]</a> ";
-	links += "<a ng-href='" + market_link + "' target='_blank'>[M]</a> ";
-	links += "<a ng-href='" + cs_link + "' target='_blank'>[E]</a>";
+	links += "<a href='" + badge_link + "' target='_blank'>[B]</a> ";
+	links += "<a href='" + store_link + "' target='_blank'>[S]</a> ";
+	links += "<a href='" + market_link + "' target='_blank'>[M]</a> ";
+	links += "<a href='" + cs_link + "' target='_blank'>[E]</a>";
 	return links;
 }
 
