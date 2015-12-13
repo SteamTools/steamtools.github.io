@@ -1,3 +1,11 @@
 User-agent: *
 Disallow: /cards/*
 Allow: /cards/$
+Allow: /cards/index.html
+
+Disallow: /itemvalue/*
+Allow: /itemvalue/$
+Allow: /itemvalue/index.html
+
+
+
