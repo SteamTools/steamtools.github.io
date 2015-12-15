@@ -262,7 +262,7 @@ function InvCtrl($scope, $http, $filter) {
 	/* 3*/ {data: 'quality', title: "Quality", width: "80px", render: $scope.qualitySort, orderSequence: ['desc', 'asc']},
 	/* 4*/ {data: 'rarity', title: "Rarity", width: "80px", render: $scope.raritySort, orderSequence: ['desc', 'asc']},
 	/* 5*/ {data: 'count', title: "Count", width: "40px", orderSequence: ['desc', 'asc']},
-	/* 6*/ {data: 'price', title: "Price", width: "60px", orderSequence: ['desc', 'asc'], render: $scope.formatCurrency},
+	/* 6*/ {data: 'price', title: "Price", width: "80px", orderSequence: ['desc', 'asc'], render: $scope.formatCurrency},
 	];
 
 	$scope.visCols = {
