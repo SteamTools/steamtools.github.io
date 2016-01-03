@@ -339,6 +339,7 @@ function($scope, $http, $filter, $compile, $modal){
 		dom: "<'row'<'thirds'l><'thirds'<'currency-menu'>><'thirds'f>r>" +
 			 "t" +
 			 "<'row'<'col-xs-6'i><'col-xs-6'p>>",
+		buttons: [ 'csv', 'excel' ],
 		lengthMenu: [[25, 100, 250, -1], [25, 100, 250, "All"]],
 		pageLength: 100,
 		autoWidth: false,
