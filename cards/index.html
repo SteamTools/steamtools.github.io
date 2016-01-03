@@ -60,6 +60,12 @@
 					tooltip-popup-delay="150"> Hide F2P </span>
 			</div>
 
+			<div>
+				<input type="checkbox" ng-model="filters.hide_nonf2p">
+				<span class="help" tooltip="Hides Games that are not Free-To-Play" tooltip-placement="right"
+					tooltip-popup-delay="150"> Hide non-N2P </span>
+			</div>
+
 			<div ng-if="userLoaded">
 			<div>
 				<input type="checkbox" ng-disabled="userData.games < 3" ng-model="filters.own_game">

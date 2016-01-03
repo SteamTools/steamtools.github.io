@@ -292,6 +292,7 @@ function($scope, $http, $filter, $compile, $modal){
 		'hide_completed': false,
 		'hide_incompleted': false,
 		'hide_f2p': false,
+		'hide_nonf2p': false,
 	};
 
 	$scope.tableColumns = [
@@ -377,6 +378,7 @@ function($scope, $http, $filter, $compile, $modal){
 
 			var f = $scope.filters;
 			if (row.f2p && f.hide_f2p) return false;
+			if (!row.f2p && f.hide_nonf2p) return false;
 			if (f.own_game && !row.game_owned) return false;
 			if (f.not_own_game && row.game_owned) return false;
 			if (f.own_cards && row.cards_owned === 0) return false;
