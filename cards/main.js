@@ -338,7 +338,7 @@ function($scope, $http, $filter, $compile, $modal){
 	$scope.table = $('#set_table').DataTable({
 		dom: "<'row'<'thirds'l><'thirds'<'currency-menu'>><'thirds'f>r>" +
 			 "t" +
-			 "<'row'<'col-xs-6'i><'col-xs-6'p>>",
+			 "<'row'<'col-xs-6'i>B<'col-xs-6'p>>",
 		buttons: [ 'csv', 'excel' ],
 		lengthMenu: [[25, 100, 250, -1], [25, 100, 250, "All"]],
 		pageLength: 100,
