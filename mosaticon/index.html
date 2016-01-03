@@ -29,8 +29,12 @@
 			</a><br>
 			<script async src="http://coinwidget.com/widget/coin.js"></script>
 			<script>
-				CoinWidgetCom.go({wallet_address: "1JkBbGN5Ymje6iMRAwpyvB8SovvUyuTk8c",
-					counter: "hide", alignment: "br"});
+				var btcLoop = setInterval(function() {
+					if (window.CoinWidgetCom === undefined)
+						return;
+					CoinWidgetCom.go({wallet_address: "1JkBbGN5Ymje6iMRAwpyvB8SovvUyuTk8c", counter: "hide", alignment: "br"});
+					clearInterval(btcLoop)
+				}, 1000);
 			</script>
 		</div>
 		<div id="stepbox" style="width: 400px">
