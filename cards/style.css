@@ -52,6 +52,8 @@ table {
 	max-width: none !important;
 }
 
+th, td { white-space: nowrap; }
+
 table.dataTable thead > tr > th {
 	padding-left: 10px;
 	padding-right: 14px;
@@ -71,6 +73,10 @@ select.input-sm {
 	height: 24px;
 	line-height: 30px;
 	padding: 0 5px;
+}
+
+div.dataTables_info {
+	border-top: 1px dashed #CCCCCC;
 }
 
 .dataTables_filter > label {
@@ -110,10 +116,15 @@ label.btn {
 	width: 42px;
 }
 
+.dt-buttons {
+	float: left;
+}
+
 #container {
 	min-height: 100%;
 	margin: auto;
 	padding: 15px;
+	padding-bottom: 5px;
 	max-width: 1024px;
 	background: url(/img/simple.png) #eee;
 	box-shadow: 0 0 12px 5px #666;

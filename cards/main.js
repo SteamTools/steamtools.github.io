@@ -1,44 +1,44 @@
 /* global moment */
 var CURRENCY_DATA = [  // Thanks to Enhanced Steam
-	{name: "USD", ratio: 1.0,		symbolFormat: "$",     right: false},
-	{name: "GBP", ratio: 0.6758,	symbolFormat: "£",     right: false},
-	{name: "EUR", ratio: 0.0092,	symbolFormat: "€",     right: true},
-	{name: "CHF", ratio: 0.998,		symbolFormat: "CHF ",  right: false},
-	{name: "RUB", ratio: 74.311083,	symbolFormat: " pуб.", right: true},
-	{name: "BRL", ratio: 3.9663,	symbolFormat: "R$ ",   right: false},
-	{name: "JPY", ratio: 120.4007,	symbolFormat: "¥ ",    right: false},
-	{name: "NOK", ratio: 8.8167,	symbolFormat: " kr",   right: true},
+	{name: "USD", ratio: 1.0,       symbolFormat: "$",     right: false},
+	{name: "GBP", ratio: 0.6758,    symbolFormat: "£",     right: false},
+	{name: "EUR", ratio: 0.0092,    symbolFormat: "€",     right: true},
+	{name: "CHF", ratio: 0.998,     symbolFormat: "CHF ",  right: false},
+	{name: "RUB", ratio: 74.311083, symbolFormat: " pуб.", right: true},
+	{name: "BRL", ratio: 3.9663,    symbolFormat: "R$ ",   right: false},
+	{name: "JPY", ratio: 120.4007,  symbolFormat: "¥ ",    right: false},
+	{name: "NOK", ratio: 8.8167,    symbolFormat: " kr",   right: true},
 	{name: "IDR", ratio: 13779.8909,symbolFormat: "Rp ",   right: false},
-	{name: "MYR", ratio: 4.2935,	symbolFormat: "RM",    right: false},
-	{name: "PHP", ratio: 46.8653,	symbolFormat: "P",     right: false},
-	{name: "SGD", ratio: 1.4165,	symbolFormat: "S$",    right: false},
-	{name: "THB", ratio: 36.0502,	symbolFormat: "฿",     right: false},
-	{name: "KRW", ratio: 1173.5239,	symbolFormat: "₩ ",    right: false},
-	{name: "TRY", ratio: 2.9139,	symbolFormat: " TL",   right: true},
-	{name: "MXN", ratio: 17.357,	symbolFormat: "Mex$ ", right: false},
-	{name: "CAD", ratio: 1.3899,	symbolFormat: "CDN$ ", right: false},
-	{name: "NZD", ratio: 1.4601,	symbolFormat: "NZ$ ",  right: false},
-	{name: "CNY", ratio: 6.5005,	symbolFormat: "¥ ",    right: false},
-	{name: "INR", ratio: 66.1504,	symbolFormat: "₹ ",    right: false},
-	{name: "CLP", ratio: 709.8237,	symbolFormat: "CLP$ ", right: false},
-	{name: "PEN", ratio: 3.4144,	symbolFormat: "S/.",   right: false},
-	{name: "COL", ratio: 3179.3682,	symbolFormat: "COL$ ", right: false},
-	{name: "ZAR", ratio: 15.58,		symbolFormat: "R ",    right: false},
-	{name: "HKD", ratio: 7.75,		symbolFormat: "HK$ ",  right: false},
-	{name: "NTD", ratio: 32.8202,	symbolFormat: "NT$ ",  right: false},
-	{name: "SAR", ratio: 3.7612,	symbolFormat: " SR",   right: true},
-	{name: "AED", ratio: 3.6767,	symbolFormat: " AED",  right: true},
+	{name: "MYR", ratio: 4.2935,    symbolFormat: "RM",    right: false},
+	{name: "PHP", ratio: 46.8653,   symbolFormat: "P",     right: false},
+	{name: "SGD", ratio: 1.4165,    symbolFormat: "S$",    right: false},
+	{name: "THB", ratio: 36.0502,   symbolFormat: "฿",     right: false},
+	{name: "KRW", ratio: 1173.5239, symbolFormat: "₩ ",    right: false},
+	{name: "TRY", ratio: 2.9139,    symbolFormat: " TL",   right: true},
+	{name: "MXN", ratio: 17.357,    symbolFormat: "Mex$ ", right: false},
+	{name: "CAD", ratio: 1.3899,    symbolFormat: "CDN$ ", right: false},
+	{name: "NZD", ratio: 1.4601,    symbolFormat: "NZ$ ",  right: false},
+	{name: "CNY", ratio: 6.5005,    symbolFormat: "¥ ",    right: false},
+	{name: "INR", ratio: 66.1504,   symbolFormat: "₹ ",    right: false},
+	{name: "CLP", ratio: 709.8237,  symbolFormat: "CLP$ ", right: false},
+	{name: "PEN", ratio: 3.4144,    symbolFormat: "S/.",   right: false},
+	{name: "COL", ratio: 3179.3682, symbolFormat: "COL$ ", right: false},
+	{name: "ZAR", ratio: 15.58,     symbolFormat: "R ",    right: false},
+	{name: "HKD", ratio: 7.75,      symbolFormat: "HK$ ",  right: false},
+	{name: "NTD", ratio: 32.8202,   symbolFormat: "NT$ ",  right: false},
+	{name: "SAR", ratio: 3.7612,    symbolFormat: " SR",   right: true},
+	{name: "AED", ratio: 3.6767,    symbolFormat: " AED",  right: true},
 
-	{name: "PLN", ratio: 3.94,		symbolFormat: "zł",    right: true},
-	{name: "VND", ratio: 22485.0,	symbolFormat: "₫",     right: false},
-	{name: "UAH", ratio: 24.03,		symbolFormat: "₴",     right: true},
-	{name: "AUD", ratio: 1.37,		symbolFormat: "A$ ",   right: false},
+	{name: "PLN", ratio: 3.94,      symbolFormat: "zł",    right: true},
+	{name: "VND", ratio: 22485.0,   symbolFormat: "₫",     right: false},
+	{name: "UAH", ratio: 24.03,     symbolFormat: "₴",     right: true},
+	{name: "AUD", ratio: 1.37,      symbolFormat: "A$ ",   right: false},
 ];
 
 angular
 .module('cardApp', ['ui.bootstrap', 'normalizeForSearch'])
 .filter('currency', function($filter){
-	return function(input, ind) {
+	return function(input, ind, noCurrency) {
 		if (isNaN(input)) return "N/A";
 
 		// Get symbol and decide if it comes before or after
@@ -48,6 +48,8 @@ angular
 
 		// Make sure input was valid, then convert and format it
 		var out = $filter('number')(input * ratio, 2);
+
+		if (noCurrency) return out;
 
 		// Add symbol in the right place
 		if (after) return out + symbol;
@@ -62,19 +64,32 @@ function($scope, $http, $filter, $compile, $modal){
 	$scope.curIndex = 0;
 	$scope.formatCurrency = function(data, type) {
 		// Only perform if it's for displaying
-		if (type !== "display"){
+		if (type !== "display" && type !== "export"){
 			return isNaN(data) ? 9999999 : data;
 		}
-		return $filter('currency')(data, $scope.curIndex);
+		return $filter('currency')(data, $scope.curIndex, type === "export");
 	};
 
 	$scope.percent = function(data, type){
+		if (type === "export") return $filter('number')(data[1] * 100, 1);
 		if (type === "sort") return data[1] + 10000;
 		if (type !== "display") return data[1];
 		var value = $filter('number')(data[1] * 100, 1) + "%";
 		if (data[0] === 0) return value;
 		return "<a href='" + data[0] + "'>" + value + "</a>";
 	};
+	// Little hack to have overflow ellipsis
+	$scope.overflow = function(data, type) {
+		if (type === "export") return data;
+		return '<span class="game">' + data + '</span>';
+	}
+
+	// Formats timestamp using moment.js
+	$scope.date = function(timestamp, type) {
+		if (type === "export") return moment(timestamp * 1000).format("YYYY-MM-DD");
+		if (type !== "display") return timestamp;
+		return moment(timestamp * 1000).format("MMM Do, YYYY");
+	}
 
 	$scope.localizeTime = function(time) {
 		return moment(time * 1000).fromNow();
@@ -267,14 +282,6 @@ function($scope, $http, $filter, $compile, $modal){
 		});
 	};
 
-	// Fixes table to be the height of the window
-	$scope.fixTableHeight = function() {
-		var h = $(window).height() - 120;
-		$scope.tableSettings.oScroll.sY = h + "px";
-		$scope.table.draw();
-	};
-	$(window).resize($scope.fixTableHeight);
-
 	// Show or hide a table column
 	$scope.toggleCol = function(colInd) {
 		var c = $scope.table.column(colInd);
@@ -296,7 +303,7 @@ function($scope, $http, $filter, $compile, $modal){
 	};
 
 	$scope.tableColumns = [
-	/* 0*/ {data: 'game',         title: "Game",        width: "250px", render: overflow},
+	/* 0*/ {data: 'game',         title: "Game",        width: "250px", render: $scope.overflow},
 	/* 1*/ {data: 'links',        title: "Links",       width: "50px"},
 	/* 2*/ {data: 'cards_owned',  title: "# Owned",     width: "50px"},
 	/* 3*/ {data: 'unique_owned', title: "# Unique",    width: "50px"},
@@ -311,7 +318,7 @@ function($scope, $http, $filter, $compile, $modal){
 	/*12*/ {data: 'bgs_avg',      title: "BG Avg",      width: "60px"},
 	/*13*/ {data: 'qty_avg',      title: "Avg Qty",     width: "54px"},
 	/*14*/ {data: 'discount',     title: "Discount",    width: "54px"},
-	/*15*/ {data: 'added',        title: "Added",       width: "90px", render: date},
+	/*15*/ {data: 'added',        title: "Added",       width: "90px", render: $scope.date},
 	/*16*/ {data: 'clean_game',   title: "Clean game",  width: "250px"},
 	];
 
@@ -336,23 +343,43 @@ function($scope, $http, $filter, $compile, $modal){
 
 	// Create the table
 	$scope.table = $('#set_table').DataTable({
-		dom: "<'row'<'thirds'l><'thirds'<'currency-menu'>><'thirds'f>r>" +
+		dom: "<'row'<'thirds'B><'thirds'<'currency-menu'>><'thirds'f>r>" +
 			 "t" +
-			 "<'row'<'col-xs-5'i>B<'col-xs-5'p>>",
+			 "<'row'<'col-xs-12 center'i>>",
 		buttons: [
-			'copyHtml5',
-			'csvHtml5',
-			'excelHtml5',
+			{
+				extend: 'copy',
+				exportOptions: {
+					columns: ':visible',
+				},
+			},
+			{
+				extend: 'csv',
+				title: 'STC_set_data',
+				exportOptions: {
+					columns: [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+					orthogonal: 'export',
+				},
+			},
+			{
+				extend: 'excel',
+				title: 'STC_set_data',
+				exportOptions: {
+					columns: [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+					orthogonal: 'export',
+				},
+			},
 		],
-		lengthMenu: [[25, 100, 250, -1], [25, 100, 250, "All"]],
-		pageLength: 100,
+		scroller: true,
+		deferRender: true,
 		autoWidth: false,
 		scrollX: true,
-		scrollY: "auto",
+		scrollY: "80vh",
+		pageLength: 100,
 		stateSave: true,
+		colReorder: true,
 		order: [[15, 'desc']],
 		scrollCollapse: true,
-		deferRender: true,
 		language: {
 			emptyTable: "Loading set data..."
 		},
@@ -406,17 +433,17 @@ function($scope, $http, $filter, $compile, $modal){
 
 	// Add currency bar to table
 	var currencyMenuHTML = '<div class="input-group btn-group">' +
-'	<div class="input-group-addon">Currency</div>' +
-'	<div class="dropdown" dropdown>' +
-'		<a class="btn btn-default" data-toggle="dropdown" href="#" dropdown-toggle>' +
+'   <div class="input-group-addon">Currency</div>' +
+'   <div class="dropdown" dropdown>' +
+'       <a class="btn btn-default" data-toggle="dropdown" href="#" dropdown-toggle>' +
 			'{{ CDATA[curIndex].name }}' +
 		'<b class="caret"></b></a>' +
-'		<ul class="dropdown-menu" role="menu">' +
-'			<li ng-repeat="currency in CDATA">' +
-'				<a href="#" ng-click="setCurrency($index)">{{currency.name}}</a>' +
-'			</li>' +
-'		</ul>' +
-'	</div>' +
+'       <ul class="dropdown-menu" role="menu">' +
+'           <li ng-repeat="currency in CDATA">' +
+'               <a href="#" ng-click="setCurrency($index)">{{currency.name}}</a>' +
+'           </li>' +
+'       </ul>' +
+'   </div>' +
 '</div>';
 
 	var currencyMenuCompiled = $compile(currencyMenuHTML)($scope);
@@ -424,7 +451,7 @@ function($scope, $http, $filter, $compile, $modal){
 
 	// Get and load set data from the server
 	$scope.dataLoaded = false;
-	var url = "http://storage.googleapis.com/cdn.steam.tools/data/set_data.json";
+	var url = "set_data.json";
 	$http.get(url).success(function(data){
 		$scope.dataLoaded = true;
 		$scope.data = data;
@@ -444,8 +471,8 @@ function($scope, $http, $filter, $compile, $modal){
 
 		// Add rows to table and update
 		$scope.importUserData();
-		$scope.fixTableHeight();
 		$scope.table.rows.add($scope.rows).draw();
+		$scope.table.scroller.measure()
 	}).error(function() {
 		var error = "<br>Error while loading set data. Try the following:<br><br>";
 		error += "1. Do a full browser refresh (ctrl+F5)<br>";
@@ -555,16 +582,6 @@ function generateMarketLink(appid, foil) {
 	return url;
 }
 
-// Little hack to have overflow ellipsis
-function overflow(data) {
-	return '<span class="game">' + data + '</span>';
-}
-
-// Formats timestamp using moment.js
-function date(timestamp, type) {
-	if (type !== "display") return timestamp;
-	return moment(timestamp * 1000).format("MMM Do, YYYY");
-}
 
 var LevelCalcCtrl = function($scope, $modalInstance) {
 	$scope.draw = function() {
