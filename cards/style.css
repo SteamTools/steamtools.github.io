@@ -79,6 +79,10 @@ div.dataTables_info {
 	border-top: 1px dashed #CCCCCC;
 }
 
+div.dataTables_scrollBody {
+	z-index: 1;
+}
+
 .dataTables_filter > label {
 	margin: 0;
 }
@@ -136,7 +140,7 @@ label.btn {
 	text-overflow: ellipsis;
 	white-space: nowrap;
 	display: block;
-	max-width: 250px;
+	max-width: 210px;
 }
 
 .center {
