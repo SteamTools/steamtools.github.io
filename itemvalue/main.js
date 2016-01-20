@@ -106,8 +106,11 @@ function InvCtrl($scope, $http, $filter) {
 	$scope.appid = "753";
 	$scope.appidLoaded = "0";
 	$scope.curIndex = 0;
-	$scope.fee = false;
-	$scope.dupes = false;
+	$scope.flags = {
+		fee: false,
+		dupes: false,
+		stack: false
+	};
 	$scope.iconLimit = 54;
 	$scope.useTable = false;
 
@@ -139,7 +142,7 @@ function InvCtrl($scope, $http, $filter) {
 	};
 
 	$scope.dupesFilter = function(item) {
-		if (!$scope.dupes) return true;
+		if (!$scope.flags.dupes) return true;
 		return item.count > 1;
 	};
 
@@ -242,7 +245,7 @@ function InvCtrl($scope, $http, $filter) {
 		if (type !== "display"){
 			return isNaN(data) ? 9999999 : data;
 		}
-		return $filter('currency')(data, $scope.curIndex, $scope.fee);
+		return $filter('currency')(data, $scope.curIndex, $scope.flags.fee);
 	};
 
 	$scope.qualitySort = function(data, type) {
@@ -256,18 +259,19 @@ function InvCtrl($scope, $http, $filter) {
 	};
 
 	$scope.tableColumns = [
-	/* 1*/ {data: 'image', title: "Image", width: "30px", orderable: false},
-	/* 0*/ {data: 'name', title: "Item Name", width: "250px", render: overflow},
-	/* 1*/ {data: 'game', title: "Game", width: "250px", render: overflow},
-	/* 2*/ {data: 'type', title: "Type", width: "80px"},
-	/* 3*/ {data: 'quality', title: "Quality", width: "80px", render: $scope.qualitySort, orderSequence: ['desc', 'asc']},
-	/* 4*/ {data: 'rarity', title: "Rarity", width: "80px", render: $scope.raritySort, orderSequence: ['desc', 'asc']},
-	/* 5*/ {data: 'count', title: "Count", width: "40px", orderSequence: ['desc', 'asc']},
-	/* 6*/ {data: 'price', title: "Price", width: "80px", orderSequence: ['desc', 'asc'], render: $scope.formatCurrency},
+	/* 0*/ {data: 'image', title: "Image", width: "30px", orderable: false},
+	/* 1*/ {data: 'name', title: "Item Name", width: "250px", render: overflow},
+	/* 2*/ {data: 'game', title: "Game", width: "250px", render: overflow},
+	/* 3*/ {data: 'type', title: "Type", width: "80px"},
+	/* 4*/ {data: 'quality', title: "Quality", width: "80px", render: $scope.qualitySort, orderSequence: ['desc', 'asc']},
+	/* 5*/ {data: 'rarity', title: "Rarity", width: "80px", render: $scope.raritySort, orderSequence: ['desc', 'asc']},
+	/* 6*/ {data: 'count', title: "Count", width: "40px", orderSequence: ['desc', 'asc']},
+	/* 7*/ {data: 'price', title: "Price", width: "80px", orderSequence: ['desc', 'asc'], render: $scope.formatCurrency},
+	/* 8*/ {data: 'stack_price', title: "Price", width: "80px", orderSequence: ['desc', 'asc'], render: $scope.formatCurrency},
 	];
 
 	$scope.visCols = {
-		'753': [1, 2, 3, 5, 6, 7],
+		'753': [0, 1, 2, 3, 5, 6, 7],
 		'440': [0, 1, 4, 6, 7],
 		'730': [0, 1, 5, 6, 7],
 		'570': [0, 1, 4, 5, 6, 7],
@@ -309,7 +313,7 @@ function InvCtrl($scope, $http, $filter) {
 
 			var result = true;
 
-			if ($scope.dupes) {
+			if ($scope.flags.dupes) {
 				result = result && row.count > 1;
 			}
 
@@ -342,8 +346,14 @@ function InvCtrl($scope, $http, $filter) {
 	if (localStorage.useTable) $scope.useTable = JSON.parse(localStorage.useTable);
 	$scope.$watch('appid', function(){localStorage.appid = $scope.appid;});
 	$scope.$watch('useTable', function(){localStorage.useTable = $scope.useTable;});
-	$scope.$watch('fee', function(){$scope.table.rows().invalidate();});
-	$scope.$watch('dupes', function(){$scope.table.draw();});
+	$scope.$watch('flags.fee', function(){$scope.table.rows().invalidate();});
+	$scope.$watch('flags.dupes', function(){$scope.table.draw();});
+	$scope.$watch('flags.stack', function(old_value, new_value){
+		$scope.table.column(7).visible(new_value);
+		$scope.table.column(8).visible(old_value);
+		$('#item_table').width("100%");
+		$scope.table.draw();
+	});
 	$scope.$watch('type', function(){$scope.table.draw();});
 	$scope.$watch('curIndex', function(){
 		localStorage.curIndex = $scope.curIndex;
@@ -391,6 +401,7 @@ function Item(data) {
 	this.quality = [data.quality, data.qcolor];
 	this.count = data.count;
 	this.price = data.price;
+	this.stack_price = data.price * data.count;
 	var image_url = "http://cdn.steamcommunity.com/economy/image/" + data.icon + "/360fx360f";
 	this.image = "<i class='icon icon-fullscreen icon-white' src='" + image_url + "'></i>";
 }

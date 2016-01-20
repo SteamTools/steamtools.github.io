@@ -70,7 +70,7 @@
 				Grid Mode
 			</button>
 
-			<span><b>Total:</b> {{(items | filter:dupesFilter | filter:typeFilter | filter:filterText | sumByKey:'price':'count':fee) | currency:curIndex:false}}
+			<span><b>Total:</b> {{(items | filter:dupesFilter | filter:typeFilter | filter:filterText | sumByKey:'price':'count':flags.fee) | currency:curIndex:false}}
 				({{items | filter:dupesFilter | filter:typeFilter | filter:filterText | sumByKey:'count'}} items)</span>
 
 			<div style="margin: 0 8px" class="btn-group">
@@ -92,8 +92,11 @@
 				</div>
 			</div>
 
-			<button ng-class="{active: fee}" class="btn" ng-click="fee=!fee" ng-model="fee">Fees</button>
-			<button ng-class="{active: dupes}" class="btn" ng-click="dupes=!dupes" ng-model="dupes">Dupes</button>
+			<button ng-class="{active: flags.fee}" class="btn" ng-click="flags.fee=!flags.fee" ng-model="flags.fee">Fees</button>
+			<button ng-class="{active: flags.dupes}" class="btn" ng-click="flags.dupes=!flags.dupes" ng-model="flags.dupes">Dupes</button>
+			<span tooltip-popup-delay='250' tooltip-placement="top" tooltip="Show total price of item stacks rather than per item price">
+				<button ng-class="{active: flags.stack}" class="btn" ng-click="flags.stack=!flags.stack" ng-model="flags.stack">Stack Price</button>
+			</span>
 
 			<br>
 
@@ -126,11 +129,11 @@
 				ng-style="{'border': '2px solid #' + i.color, 'background-color': '#' + i.bg}"
 				target="_blank" ng-href="{{LISTING + i.url}}">
 				<span ng-hide="i.count == 1" class="counter">x{{i.count}}</span>
-				<span ng-if="i.rarity || i.rcolor" class="rarity {{i.rarity + appidLoaded}}" ng-style="{'background-color': '#' + i.rcolor}"
+				<span ng-show="i.rarity || i.rcolor" class="rarity {{i.rarity + appidLoaded}}" ng-style="{'background-color': '#' + i.rcolor}"
 					tooltip-popup-delay='250' tooltip-placement="top" tooltip="{{i.rarity}}">.</span>
 					<img ng-src="{{ECONOMY + i.icon + '/62fx62f'}}" tooltip-popup-delay='250' tooltip-placement="top" tooltip="{{i.name}}" class="itemicon"><br>
 					<span class="price">
-						{{((i.price || 'x') | currency:curIndex:fee) || 'N/A'}}
+						{{((i.price * (flags.stack ? i.count : 1) || 'x') | currency:curIndex:flags.fee) || 'N/A'}}
 					</span>
 			</a>
 		</div>
@@ -139,7 +142,7 @@
 	</div>
 
 	<script src="//cdn.datatables.net/plug-ins/725b2a2115b/integration/bootstrap/2/dataTables.bootstrap.js"></script>
-	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js"></script>
+	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.1.5/angular.min.js"></script>
 	<script src="//cdnjs.cloudflare.com/ajax/libs/seedrandom/2.3.6/seedrandom.min.js"></script>
 	<script src="ui-bootstrap-custom-tpls-0.7.0.min.js"></script>
 	<script src="jquery.thumbhover.js"></script>
