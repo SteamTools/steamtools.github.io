@@ -45,10 +45,12 @@ angular
 })
 .controller('BGCtrl', ['$scope', '$http', '$location',
 function($scope, $http, $location) {
-	$scope.MARKET_URL = "http://steamcommunity.com/market/listings/";
+	$scope.BASE_URL = "http://steamcommunity.com/market/listings/";
 	$scope.ECON_URL = "http://cdn.steamcommunity.com/economy/image/";
 	$scope.INV_URL = "http://mosaticon2.appspot.com/FetchBackgrounds?id=";
 	$scope.bg = [];
+	$scope.numLines = 20;
+	$scope.itemsPerLine = 0;
 
 	$scope.limits = {
 		min: 0,
@@ -58,9 +60,6 @@ function($scope, $http, $location) {
 		maxPrice: 400,
 	};
 
-	$scope.numLines = 20;
-	$scope.itemsPerLine = 0;
-	$scope.itemsReady = false;
 
 	$http.get('http://cdn.steam.tools/data/bg.json').success(function(data){
 		var maxPrice = 0;
@@ -80,19 +79,6 @@ function($scope, $http, $location) {
 		$scope.dates = data;
 		$scope.genDates();
 	});
-
-	$scope.genDates = function(){
-		if (!$scope.dates || $scope.bg.length === 0) return;
-
-		for (var i = 0; i < $scope.bg.length; i++) {
-			var e = $scope.bg[i];
-			if ($scope.dates.hasOwnProperty(e.appid)) {
-				e.time = $scope.dates[e.appid] - 1368590400;
-			} else {
-				e.time = $scope.limits.dateRange - 1;
-			}
-		}
-	};
 
 	$scope.owned = {};
 	$scope.loggedIn = false;
@@ -132,6 +118,18 @@ function($scope, $http, $location) {
 		$scope.owned = {};
 	};
 
+	$scope.genDates = function(){
+		if (!$scope.dates || $scope.bg.length === 0) return;
+
+		for (var i = 0; i < $scope.bg.length; i++) {
+			var e = $scope.bg[i];
+			if ($scope.dates.hasOwnProperty(e.appid)) {
+				e.time = $scope.dates[e.appid] - 1368590400;
+			} else {
+				e.time = $scope.limits.dateRange - 1;
+			}
+		}
+	};
 
 	$scope.getStyle = function(p){
 		var cdn = p[0] >= 82 ? "cdn" : "cdn2";
@@ -234,7 +232,6 @@ function($scope, $http, $location) {
 		$scope.divWidth = (bg_count * (256 + 10) + 10) + "px";
 		$scope.itemsPerLine = bg_count;
 		$scope.numLines = Math.max(page_size, $scope.numLines);
-		$scope.itemsReady = true;
 	};
 
 	window.onscroll = function(){
@@ -258,12 +255,6 @@ function($scope, $http, $location) {
 	}
 
 }]);
-
-window.onload = window.onresize = function() {
-	var itemDiv = document.getElementById("items");
-	var width = Math.floor(window.innerWidth / 266) * 266 + 10;
-	itemDiv.style.width = width + "px";
-};
 
 String.prototype.hashCode = function() {
 	var hash = 0, i, chr, len;

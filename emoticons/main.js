@@ -151,16 +151,6 @@ function($scope, $http, $location) {
 		return style;
 	};
 
-	$scope.fixDivSize = function() {
-		var esize = $scope.small ? 28 : 74;
-		var emote_count = Math.floor(window.innerWidth / esize) - 1;
-		var page_size = Math.ceil(window.innerHeight / esize);
-
-		$scope.divWidth = (emote_count * esize + 10) + "px";
-		$scope.itemsPerLine = emote_count;
-		$scope.numLines = Math.max(page_size, $scope.numLines);
-	};
-
 	$scope.byHue = function Hue(e){ return e.hls[0]; };
 	$scope.byBrightness = function Brightness(e){ return -e.hls[1]; };
 	$scope.bySaturation = function Saturation(e){ return e.hls[2]; };
@@ -172,6 +162,7 @@ function($scope, $http, $location) {
 	$scope.byDate = function Date(e){ return e.time; };
 
 	$scope.order = $scope.byDate;
+	$scope.showRange = true;
 	$scope.rev = true;
 
 	$scope.setOrder = function(orderFun) {
@@ -205,6 +196,16 @@ function($scope, $http, $location) {
 	});
 
 	$scope.$watch('small', $scope.fixDivSize);
+
+	$scope.fixDivSize = function() {
+		var esize = $scope.small ? 28 : 74;
+		var emote_count = Math.floor(window.innerWidth / esize) - 1;
+		var page_size = Math.ceil(window.innerHeight / esize);
+
+		$scope.divWidth = (emote_count * esize + 10) + "px";
+		$scope.itemsPerLine = emote_count;
+		$scope.numLines = Math.max(page_size, $scope.numLines);
+	};
 
 	window.onscroll = function(){
 		if ($scope.numLines * $scope.itemsPerLine > $scope.emotes.length) return;
