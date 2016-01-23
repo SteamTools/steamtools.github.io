@@ -19,12 +19,13 @@ angular
 		var data = 0;
 		var newList = [];
 		for (var i = 0; i < input.length; i++) {
+			var hls = input[i].hls || [0, 0, 0]
 			if (limits.type === "Hue") {
-				data = input[i].hls[0];
+				data = hls[0];
 			} else if (limits.type === "Brightness") {
-				data = input[i].hls[1];
+				data = hls[1];
 			} else if (limits.type === "Saturation") {
-				data = input[i].hls[2];
+				data = hls[2];
 			} else if (limits.type === "Price") {
 				data = input[i].price;
 			} else if (limits.type === "Date") {
@@ -171,9 +172,9 @@ function($scope, $http, $location) {
 		document.body.appendChild(img);
 	};
 
-	$scope.byHue = function Hue(e){ return e.hls[0]; };
-	$scope.byBrightness = function Brightness(e){ return -e.hls[1]; };
-	$scope.bySaturation = function Saturation(e){ return e.hls[2]; };
+	$scope.byHue = function Hue(e){ return e.hls ? e.hls[0] : 0; };
+	$scope.byBrightness = function Brightness(e){ return e.hls ? -e.hls[1] : 0; };
+	$scope.bySaturation = function Saturation(e){ return e.hls ? e.hls[2] : 0; };
 	$scope.byName = function Name(e){ return e.name.toLowerCase(); };
 	$scope.byGame = function Game(e){ return e.game.toLowerCase(); };
 	$scope.byPrice = function Price(e){ return e.price; };
