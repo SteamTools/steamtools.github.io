@@ -1,6 +1,6 @@
 angular
 .module('EmoteApp', ['ui-rangeSlider'])
-.filter('range', function() {
+.filter('range', function($filter) {
 	return function(input, limits) {
 		var newMin, newMax;
 		if (limits.type === "Random" || limits.type === "Name" || limits.type === "Game") {
@@ -14,10 +14,23 @@ angular
 		} else if (limits.type === "Date") {
 			newMin = limits.min / 100 * limits.dateRange;
 			newMax = limits.max / 100 * limits.dateRange;
-		}  else if (limts.type === "Length") {
+		}  else if (limits.type === "Length") {
 			newMin = 1;
 			newMax = 36;
 		}
+
+		var minLabel, maxLabel;
+		if (limits.type === "Price") {
+			minLabel = $filter('number')(newMin, 2);
+			maxLabel = $filter('number')(newMax, 2);
+		} else if (limits.type === "Date") {
+			minLabel = new Date(newMin*1000).toDateString().substr(4);
+			maxLabel = new Date(newMax*1000).toDateString().substr(4);
+		} else {
+			minLabel = parseInt(newMin, 10);
+			maxLabel = parseInt(newMax, 10);
+		}
+		limits.rangeLabel = minLabel + ' - ' + maxLabel;
 
 		var data = 0;
 		var newList = [];

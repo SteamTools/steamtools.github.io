@@ -89,6 +89,11 @@
 			width: 500px;
 			margin-bottom: -7px;
 		}
+		.limits-label {
+			vertical-align: text-bottom;
+			margin-left: 3px;
+			font-weight: bold;
+		}
 		.corner img:hover {opacity: 0.8;}
 		.topbutton:hover {background-color: #CDE; text-decoration: none;}
 		.topbutton:active {top: 12px; box-shadow: 0px 1px 0px 0px #888;}
@@ -141,6 +146,7 @@
 	<div style="width: 700px; margin: auto; margin-top: -12px" ng-show="showRange">
 		<span style="font-weight: bold; font-size: 14pt">{{limits.type}}: </span>
 		<div class="slider" range-slider min="0" max="100" model-min="limits.min" model-max="limits.max"></div>
+		<span class="limits-label">{{limits.rangeLabel}}</span>
 	</div>
 
 	<div style="display: inline-block; margin: 5px" class="input-prepend btn-group">
