@@ -175,7 +175,17 @@ function($scope, $http, $location) {
 	$scope.rev = true;
 
 	$scope.setOrder = function(orderFun) {
-		$scope.limits.type = orderFun.name;
+		var t = orderFun.name;
+		$scope.limits.type = t;
+		if (t === "Random" || t === "Name" || t === "Game") {
+			$scope.showRange = false;
+		} else {
+			$scope.showRange = true;
+		}
+
+		$scope.limits.min = 0;
+		$scope.limits.max = 100;
+
 		if ($scope.order === orderFun)
 			$scope.rev = !$scope.rev;
 		else {
