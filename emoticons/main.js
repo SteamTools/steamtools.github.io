@@ -14,18 +14,20 @@ angular
 		} else if (limits.type === "Date") {
 			newMin = limits.min / 100 * limits.dateRange;
 			newMax = limits.max / 100 * limits.dateRange;
-		}  else if (limits.type === "Length") {
-			newMin = 1;
-			newMax = 36;
+		} else if (limits.type === "Length") {
+			newMin = limits.min;
+			newMax = parseInt(limits.max / 100 * 36, 100);
 		}
 
 		var minLabel, maxLabel;
 		if (limits.type === "Price") {
-			minLabel = $filter('number')(newMin, 2);
-			maxLabel = $filter('number')(newMax, 2);
+			minLabel = '$' + $filter('number')(newMin, 2);
+			maxLabel = '$' + $filter('number')(newMax, 2);
 		} else if (limits.type === "Date") {
-			minLabel = new Date(newMin*1000).toDateString().substr(4);
-			maxLabel = new Date(newMax*1000).toDateString().substr(4);
+			minDate = (newMin + 1368590400) * 1000;
+			maxDate = (newMax + 1368590400) * 1000;
+			minLabel = new Date(minDate).toDateString().substr(4);
+			maxLabel = new Date(maxDate).toDateString().substr(4);
 		} else {
 			minLabel = parseInt(newMin, 10);
 			maxLabel = parseInt(newMax, 10);
@@ -47,7 +49,7 @@ angular
 			} else if (limits.type === "Date") {
 				data = input[i].time;
 			} else if (limits.type === "Length") {
-				data = input[i].name.length;
+				data = input[i].name.length - 2;
 			}
 
 			if (newMin <= data && data <= newMax)
