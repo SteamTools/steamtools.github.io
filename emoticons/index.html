@@ -159,12 +159,11 @@
 	<div id="loading" ng-if="emotes.length == 0">Loading...</div>
 
 	<div id="items"	ng-if="emotes.length > 0" ng-style="{'width': divWidth}">
-		<div ng-repeat="e in emotes | filter:ownTest | filter:filterText | range:limits | orderBy:order:rev | limitTo:numLines*itemsPerLine"
-			title="{{e.name}}" class="box">
+		<div ng-repeat="e in emotes | filter:ownTest | filter:filterText | range:limits | orderBy:order:rev | limitTo:numLines*itemsPerLine" title="{{e.name}}" class="box">
 			<span ng-show="date" style="font-size: 8px">{{e.date}}</span>
 			<a class="emote" ng-class="{small: small}" ng-style="getStyle(e.pos)" ng-href="{{BASE_URL + e.url}}" target="_blank"></a>
 			<span ng-show="names">{{e.name}}</span>
-		</a>
+		</div>
 	</div>
 
 	<script src="//code.jquery.com/jquery-2.2.0.min.js"></script>
