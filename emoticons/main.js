@@ -15,8 +15,8 @@ angular
 			newMin = limits.min / 100 * limits.dateRange;
 			newMax = limits.max / 100 * limits.dateRange;
 		} else if (limits.type === "Length") {
-			newMin = limits.min;
-			newMax = parseInt(limits.max / 100 * 36, 100);
+			newMin = parseInt(limits.min / 100 * 36, 10);
+			newMax = parseInt(limits.max / 100 * 36, 10);
 		}
 
 		var minLabel, maxLabel;
