@@ -14,6 +14,9 @@ angular
 		} else if (limits.type === "Date") {
 			newMin = limits.min / 100 * limits.dateRange;
 			newMax = limits.max / 100 * limits.dateRange;
+		} else if (limts.type === "Length") {
+			newMin = 1;
+			newMax = 36;
 		}
 
 		var data = 0;
@@ -30,6 +33,8 @@ angular
 				data = input[i].price;
 			} else if (limits.type === "Date") {
 				data = input[i].time;
+			} else if (limits.type === "Length") {
+				data = input[i].name.length;
 			}
 
 			if (newMin <= data && data <= newMax)
