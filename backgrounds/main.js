@@ -9,8 +9,8 @@ angular
 			newMin = limits.min / 100 * 255;
 			newMax = limits.max / 100 * 255;
 		} else if (limits.type === "Price") {
-			newMin = Math.pow(limits.min, 2) / 10000 * limits.maxPrice;
-			newMax = Math.pow(limits.max, 2) / 10000 * limits.maxPrice;
+			newMin = Math.pow(limits.min, 3) / Math.pow(100, 3) * limits.maxPrice;
+			newMax = Math.pow(limits.max, 3) / Math.pow(100, 3) * limits.maxPrice;
 		} else if (limits.type === "Date") {
 			newMin = limits.min / 100 * limits.dateRange;
 			newMax = limits.max / 100 * limits.dateRange;
