@@ -786,7 +786,7 @@ var ImportMenuCtrl = function($scope, $modalInstance) {
 		for (i = 0; i < rows.length; i++) {
 			var row = rows[i].trim();
 			if (row === "") continue;
-			var sep = row.indexOf(":") < 0 ? "ːː" ; "::" ;
+			var sep = row.indexOf(":") < 0 ? "ːː" : "::" ;
 			var emotes = row.replace(' ', '').slice(1,-1).split(sep);
 			var emoteRow = [];
 			for (j = 0; j < emotes.length; j++) {
