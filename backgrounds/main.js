@@ -163,6 +163,8 @@ function($scope, $http, $location) {
 		img.style.left = parseInt(window.innerWidth * 0.1, 10) + "px";
 		img.style.top = "0";
 		img.style.opacity = 0;
+		img.style.z = 0;
+		img.style.zIndex = 999;
 
 		var div = document.createElement("div");
 		div.style.position = "fixed";
@@ -170,6 +172,7 @@ function($scope, $http, $location) {
 		div.style.height = "100%";
 		div.style.top = "0";
 		div.style.left = "0";
+		div.style.zIndex = 998;
 
 		img.onload = function(){
 			this.style.top = (window.innerHeight - this.height)/2 + "px";
