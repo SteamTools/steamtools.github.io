@@ -81,6 +81,7 @@ div.dataTables_info {
 
 div.dataTables_scrollBody {
 	z-index: 1;
+	min-height: 163px;
 }
 
 .dataTables_filter > label {
