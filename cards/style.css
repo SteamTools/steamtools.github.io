@@ -130,10 +130,17 @@ label.btn {
 	margin: auto;
 	padding: 15px;
 	padding-bottom: 5px;
-	max-width: 1024px;
+	max-width: 1280px;
 	background: url(/img/simple.png) #eee;
 	box-shadow: 0 0 12px 5px #666;
 }
+
+@media only screen and (max-width: 1680px) {
+	#container {
+		max-width: 1024px;
+	}
+}
+
 
 .game {
 	text-align: left;
