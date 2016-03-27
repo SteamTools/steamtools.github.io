@@ -22,7 +22,7 @@ var CURRENCY_DATA = [  // Thanks to Enhanced Steam
 	{name: "INR", ratio: 67.9272,   symbolFormat: "₹ ",    right: false},
 	{name: "CLP", ratio: 708.3067,  symbolFormat: "CLP$ ", right: false},
 	{name: "PEN", ratio: 3.4845,    symbolFormat: "S/.",   right: false},
-	{name: "COL", ratio: 3361.1656, symbolFormat: "COL$ ", right: false},
+	{name: "COP", ratio: 3361.1656, symbolFormat: "COL$ ", right: false},
 	{name: "ZAR", ratio: 16.156,    symbolFormat: "R ",    right: false},
 	{name: "HKD", ratio: 7.7799,    symbolFormat: "HK$ ",  right: false},
 	{name: "NTD", ratio: 33.3559,   symbolFormat: "NT$ ",  right: false},
