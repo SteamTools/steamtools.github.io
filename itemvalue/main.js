@@ -114,6 +114,18 @@ function InvCtrl($scope, $http, $filter) {
 	$scope.iconLimit = 54;
 	$scope.useTable = false;
 
+	$http.get('http://cdn.steam.tools/data/currency.json').success(function(data){
+		var count = 0;
+		for (var i = 0; i < $scope.CDATA.length; i++) {
+			var code = $scope.CDATA[i].name;
+			if (data.hasOwnProperty(code)) {
+				$scope.CDATA[i].ratio = data[code];
+				count++;
+			}
+		}
+		console.log('Updated ' + count + '/' + $scope.CDATA.length + ' currencies');
+	});
+
 	$scope.typeMap = {
 		'753': "Steam",
 		'440': "TF2",

@@ -22,10 +22,10 @@ var CURRENCY_DATA = [  // Thanks to Enhanced Steam
 	{name: "INR", ratio: 67.9272,   symbolFormat: "₹ ",    right: false},
 	{name: "CLP", ratio: 708.3067,  symbolFormat: "CLP$ ", right: false},
 	{name: "PEN", ratio: 3.4845,    symbolFormat: "S/.",   right: false},
-	{name: "COL", ratio: 3361.1656, symbolFormat: "COL$ ", right: false},
+	{name: "COP", ratio: 3361.1656, symbolFormat: "COL$ ", right: false},
 	{name: "ZAR", ratio: 16.156,    symbolFormat: "R ",    right: false},
 	{name: "HKD", ratio: 7.7799,    symbolFormat: "HK$ ",  right: false},
-	{name: "NTD", ratio: 33.3559,   symbolFormat: "NT$ ",  right: false},
+	{name: "TWD", ratio: 33.3559,   symbolFormat: "NT$ ",  right: false},
 	{name: "SAR", ratio: 3.7456,    symbolFormat: " SR",   right: true},
 	{name: "AED", ratio: 3.6692,    symbolFormat: " AED",  right: true},
 
@@ -59,6 +59,18 @@ angular
 .controller('CardCtrl', ['$scope', '$http', '$filter', '$compile', '$modal',
 function($scope, $http, $filter, $compile, $modal){
 	$scope.CDATA = CURRENCY_DATA;
+
+	$http.get('http://cdn.steam.tools/data/currency.json').success(function(data){
+		var count = 0;
+		for (var i = 0; i < $scope.CDATA.length; i++) {
+			var code = $scope.CDATA[i].name;
+			if (data.hasOwnProperty(code)) {
+				$scope.CDATA[i].ratio = data[code];
+				count++;
+			}
+		}
+		console.log('Updated ' + count + '/' + $scope.CDATA.length + ' currencies');
+	});
 
 	// Formats and converts the prices to selected currency
 	$scope.curIndex = 0;
@@ -451,7 +463,7 @@ function($scope, $http, $filter, $compile, $modal){
 
 	// Get and load set data from the server
 	$scope.dataLoaded = false;
-	var url = "http://storage.googleapis.com/cdn.steam.tools/data/set_data.json";
+	var url = "http://cdn.steam.tools/data/set_data.json";
 	$http.get(url).success(function(data){
 		$scope.dataLoaded = true;
 		$scope.data = data;
