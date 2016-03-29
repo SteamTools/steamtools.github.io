@@ -25,7 +25,7 @@ var CURRENCY_DATA = [  // Thanks to Enhanced Steam
 	{name: "COP", ratio: 3361.1656, symbolFormat: "COL$ ", right: false},
 	{name: "ZAR", ratio: 16.156,    symbolFormat: "R ",    right: false},
 	{name: "HKD", ratio: 7.7799,    symbolFormat: "HK$ ",  right: false},
-	{name: "NTD", ratio: 33.3559,   symbolFormat: "NT$ ",  right: false},
+	{name: "TWD", ratio: 33.3559,   symbolFormat: "NT$ ",  right: false},
 	{name: "SAR", ratio: 3.7456,    symbolFormat: " SR",   right: true},
 	{name: "AED", ratio: 3.6692,    symbolFormat: " AED",  right: true},
 
