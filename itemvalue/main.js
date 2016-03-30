@@ -137,6 +137,9 @@ function InvCtrl($scope, $http, $filter) {
 		'218620': "PAYDAY 2",
 		'238460': "BBT",
 		'321360': "Primal Carnage: Extinction",
+		'232090': "Killing Floor 2",
+		'437220': "The Culling",
+		'322330': "Don't Starve Together",
 	};
 
 	$scope.setCurrency = function(i) {
@@ -293,6 +296,9 @@ function InvCtrl($scope, $http, $filter) {
 		'304930': [0, 1, 6, 7],
 		'238460': [0, 1, 6, 7],
 		'321360': [0, 1, 6, 7],
+		'232090': [0, 1, 6, 7],
+		'437220': [0, 1, 6, 7],
+		'322330': [0, 1, 3, 5, 6, 7],
 	};
 
 	// Create the table
