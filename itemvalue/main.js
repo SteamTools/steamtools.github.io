@@ -126,12 +126,30 @@ function InvCtrl($scope, $http, $filter) {
 		console.log('Updated ' + count + '/' + $scope.CDATA.length + ' currencies');
 	});
 
+	$scope.apps = [
+		"753",
+		"440",
+		"730",
+		"570",
+		"295110",
+		"433850",
+		"252490",
+		"304930",
+		"218620",
+		"238460",
+		"321360",
+		"232090",
+		"437220",
+		"322330",
+	]
+
 	$scope.typeMap = {
 		'753': "Steam",
 		'440': "TF2",
 		'730': "CS:GO",
 		'570': "Dota 2",
-		'295110': "H1Z1",
+		'295110': "H1Z1: Just Survive",
+		'433850': "H1Z1: King of the Kill",
 		'252490': "Rust",
 		'304930': "Unturned",
 		'218620': "PAYDAY 2",
@@ -141,6 +159,10 @@ function InvCtrl($scope, $http, $filter) {
 		'437220': "The Culling",
 		'322330': "Don't Starve Together",
 	};
+
+	$scope.setGame = function(appid) {
+		$scope.appid = appid;
+	}
 
 	$scope.setCurrency = function(i) {
 		$scope.curIndex = i;
@@ -291,6 +313,7 @@ function InvCtrl($scope, $http, $filter) {
 		'730': [0, 1, 5, 6, 7],
 		'570': [0, 1, 4, 5, 6, 7],
 		'295110': [0, 1, 3, 6, 7],
+		'433850': [0, 1, 3, 6, 7],
 		'252490': [0, 1, 6, 7],
 		'218620': [0, 1, 6, 7],
 		'304930': [0, 1, 6, 7],

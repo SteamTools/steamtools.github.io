@@ -28,30 +28,32 @@
 
 	<div id="container">
 		<div style="margin: 6px; font-weight: bold">Load your inventory and sort the items by market value</div>
-		<div style="padding: 0 10px;" class="btn-group">
-			<span class="input-prepend" style="margin-bottom:0">
-				<span class="add-on" style="width: 40px">Type</span>
-			</span>
-			<button type="button" class="btn" ng-model="appid" btn-radio="'753'">Steam</button>
-			<button type="button" class="btn" ng-model="appid" btn-radio="'440'">TF2</button>
-			<button type="button" class="btn" ng-model="appid" btn-radio="'730'">CS:GO</button>
-			<button type="button" class="btn" ng-model="appid" btn-radio="'570'">Dota 2</button>
-			<button type="button" class="btn" ng-model="appid" btn-radio="'295110'">H1Z1</button>
-			<button type="button" class="btn" ng-model="appid" btn-radio="'252490'">Rust</button>
-			<button type="button" class="btn" ng-model="appid" btn-radio="'304930'">Unturned</button>
-			<button type="button" class="btn" ng-model="appid" btn-radio="'218620'">PAYDAY 2</button>
-			<button type="button" class="btn" ng-model="appid" btn-radio="'238460'">BBT</button>
-			<button type="button" class="btn" ng-model="appid" btn-radio="'321360'">PC:E</button>
-			<button type="button" class="btn" ng-model="appid" btn-radio="'232090'">KF2</button>
-			<button type="button" class="btn" ng-model="appid" btn-radio="'437220'">Culling</button>
-			<button type="button" class="btn" ng-model="appid" btn-radio="'322330'">DS:T</button>
-		</div>
-		<br>
-		<form id="addinput" class="input-prepend input-append form-horizontal" style="margin-top: 10px">
+
+		<form class="input-prepend input-append form-horizontal" style="margin-right: 10px">
 			<span class="add-on">SteamID</span>
 			<input class="span2" type="text" ng-model="UserID">
 			<button class="btn btn-inverse" ng-click="loadItems()"><i class="icon-user icon-white"></i> Fetch</button>
 		</form>
+
+		<form class="btn-group" style="margin-top: 10px">
+			<span class="input-prepend" style="margin-bottom:0">
+				<span class="add-on" style="width: 60px">Game</span>
+			</span>
+			<div class="input-group btn-group">
+				<div class="input-group-addon">Game</div>
+				<div class="dropdown" dropdown>
+					<a class="btn btn-default" data-toggle="dropdown" href="#" dropdown-toggle>
+						{{ typeMap[appid] }}
+					<b class="caret"></b></a>
+					<ul class="dropdown-menu" style="width: 160px" role="menu">
+						<li ng-repeat="app in apps">
+							<a href="#" ng-click="setGame(app)">{{typeMap[app]}}</a>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</form>
+
 		<div id="error">{{status}}</div>
 		<div id="help"></div>
 
