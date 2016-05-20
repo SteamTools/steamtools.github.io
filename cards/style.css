@@ -171,6 +171,12 @@ th, td { white-space: nowrap; }
 	z-index: 2;
 }
 
+.panel label {
+	display: inline;
+	margin-bottom: 0px;
+	font-weight: normal;
+}
+
 .left {
 	left: 0;
 	border-bottom-right-radius: 5px;

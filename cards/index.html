@@ -44,51 +44,51 @@
 			</div>
 			<div class="center status">{{user_status}}</div>
 		<h4>Set Types</h4>
-			<input type="checkbox" ng-model="setType.standard"> Standard <br>
-			<input type="checkbox" ng-model="setType.foil"> Foil <br>
+			<input type="checkbox" id="standard_set" ng-model="setType.standard"> <label for="standard_set">Standard</label> <br>
+			<input type="checkbox" id="foil_set" ng-model="setType.foil"> <label for="foil_set">Foil</label> <br>
 		<br>
 		<h4>Filters</h4>
 			<div>
-				<input type="checkbox" ng-model="filters.hide_f2p">
-				<span class="help" tooltip="Hides Free-To-Play games" tooltip-placement="right"
-					tooltip-popup-delay="150"> Hide F2P </span>
+				<input id="hide_f2p" type="checkbox" ng-model="filters.hide_f2p">
+				<label for="hide_f2p" class="help" tooltip="Hides Free-To-Play games" tooltip-placement="right"
+					tooltip-popup-delay="150"> Hide F2P </label>
 			</div>
 
 			<div>
-				<input type="checkbox" ng-model="filters.hide_nonf2p">
-				<span class="help" tooltip="Hides Games that are not Free-To-Play" tooltip-placement="right"
-					tooltip-popup-delay="150"> Hide non-F2P </span>
+				<input id="hide_nonf2p" type="checkbox" ng-model="filters.hide_nonf2p">
+				<label for="hide_nonf2p" class="help" tooltip="Hides Games that are not Free-To-Play" tooltip-placement="right"
+					tooltip-popup-delay="150"> Hide non-F2P </label>
 			</div>
 
 			<div ng-if="userLoaded">
 			<div>
-				<input type="checkbox" ng-disabled="userData.games < 3" ng-model="filters.own_game">
-				<span class="help" tooltip="Filter sets you own the games for" tooltip-placement="right"
-					tooltip-popup-delay="150">Owned Games</span>
+				<input id="own_game" type="checkbox" ng-disabled="userData.games < 3" ng-model="filters.own_game">
+				<label for="own_game" class="help" tooltip="Filter sets you own the games for" tooltip-placement="right"
+					tooltip-popup-delay="150">Owned Games</label>
 			</div>
 
 			<div>
-				<input type="checkbox" ng-disabled="userData.games < 3" ng-model="filters.not_own_game">
-				<span class="help" tooltip="Filter sets you don't own the games for" tooltip-placement="right"
-					tooltip-popup-delay="150">Not Owned Games</span>
+				<input id="not_own_game" type="checkbox" ng-disabled="userData.games < 3" ng-model="filters.not_own_game">
+				<label for="not_own_game" class="help" tooltip="Filter sets you don't own the games for" tooltip-placement="right"
+					tooltip-popup-delay="150">Not Owned Games</label>
 			</div>
 
 			<div>
-				<input type="checkbox" ng-disabled="userData.cards < 3" ng-model="filters.own_cards">
-				<span class="help" tooltip="Filter sets you have cards for" tooltip-placement="right"
-					tooltip-popup-delay="150">Owned Cards</span>
+				<input id="own_cards" type="checkbox" ng-disabled="userData.cards < 3" ng-model="filters.own_cards">
+				<label for="own_cards" class="help" tooltip="Filter sets you have cards for" tooltip-placement="right"
+					tooltip-popup-delay="150">Owned Cards</label>
 			</div>
 
 			<div ng-if="hasCompleteBadges">
-				<input type="checkbox" ng-disabled="userData.badges < 3" ng-model="filters.hide_completed">
-				<span class="help" tooltip="Filter badges that can still be leveled up" tooltip-placement="right"
-					tooltip-popup-delay="150">Incomplete Badges</span>
+				<input id="hide_completed" type="checkbox" ng-disabled="userData.badges < 3" ng-model="filters.hide_completed">
+				<label for="hide_completed" class="help" tooltip="Filter badges that can still be leveled up" tooltip-placement="right"
+					tooltip-popup-delay="150">Incomplete Badges</label>
 			</div>
 
 			<div ng-if="hasCompleteBadges">
-				<input type="checkbox" ng-disabled="userData.badges < 3" ng-model="filters.hide_incompleted">
-				<span class="help" tooltip="Filter badges that are completed" tooltip-placement="right"
-					tooltip-popup-delay="150">Complete Badges</span>
+				<input id="hide_incompleted" type="checkbox" ng-disabled="userData.badges < 3" ng-model="filters.hide_incompleted">
+				<label for="hide_incompleted" class="help" tooltip="Filter badges that are completed" tooltip-placement="right"
+					tooltip-popup-delay="150">Complete Badges</label>
 			</div>
 			</div>
 			<br>
@@ -96,9 +96,9 @@
 
 		<h4>Columns</h4>
 			<div ng-repeat="col in tableColumns" ng-if="availableCol[$index]">
-				<input type="checkbox" ng-click="toggleCol($index)" ng-model="visibleCol[$index]">
-				<span class="help" tooltip-placement="right" tooltip-popup-delay="150"
-					tooltip="{{columnHints[$index]}}">{{col.title}}</span><br>
+				<input id="column_{{$index}}" type="checkbox" ng-click="toggleCol($index)" ng-model="visibleCol[$index]">
+				<label for="column_{{$index}}" class="help" tooltip-placement="right" tooltip-popup-delay="150"
+					tooltip="{{columnHints[$index]}}">{{col.title}}</label><br>
 			</div>
 
 	</div>
