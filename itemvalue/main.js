@@ -145,7 +145,7 @@ function InvCtrl($scope, $http, $filter) {
 
 	$scope.typeMap = {
 		'753': "Steam",
-		'440': "TF2",
+		'440': "Team Fortress 2",
 		'730': "CS:GO",
 		'570': "Dota 2",
 		'295110': "H1Z1: Just Survive",
@@ -153,7 +153,7 @@ function InvCtrl($scope, $http, $filter) {
 		'252490': "Rust",
 		'304930': "Unturned",
 		'218620': "PAYDAY 2",
-		'238460': "BBT",
+		'238460': "BattleBlock Theater",
 		'321360': "Primal Carnage: Extinction",
 		'232090': "Killing Floor 2",
 		'437220': "The Culling",
