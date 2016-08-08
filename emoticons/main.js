@@ -145,7 +145,7 @@ function($scope, $http, $location) {
 				e.time = $scope.dates[e.appid] - 1368590400;
 			} else {
 				e.date = "???";
-				e.time = $scope.limits.dateRange - 1;
+				e.time = 0;
 			}
 		}
 	};
