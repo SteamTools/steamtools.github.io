@@ -264,12 +264,6 @@ function($scope, $http, $filter, $compile, $modal){
 		$scope.availableCol[5] = false;
 		$scope.availableCol[7] = false;
 
-		$scope.filters.own_game = false,
-		$scope.filters.not_own_game = false,
-		$scope.filters.own_cards = false,
-		$scope.filters.hide_completed = false,
-		$scope.filters.hide_incompleted = false,
-
 		$scope.userLoaded = false;
 		$scope.UserID = "";
 
@@ -313,6 +307,14 @@ function($scope, $http, $filter, $compile, $modal){
 		'hide_f2p': false,
 		'hide_nonf2p': false,
 	};
+
+	if (localStorage.setTypeConfig !== undefined) {
+		$scope.setType = JSON.parse(localStorage.setTypeConfig);
+	}
+
+	if (localStorage.filtersConfig !== undefined) {
+		$scope.filters = JSON.parse(localStorage.filtersConfig);
+	}
 
 	$scope.tableColumns = [
 	/* 0*/ {data: 'game',         title: "Game",        width: "250px", render: $scope.overflow},
@@ -423,16 +425,18 @@ function($scope, $http, $filter, $compile, $modal){
 			var f = $scope.filters;
 			if (row.f2p && f.hide_f2p) return false;
 			if (!row.f2p && f.hide_nonf2p) return false;
-			if (f.own_game && !row.game_owned) return false;
-			if (f.not_own_game && row.game_owned) return false;
-			if (f.own_cards && row.cards_owned === 0) return false;
-			if (f.hide_completed) {
-				if (!row.foil && row.badge_lvl === 5) return false;
-				if (row.foil && row.badge_lvl === 1) return false;
-			}
-			if (f.hide_incompleted) {
-				if (!row.foil && row.badge_lvl < 5) return false;
-				if (row.foil && row.badge_lvl === 0) return false;
+			if ($scope.userLoaded) {
+				if (f.own_game && !row.game_owned) return false;
+				if (f.not_own_game && row.game_owned) return false;
+				if (f.own_cards && row.cards_owned === 0) return false;
+				if (f.hide_completed) {
+					if (!row.foil && row.badge_lvl === 5) return false;
+					if (row.foil && row.badge_lvl === 1) return false;
+				}
+				if (f.hide_incompleted) {
+					if (!row.foil && row.badge_lvl < 5) return false;
+					if (row.foil && row.badge_lvl === 0) return false;
+				}
 			}
 
 			return true;
@@ -508,10 +512,12 @@ function($scope, $http, $filter, $compile, $modal){
 
 	// Update table whenever filters are changed
 	$scope.$watch('setType', function(){
+		localStorage.setTypeConfig = JSON.stringify($scope.setType);
 		$scope.table.draw();
 	}, true);
 
 	$scope.$watch('filters', function(){
+		localStorage.filtersConfig = JSON.stringify($scope.filters);
 		$scope.table.draw();
 	}, true);
 
