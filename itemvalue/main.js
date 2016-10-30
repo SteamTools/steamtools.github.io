@@ -492,17 +492,13 @@ var RARITY_SORT = {
 	"Contraband": 95,
 	"Extraordinary": 99,
 
-	"Standard": 10,
-	"Inscribed": 20,
-	"Genuine": 30,
-	"Corrupted": 40,
-	"Frozen": 50,
-	"Exalted": 60,
-	"Heroic": 70,
-	"Elder": 80,
-	"Unusual": 90,
-	"Autographed": 100,
-
+	"Common": 10,
+	"Uncommon": 20,
+	"Rare": 30,
+	"Mythical": 40,
+	"Immortal": 50,
+	"Legendary": 60,
+	"Arcana": 70,
 };
 
 var QUALITY_SORT = {
@@ -514,11 +510,15 @@ var QUALITY_SORT = {
 	"Decorated Weapon": 60,
 	"Unusual": 70,
 
-	"Common": 10,
-	"Uncommon": 20,
-	"Rare": 30,
-	"Mythical": 40,
-	"Immortal": 50,
-	"Legendary": 60,
-	"Arcana": 70,
+	"Base": 5,
+	"Standard": 10,
+	"Inscribed": 20,
+	"Genuine": 30,
+	"Corrupted": 40,
+	"Frozen": 50,
+	"Exalted": 60,
+	"Heroic": 70,
+	"Elder": 80,
+	"Unusual": 90,
+	"Autographed": 100,
 };
