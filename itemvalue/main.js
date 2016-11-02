@@ -103,7 +103,7 @@ function InvCtrl($scope, $http, $filter) {
 	$scope.status = "Import your profile";
 	$scope.TYPES =["all", "emoticon", "background", "card", "booster"];
 	$scope.type = "0";
-	$scope.appid = "753";
+	$scope.appid = {model: "753"};
 	$scope.appidLoaded = "0";
 	$scope.curIndex = 0;
 	$scope.flags = {
@@ -160,8 +160,29 @@ function InvCtrl($scope, $http, $filter) {
 		'322330': "Don't Starve Together",
 	};
 
-	$scope.setGame = function(appid) {
-		$scope.appid = appid;
+	$scope.iconMap = {
+		'753': "steam",
+		'440': "033bdd91842b6aca0633ee1e5f3e6b82f2e8962f",
+		'730': "d1159d1a4d0e18da4d74f85dbb4934d7a92ace2b",
+		'570': "c0d15684e6c186289b50dfe083f5c562c57e8fb6",
+		'295110': "4a3e08aa79d21673a83f223b696916a8e4029f20",
+		'433850': "5b84d84ae300bbd409abef5ad0ef09b65383740e",
+		'252490': "acf87ad23570b3c81f8c9cfc19544a07edd8b632",
+		'304930': "7500f9e8568184afab30645d9fb0d18cdb4100fb",
+		'218620': "payday2",
+		'238460': "f1e4fa88188fe97c8292b27ff1359e61fdc4bcd7",
+		'321360': "acdedc2593c79f1082355e43744c9aa9efe226bf",
+		'232090': "98ab6d7da74551839cba1896f012f5e7398072a8",
+		'437220': "35718688eb35709cb00790da1cc8e0ff2599920c",
+		'322330': "5176d189ff929acc8d29a2e5f0466e18798db436",
+	};
+
+	$scope.getIcon = function(appid) {
+		var url = $scope.iconMap[appid] + ".ico";
+		if (appid !== "753" && appid !== "218620") {
+			url = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/" + appid + "/" + url;
+		}
+		return url;
 	}
 
 	$scope.setCurrency = function(i) {
@@ -174,8 +195,8 @@ function InvCtrl($scope, $http, $filter) {
 
 		$scope.items = [];
 		localStorage.lastUser = $scope.UserID;
-		localStorage.lastAppid = $scope.appid;
-		$scope.fetchItems($scope.UserID, $scope.appid);
+		localStorage.lastAppid = $scope.appid.model;
+		$scope.fetchItems($scope.UserID, $scope.appid.model);
 	};
 
 	$scope.dupesFilter = function(item) {
@@ -226,7 +247,7 @@ function InvCtrl($scope, $http, $filter) {
 				}
 			}
 
-			document.location.hash = '/' + data.name + "-" + $scope.appid;
+			document.location.hash = '/' + data.name + "-" + $scope.appid.model;
 
 			$scope.appidLoaded = appid;
 			$scope.items = data.items;
@@ -258,7 +279,7 @@ function InvCtrl($scope, $http, $filter) {
 				help.innerHTML = html;
 
 			} else {
-				var type = $scope.typeMap[$scope.appid];
+				var type = $scope.typeMap[$scope.appid.model];
 				$scope.status = "No " + type + " items found.";
 			}
 
@@ -372,7 +393,7 @@ function InvCtrl($scope, $http, $filter) {
 	}
 
 	if (localStorage.hasOwnProperty("lastAppid")) {
-		$scope.appid = localStorage.lastAppid;
+		$scope.appid.model = localStorage.lastAppid;
 	}
 
 	if (window.localStorage !== undefined && !localStorage.feedbackPrompt) {
@@ -383,9 +404,9 @@ function InvCtrl($scope, $http, $filter) {
 	}
 
 	if (localStorage.curIndex) $scope.curIndex = localStorage.curIndex;
-	if (localStorage.appid) $scope.appid = localStorage.appid;
+	if (localStorage.appid) $scope.appid.model = localStorage.appid;
 	if (localStorage.useTable) $scope.useTable = JSON.parse(localStorage.useTable);
-	$scope.$watch('appid', function(){localStorage.appid = $scope.appid;});
+	$scope.$watch('appid', function(){localStorage.appid = $scope.appid.model;});
 	$scope.$watch('useTable', function(){localStorage.useTable = $scope.useTable;});
 	$scope.$watch('flags.fee', function(){$scope.table.rows().invalidate();});
 	$scope.$watch('flags.dupes', function(){$scope.table.draw();});
@@ -426,7 +447,7 @@ function InvCtrl($scope, $http, $filter) {
 		if (validIDs.indexOf(appid) < 0) return;
 
 		$scope.UserID = name;
-		$scope.appid = appid;
+		$scope.appid.model = appid;
 		$scope.loadItems();
 	})();
 }

@@ -17,6 +17,7 @@ hr{border-top: 1px solid #DDD; margin: 12px 0;}
 	box-shadow: 0 0 12px 5px #666;
 	z-index: 1;
 }
+.game-icon { height: 32px; }
 .center{text-align: center}
 .item{display: inline-block;
 	margin: 6px;
