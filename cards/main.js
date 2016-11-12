@@ -166,12 +166,12 @@ function($scope, $http, $filter, $compile, $modal){
 			$scope.userGames[games[i]] = true;
 		}
 
-		$scope.userBadges = {};
 		$scope.userCards = {};
-
+		$scope.userBadges = {};
 		$scope.userData.games = 3;
 		$scope.userData.cards = 0;
 		$scope.userData.badges = 0;
+		$scope.user = {games: games};
 
 		$scope.importUserData();
 	}
@@ -506,7 +506,7 @@ function($scope, $http, $filter, $compile, $modal){
 			set.clean_game = $filter('normalizeForSearch')(set.game);
 			if (set.normal !== null) $scope.rows.push(new Set(set, false));
 			if (set.foil !== null) $scope.rows.push(new Set(set, true));
-			$scope.nameToAppid[set.clean_name] = set.appid;
+			$scope.nameToAppid[set.clean_game] = set.appid;
 			$scope.appidToSet[set.appid] = set;
 		}
 
