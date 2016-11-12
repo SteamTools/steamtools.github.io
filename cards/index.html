@@ -205,13 +205,14 @@
 		</div>
 		<div class="modal-body" style="text-align: center; padding: 10px 0">
 			<div ng-show="loadedGames.length == 0" id="levelInfo">
-				Enter the list of games you want to import (either by name or appid) in the box below,
+				Enter the list of games you want to import in the box below (either by name or appid),
 				one per line, and click <b>Import</b>.
 			</div>
 			<div ng-show="loadedGames.length == 0" style="margin: 10px 200px">
 				<textarea class="form-control" ng-model="gameListInput" rows="20"></textarea>
 			</div>
 			<div ng-show="loadedGames.length > 0" id="levelInfo">
+				<h4>Loaded games:</h4>
 				<div ng-repeat="game in loadedGames">{{game}}</div>
 			</div>
 			<div class="center status" ng-show='error'>{{error}}</div>
