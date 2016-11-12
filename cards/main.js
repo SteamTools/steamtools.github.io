@@ -160,6 +160,22 @@ function($scope, $http, $filter, $compile, $modal){
 		});
 	};
 
+	$scope.loadGameList = function(games) {
+		$scope.userGames = {};
+		for (var i = 0; i < games.length; i++) {
+			$scope.userGames[games[i]] = true;
+		}
+
+		$scope.userBadges = {};
+		$scope.userCards = {};
+
+		$scope.userData.games = 3;
+		$scope.userData.cards = 0;
+		$scope.userData.badges = 0;
+
+		$scope.importUserData();
+	}
+
 	// Load user data into rows
 	$scope.importUserData = function() {
 		// Only perform once we have both user and set data
@@ -283,6 +299,15 @@ function($scope, $http, $filter, $compile, $modal){
 		$modal.open({
 			templateUrl: 'levelCalculator.html',
 			controller: LevelCalcCtrl,
+			size: 'lg',
+			scope: $scope
+		});
+	};
+
+	$scope.openGameImporter = function () {
+		$modal.open({
+			templateUrl: 'gameImporter.html',
+			controller: GameImporterCtrl,
 			size: 'lg',
 			scope: $scope
 		});
@@ -472,17 +497,17 @@ function($scope, $http, $filter, $compile, $modal){
 		$scope.dataLoaded = true;
 		$scope.data = data;
 		$scope.rows = [];
+		$scope.nameToAppid = {};
+		$scope.appidToSet = {};
 
 		// For each set, add the normal and foil row, if they exist
 		for (var i = 0; i < $scope.data.sets.length; i++) {
 			var set = $scope.data.sets[i];
 			set.clean_game = $filter('normalizeForSearch')(set.game);
-			if (set.normal !== null) {
-				$scope.rows.push(new Set(set, false));
-			}
-			if (set.foil !== null) {
-				$scope.rows.push(new Set(set, true));
-			}
+			if (set.normal !== null) $scope.rows.push(new Set(set, false));
+			if (set.foil !== null) $scope.rows.push(new Set(set, true));
+			$scope.nameToAppid[set.clean_name] = set.appid;
+			$scope.appidToSet[set.appid] = set;
 		}
 
 		// Add rows to table and update
@@ -600,6 +625,47 @@ function generateMarketLink(appid, foil) {
 	return url;
 }
 
+
+var GameImporterCtrl = function($scope, $modalInstance, $filter) {
+	$scope.loaded = false;
+	$scope.gameListInput = '';
+	$scope.loadedGames = [];
+	$scope.error = false;
+
+	$scope.import = function() {
+		var appids = [];
+		var mainScope = $scope.$parent;
+		if (!mainScope.dataLoaded) {
+			$scope.error = 'Card data not yet loaded...';
+			return
+		}
+
+		var gameList = $scope.gameListInput.split('\n');
+		for (var i = 0; i < gameList.length; i++) {
+			var game = $filter('normalizeForSearch')(gameList[i].trim());
+			if (mainScope.nameToAppid.hasOwnProperty(game)) {
+				appids.push(mainScope.nameToAppid[game]);
+			} else if (mainScope.appidToSet.hasOwnProperty(game)) {
+				appids.push(game);
+			}
+		}
+
+		for (var i = 0; i < appids.length; i++) {
+			var name =mainScope.appidToSet[appids[i]].game;
+			$scope.loadedGames.push(name);
+		}
+
+		if (appids.length > 0) {
+			$scope.$parent.loadGameList(appids);
+		} else {
+			$scope.error = 'No matching game found...'
+		}
+	};
+
+	$scope.close = function() {
+		$modalInstance.dismiss('close');
+	};
+};
 
 var LevelCalcCtrl = function($scope, $modalInstance) {
 	$scope.draw = function() {

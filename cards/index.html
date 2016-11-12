@@ -43,6 +43,10 @@
 				<span ng-class="labelType[userData.badges]" class="label">Badges</span>
 			</div>
 			<div class="center status">{{user_status}}</div>
+			<div ng-show="!userLoaded" style="text-align: center;">
+				<button class="button btn" ng-click="openGameImporter()">Import Game List</button>
+			</div>
+			<br>
 		<h4>Set Types</h4>
 			<input type="checkbox" id="standard_set" ng-model="setType.standard"> <label for="standard_set">Standard</label> <br>
 			<input type="checkbox" id="foil_set" ng-model="setType.foil"> <label for="foil_set">Foil</label> <br>
@@ -191,6 +195,29 @@
 		</div>
 		<div class="modal-footer" style="text-align: center">
 			<button class="btn btn-success" ng-click="draw()">Load Data</button>
+			<button class="btn btn-danger" ng-click="close()">Close</button>
+		</div>
+	</script>
+
+	<script type="text/ng-template" id="gameImporter.html">
+		<div class="modal-header" style="text-align: center;">
+			<h3 class="modal-title">Game List Importer</h3>
+		</div>
+		<div class="modal-body" style="text-align: center; padding: 10px 0">
+			<div ng-show="loadedGames.length == 0" id="levelInfo">
+				Enter the list of games you want to import (either by name or appid) in the box below,
+				one per line, and click <b>Import</b>.
+			</div>
+			<div ng-show="loadedGames.length == 0" style="margin: 10px 200px">
+				<textarea class="form-control" ng-model="gameListInput" rows="20"></textarea>
+			</div>
+			<div ng-show="loadedGames.length > 0" id="levelInfo">
+				<div ng-repeat="game in loadedGames">{{game}}</div>
+			</div>
+			<div class="center status" ng-show='error'>{{error}}</div>
+		</div>
+		<div class="modal-footer" style="text-align: center">
+			<button class="btn btn-success" ng-show="loadedGames.length == 0" ng-click="import()">Import</button>
 			<button class="btn btn-danger" ng-click="close()">Close</button>
 		</div>
 	</script>
