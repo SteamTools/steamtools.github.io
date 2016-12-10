@@ -197,6 +197,7 @@ function InvCtrl($scope, $http, $filter) {
 		localStorage.lastUser = $scope.UserID;
 		localStorage.lastAppid = $scope.appid.model;
 		$scope.fetchItems($scope.UserID, $scope.appid.model);
+		$scope.retries = 0;
 	};
 
 	$scope.dupesFilter = function(item) {
