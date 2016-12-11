@@ -220,8 +220,6 @@ function InvCtrl($scope, $http, $filter) {
 		var url = domain + "/ParseInv?id=" + user + "&app=" + appid;
 
 		$http.get(url).success(function(data){
-			console.log(data);
-			return;
 			$scope.type = "0";
 
 			if (data.help === 1) {
