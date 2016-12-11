@@ -244,8 +244,8 @@ function InvCtrl($scope, $http, $filter) {
 				} else {
 					$scope.status = "Failed: " + data.reason;
 					delete localStorage.lastUser;
-					return;
 				}
+				return;
 			}
 
 			document.location.hash = '/' + data.name + "-" + $scope.appid.model;
