@@ -218,9 +218,10 @@ function InvCtrl($scope, $http, $filter) {
 		ind = (ind + $scope.retries) % $scope.SERVERS.length;
 		var domain = "http://" + $scope.SERVERS[ind] + ".appspot.com";
 		var url = domain + "/ParseInv?id=" + user + "&app=" + appid;
-		url += "&callback=JSON_CALLBACK";
 
-		$http.jsonp(url).success(function(data){
+		$http.get(url).success(function(data){
+			console.log(data);
+			return;
 			$scope.type = "0";
 
 			if (data.help === 1) {
