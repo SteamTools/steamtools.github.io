@@ -100,9 +100,7 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 		$scope.processedEmotes = false;
 
 		var url = "http://mosaticon.appspot.com/FetchEmotes?id=" + user;
-		url += "&callback=JSON_CALLBACK";
-
-		$http.jsonp(url).success(function(data){
+		$http.get(url).success(function(data){
 			var help = document.getElementById("help");
 			if (data.help === 1) {
 				help.innerHTML = "Make sure your " +

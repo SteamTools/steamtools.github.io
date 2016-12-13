@@ -123,9 +123,8 @@ function($scope, $http, $filter, $compile, $modal){
 		$scope.user_status = "";
 
 		var url = "http://stc-price.appspot.com/UserInfo?id=" + steamid;
-		url += "&callback=JSON_CALLBACK";
 
-		$http.jsonp(url).success(function(data){
+		$http.get(url).success(function(data){
 			if (!data.success){
 				$scope.user_status = data.reason;
 				$scope.userData = {'games': 1, 'cards': 1, 'badges': 1};
