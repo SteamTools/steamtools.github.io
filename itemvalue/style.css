@@ -72,6 +72,9 @@ hr{border-top: 1px solid #DDD; margin: 12px 0;}
 	text-align: center;
 }
 
+.captcha {margin: 8px;}
+.captcha > div {margin: auto;}
+
 .Uncommon570 {background-color: #5e98d9}
 .Rare570 {background-color: #4b69ff}
 .Mythical570 {background-color: #8847ff}

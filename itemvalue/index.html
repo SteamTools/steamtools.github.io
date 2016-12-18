@@ -9,6 +9,7 @@
 
 	<script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
 	<script src="//cdn.datatables.net/1.10.2/js/jquery.dataTables.min.js"></script>
+	<script src="https://www.google.com/recaptcha/api.js?onload=vcRecaptchaApiLoaded&render=explicit" async defer></script>
 
 	<link rel="shortcut icon" href="/favicon.ico">
 	<link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" rel="stylesheet">
@@ -30,10 +31,16 @@
 		<div style="margin: 6px; font-weight: bold">Load your inventory and sort the items by market value</div>
 
 		<div>
-			<form class="input-prepend input-append form-horizontal" style="margin-right: 10px">
-				<span class="add-on">SteamID</span>
-				<input class="span2" type="text" ng-model="UserID">
-				<button class="btn btn-inverse" ng-click="loadItems()"><i class="icon-user icon-white"></i> Fetch</button>
+			<form class="form-horizontal" ng-submit="loadItems()">
+				<div class="input-prepend input-append">
+					<span class="add-on">SteamID</span>
+					<input class="span3" type="text" ng-model="UserID">
+					<button class="btn btn-inverse" type="submit"><i class="icon-user icon-white"></i> Fetch</button>
+				</div>
+				<div ng-hide="captchaKey">
+					<div class="captcha" vc-recaptcha key="'6Le3BA8UAAAAAMTyES7HZypYt6127RuDbTBGkgeE'"
+						on-success="setCaptchaKey(response)" on-expire="setCaptchaKey(false)"></div>
+				</div>
 			</form>
 		</div>
 
@@ -136,6 +143,7 @@
 
 	<script src="//cdn.datatables.net/plug-ins/725b2a2115b/integration/bootstrap/2/dataTables.bootstrap.js"></script>
 	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.1.5/angular.min.js"></script>
+	<script src="angular-recaptcha.min.js"></script>
 	<script src="//cdnjs.cloudflare.com/ajax/libs/seedrandom/2.3.6/seedrandom.min.js"></script>
 	<script src="ui-bootstrap-custom-tpls-0.7.0.min.js"></script>
 	<script src="jquery.thumbhover.js"></script>

@@ -35,7 +35,7 @@ var CURRENCY_DATA = [  // Thanks to Enhanced Steam
 	{name: "AUD", ratio: 1.41,      symbolFormat: "A$ ",   right: false},
 ];
 
-angular.module('valueApp', ['ui.bootstrap'])
+angular.module('valueApp', ['ui.bootstrap', 'vcRecaptcha'])
 .config(['$tooltipProvider', function($tooltipProvider){
 	$tooltipProvider.setTriggers({
 		'mouseenter': 'mouseleave',
@@ -94,7 +94,7 @@ angular.module('valueApp', ['ui.bootstrap'])
 	};
 });
 
-function InvCtrl($scope, $http, $filter) {
+function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 	$scope.SERVERS = ["item-value", "item-value2", "item-value3", "item-value4", "item-value5",
 					  "item-value6", "item-value7", "item-value8", "item-value9", "item-value10"];
 	$scope.CDATA = CURRENCY_DATA;
@@ -177,6 +177,18 @@ function InvCtrl($scope, $http, $filter) {
 		'322330': "5176d189ff929acc8d29a2e5f0466e18798db436",
 	};
 
+	$scope.ts = false;
+	$scope.key = false;
+	$scope.captchaId = 0;
+	$scope.captchaKey = false;
+	$scope.setCaptchaKey = function(key) {
+		$scope.captchaKey = key;
+	}
+
+	$scope.setCaptchaId = function(id) {
+		$scope.captchaId = id;
+	}
+
 	$scope.getIcon = function(appid) {
 		var url = $scope.iconMap[appid] + ".ico";
 		if (appid !== "753" && appid !== "218620") {
@@ -190,7 +202,7 @@ function InvCtrl($scope, $http, $filter) {
 	};
 
 	$scope.loadItems = function(){
-		if (!$scope.UserID || $scope.UserID.trim() === "")
+		if (!$scope.captchaKey || !$scope.UserID || $scope.UserID.trim() === "")
 			return;
 
 		$scope.items = [];
@@ -219,7 +231,16 @@ function InvCtrl($scope, $http, $filter) {
 		var domain = "http://" + $scope.SERVERS[ind] + ".appspot.com";
 		var url = domain + "/ParseInv?id=" + user + "&app=" + appid;
 
+		if ($scope.key && $scope.ts) {
+			url += '&ts=' + $scope.ts + '&key=' + $scope.key;
+		} else if ($scope.captchaKey) {
+			url += '&captcha=' + $scope.captchaKey;
+		} else {
+			return;
+		}
+
 		$http.get(url).success(function(data){
+			if (!data) return;
 			$scope.type = "0";
 
 			if (data.help === 1) {
@@ -235,7 +256,18 @@ function InvCtrl($scope, $http, $filter) {
 				help.innerHTML = "";
 			}
 
-			if (!data || data.success === false){
+			if (data.success === false){
+				if (data.key && data.ts) {
+					$scope.key = data.key;
+					$scope.ts = data.ts;
+				} else {
+					vcRecaptchaService.reload($scope.widgetId);
+					$scope.captchaKey = false;
+					$scope.key = false;
+					$scope.ts = false;
+					data.retry = false;
+				}
+
 				if (data.retry && $scope.retries < $scope.SERVERS.length) {
 					$scope.status = "Something went wrong, retrying...";
 					$scope.retries++;
@@ -283,13 +315,12 @@ function InvCtrl($scope, $http, $filter) {
 				$scope.status = "No " + type + " items found.";
 			}
 
-		}).error(function(){
-			if ($scope.retries < $scope.SERVERS.length) {
-				$scope.retries++;
-				$scope.fetchItems(user, appid);
-			} else {
-				$scope.status = "Something went wrong... try again later.";
-			}
+		}).error(function(data){
+			$scope.status = "Something went wrong... try again later.";
+			vcRecaptchaService.reload($scope.widgetId);
+			$scope.captchaKey = false;
+			$scope.key = false;
+			$scope.ts = false;
 		});
 	};
 
@@ -448,7 +479,6 @@ function InvCtrl($scope, $http, $filter) {
 
 		$scope.UserID = name;
 		$scope.appid.model = appid;
-		$scope.loadItems();
 	})();
 }
 
