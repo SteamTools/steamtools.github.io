@@ -37,9 +37,11 @@
 					<input class="span3" type="text" ng-model="UserID">
 					<button class="btn btn-inverse" type="submit"><i class="icon-user icon-white"></i> Fetch</button>
 				</div>
-				<div ng-hide="captchaKey">
+				<div ng-hide="captchaKey || key">
 					<div class="captcha" vc-recaptcha key="'6Le3BA8UAAAAAMTyES7HZypYt6127RuDbTBGkgeE'"
-						on-success="setCaptchaKey(response)" on-expire="setCaptchaKey(false)"></div>
+						on-create="setCaptchaId(widgetId)"
+						on-success="setCaptchaKey(response)"
+						on-expire="setCaptchaKey(false)"></div>
 				</div>
 			</form>
 		</div>
