@@ -428,12 +428,12 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 		$scope.appid.model = localStorage.lastAppid;
 	}
 
-	if (window.localStorage !== undefined && !localStorage.feedbackPrompt) {
-		setTimeout(function(){
-			FireEvent("feedback", "show");
-			localStorage.feedbackPrompt = true;
-		}, 100000);
-	}
+	// if (window.localStorage !== undefined && !localStorage.feedbackPrompt) {
+	// 	setTimeout(function(){
+	// 		FireEvent("feedback", "show");
+	// 		localStorage.feedbackPrompt = true;
+	// 	}, 100000);
+	// }
 
 	if (localStorage.curIndex) $scope.curIndex = localStorage.curIndex;
 	if (localStorage.appid) $scope.appid.model = localStorage.appid;
