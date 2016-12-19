@@ -96,7 +96,7 @@ angular.module('valueApp', ['ui.bootstrap', 'vcRecaptcha'])
 
 function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 	$scope.SERVERS = ["item-value", "item-value2", "item-value3", "item-value4", "item-value5",
-					  "item-value6", "item-value7", "item-value8", "item-value9", "item-value10"];
+					  "item-value6", "item-value7", "item-value8", "item-value9", "item-value10",
 					  "item-value11", "item-value12", "item-value13", "item-value14", "item-value15"];
 	$scope.CDATA = CURRENCY_DATA;
 	$scope.ECONOMY = "http://cdn.steamcommunity.com/economy/image/";
