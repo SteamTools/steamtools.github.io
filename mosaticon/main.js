@@ -94,12 +94,14 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 
 	};
 
+	$scope.SERVERS = ['mosaticon', 'mosaticon2', 'mosaticon3', 'mosaticon4'];
 	$scope.fetchEmoticons = function(user) {
 		$scope.status = "Loading...";
 		$scope.orderBy = $filter('orderBy');
 		$scope.processedEmotes = false;
 
-		var url = "http://mosaticon.appspot.com/FetchEmotes?id=" + user;
+		var server = $scope.SERVERS[parseInt(Math.random() * 4)];
+		var url = "http://" + server + ".appspot.com/FetchEmotes?id=" + user;
 		$http.get(url).success(function(data){
 			var help = document.getElementById("help");
 			if (data.help === 1) {

@@ -61,7 +61,7 @@ angular
 .controller('EmoteCtrl', ['$scope', '$http', '$location',
 function($scope, $http, $location) {
 	$scope.BASE_URL = "http://steamcommunity.com/market/listings/";
-	$scope.INV_URL = "http://mosaticon2.appspot.com/FetchEmotes?id=";
+	$scope.SERVERS = ['mosaticon', 'mosaticon2', 'mosaticon3', 'mosaticon4'];
 	$scope.emotes = [];
 	$scope.numLines = 20;
 	$scope.itemsPerLine = 0;
@@ -98,8 +98,9 @@ function($scope, $http, $location) {
 	$scope.user_status = "Login to filter owned items";
 	$scope.userLogin = function(steamid64) {
 		$scope.loggedIn = false;
-		var url = $scope.INV_URL + steamid64 + "&callback=JSON_CALLBACK";
-		$http.jsonp(url).success(function(data){
+		var server = $scope.SERVERS[parseInt(Math.random() * 4)];
+		var url = "http://" + server + ".appspot.com/FetchEmotes?id=" + steamid64;
+		$http.get(url).success(function(data){
 			if (!data.success) {
 				$scope.user_status = data.reason;
 				return;
