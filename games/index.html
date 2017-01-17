@@ -24,33 +24,9 @@
 		<a target="_blank" href="https://twitter.com/SteamTools"><img src="/img/twitter.png" alt="Twitter"></a>
 		<a target="_blank" href="http://steamcommunity.com/groups/steam_tools"><img src="/img/steam.png" alt="Steam Group"></a>
 		<a class="topbutton" id="feedback"  href="http://steamcommunity.com/id/Ph0X"
-			data-uv-trigger popover-placement="bottom" popover-trigger="show" popover-animation="true"
+			popover-placement="bottom" popover-trigger="show" popover-animation="true"
 			popover="Got a suggestion? Found a bug? Leave feedback!">Feedback</a>
 	</div>
-
-	<script>
-	UserVoice=window.UserVoice||[];
-	(function(){
-		var uv=document.createElement('script');
-		uv.type='text/javascript';
-		uv.async=true;
-		uv.src='//widget.uservoice.com/XTFNtBU14F9kxY4Wh9Wo0A.js';
-		var s=document.getElementsByTagName('script')[0];
-		s.parentNode.insertBefore(uv,s)
-	})();
-
-	// Set colors
-	UserVoice.push(['set', {
-		accent_color: '#448dd6',
-		trigger_color: 'white',
-		trigger_background_color: '#448dd6',
-		smartvote_enabled: false,
-		menu_enabled: false,
-		contact_title: "Bugs / Suggestions"
-	}]);
-
-	UserVoice.push(['identify', {}]);
-	</script>
 
 	<div id="switch_placeholder_f37c7b4999258037274f1c470dc41520" class="switch_placeholder" style="margin: auto"></div>
 
@@ -157,6 +133,40 @@
 
 	<script> (__scads = window.__scads || []).push({"z":3189,"targetId":"switch_placeholder_f37c7b4999258037274f1c470dc41520","domain":"delivery.e.switchadhub.com","width":"728","height":"90"}); </script>
 	<script async src="//delivery.e.switchadhub.com/adserver/sat.js?v=2"></script>
+
+	<!-- Start of UserVoice code -->
+	<script>
+	$('#feedback').click(function() {
+		UserVoice=window.UserVoice||[];
+		(function(){
+			var uv=document.createElement('script');
+			uv.type='text/javascript';
+			uv.async=true;
+			uv.src='//widget.uservoice.com/XTFNtBU14F9kxY4Wh9Wo0A.js';
+			var s=document.getElementsByTagName('script')[0];
+			s.parentNode.insertBefore(uv,s)
+		})();
+
+		UserVoice.push(['set', {
+			accent_color: '#448dd6',
+			trigger_color: 'white',
+			trigger_background_color: '#448dd6',
+			smartvote_enabled: false,
+			menu_enabled: false,
+			contact_title: "Bugs / Suggestions"
+		}]);
+
+		UserVoice.push(['identify', {}]);
+		var int = setInterval(function() {
+			if (UserVoice.show) {
+				UserVoice.showLightbox();
+				clearInterval(int);
+			}
+		}, 100);
+		return false;
+	});
+	</script>
+	<!-- End of UserVoice code -->
 
 	<!-- Start of Google Analytics code -->
 	<script>
