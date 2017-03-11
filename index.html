@@ -1,6 +1,14 @@
 <!doctype html>
 <html lang="en">
 <head>
+	<!-- Google Tag Manager -->
+	<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+	new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+	j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+	'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+	})(window,document,'script','dataLayer','GTM-PX596BB');</script>
+	<!-- End Google Tag Manager -->
+
 	<meta charset="UTF-8">
 	<meta name="description" content="A set of Steam related WebApps built around trading cards, emoticons and backgrounds. They allow you to view, sort and filter the up-to-date list of items.">
 	<meta name="keywords" content="Steam,trading,emoticon,background,card,mosaticon,items,value,price,filter,sort,mosaic">
@@ -10,9 +18,13 @@
 	<link rel="stylesheet" href="style.css">
 </head>
 <body>
-	<div id="whitebg"></div>
+	<!-- Google Tag Manager (noscript) -->
+	<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PX596BB"
+	height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+	<!-- End Google Tag Manager (noscript) -->
 
-	<div id="switch_placeholder_b335c229579208f471f90f8e8b24b27f" class="adswitch_skin"></div>
+	<div id="whitebg"></div>
+	<div id="nn_skin" class="adswitch_skin"></div>
 	<div id="container">
 	<svg class="logo" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
 		 width="250px" height="130px" viewBox="417.5 106.5 2252 1172" style="enable-background:new 417.5 106.5 2252 1172;"
@@ -108,9 +120,7 @@
 	</ul>
 	<br>
 	<div style="padding-bottom: 80px;">
-		<div id="switch_placeholder_f37c7b4999258037274f1c470dc41520" class="switch_placeholder" style="margin: auto"></div>
-		<script> (__scads = window.__scads || []).push({"z":3189,"targetId":"switch_placeholder_f37c7b4999258037274f1c470dc41520","domain":"delivery.e.switchadhub.com","width":"728","height":"90"}); </script>
-		<script async src="//delivery.e.switchadhub.com/adserver/sat.js?v=2"></script>
+		<div id="nn_leaderboard" style="margin: 0px auto"></div>
 	</div>
 
 	<footer id="copyright">
@@ -132,10 +142,6 @@
 		</div>
 	</footer>
 	</div>
-
-
-	<script> (__scads = window.__scads || []).push({"z":3185,"targetId":"switch_placeholder_b335c229579208f471f90f8e8b24b27f","domain":"delivery.e.switchadhub.com","width":"1642","height":"970"}); </script>
-	<script async src="//delivery.e.switchadhub.com/adserver/sat.js?v=2"></script>
 
 	<!-- Start of Google Analytics code -->
 	<script>
@@ -172,7 +178,7 @@
 		var bgImg = new Image();
 		bgImg.src = "/img/bg.png";
 		bgImg.onload = function(){
-			whitebg.style.opacity = 0;
+			document.getElementById('whitebg').style.opacity = 0;
 		};
 	</script>
 
