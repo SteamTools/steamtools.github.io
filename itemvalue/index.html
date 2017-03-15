@@ -44,7 +44,7 @@
 		<div style="margin: 6px; font-weight: bold">Load your inventory and sort the items by market value</div>
 
 		<div>
-			<form class="form-horizontal" ng-submit="loadItems()">
+			<form class="form-horizontal">
 				<div class="input-prepend input-append">
 					<span class="add-on">SteamID</span>
 					<input class="span3" type="text" ng-model="UserID">
@@ -53,7 +53,8 @@
 						vc-recaptcha key="'6LfiCRkUAAAAAOk3W9Qc4zBY0rbNV5Um8ZJ33anE'"
 						on-create="setCaptchaId(widgetId)"
 						on-success="setCaptchaKey(response)"
-						on-expire="setCaptchaKey(false)"><i class="icon-user icon-white"></i> Fetch</button>
+						on-expire="setCaptchaKey(false)"
+						ng-click="loadItems()"><i class="icon-user icon-white"></i> Fetch</button>
 					</div>
 				</div>
 			</form>
@@ -152,6 +153,7 @@
 		</div>
 		<button style="margin: 5px;" ng-show="(items | filter:dupesFilter | filter:typeFilter | filter:filterText).length > iconLimit && !useTable" type="button" class="btn" ng-click="iconLimit=9999999">Show all</button>
 		</div>
+
 	</div>
 
 	<script src="//cdn.datatables.net/plug-ins/725b2a2115b/integration/bootstrap/2/dataTables.bootstrap.js"></script>

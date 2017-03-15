@@ -191,6 +191,11 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 		$scope.captchaId = id;
 	}
 
+	$scope.expireCaptcha = function() {
+		vcRecaptchaService.reload($scope.captchaId);
+		$scope.captchaKey = false;
+	}
+
 	$scope.getIcon = function(appid) {
 		var url = $scope.iconMap[appid] + ".ico";
 		if (appid !== "753" && appid !== "218620") {
@@ -204,6 +209,7 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 	};
 
 	$scope.loadItems = function(){
+		console.log('test');
 		if (!$scope.captchaKey || !$scope.UserID || $scope.UserID.trim() === "")
 			return;
 
@@ -263,7 +269,7 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 					$scope.key = data.key;
 					$scope.ts = data.ts;
 				} else {
-					vcRecaptchaService.reload($scope.widgetId);
+					vcRecaptchaService.reload($scope.captchaId);
 					$scope.captchaKey = false;
 					$scope.key = false;
 					$scope.ts = false;
@@ -319,7 +325,7 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 
 		}).error(function(data){
 			$scope.status = "Something went wrong... try again later.";
-			vcRecaptchaService.reload($scope.widgetId);
+			vcRecaptchaService.reload($scope.captchaId);
 			$scope.captchaKey = false;
 			$scope.key = false;
 			$scope.ts = false;
