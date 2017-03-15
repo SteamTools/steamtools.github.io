@@ -184,6 +184,7 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 	$scope.captchaKey = false;
 	$scope.setCaptchaKey = function(key) {
 		$scope.captchaKey = key;
+		$scope.loadItems();
 	}
 
 	$scope.setCaptchaId = function(id) {
@@ -230,7 +231,7 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 		var ind = Math.floor(Math.random() * $scope.SERVERS.length);
 		ind = (ind + $scope.retries) % $scope.SERVERS.length;
 		var domain = "http://" + $scope.SERVERS[ind] + ".appspot.com";
-		var url = domain + "/ItemValue?id=" + user + "&app=" + appid;
+		var url = domain + "/ItemValue?i=1&id=" + user + "&app=" + appid;
 
 		if ($scope.key && $scope.ts) {
 			url += '&ts=' + $scope.ts + '&key=' + $scope.key;

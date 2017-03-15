@@ -48,13 +48,13 @@
 				<div class="input-prepend input-append">
 					<span class="add-on">SteamID</span>
 					<input class="span3" type="text" ng-model="UserID">
-					<button class="btn btn-inverse" type="submit"><i class="icon-user icon-white"></i> Fetch</button>
-				</div>
-				<div ng-hide="captchaKey || key">
-					<div class="captcha" vc-recaptcha key="'6Le3BA8UAAAAAMTyES7HZypYt6127RuDbTBGkgeE'"
+					<div style="display: inline-block; line-height: 30px;">
+					<button class="btn btn-inverse g-recaptcha" type="submit"
+						vc-recaptcha key="'6LfiCRkUAAAAAOk3W9Qc4zBY0rbNV5Um8ZJ33anE'"
 						on-create="setCaptchaId(widgetId)"
 						on-success="setCaptchaKey(response)"
-						on-expire="setCaptchaKey(false)"></div>
+						on-expire="setCaptchaKey(false)"><i class="icon-user icon-white"></i> Fetch</button>
+					</div>
 				</div>
 			</form>
 		</div>
