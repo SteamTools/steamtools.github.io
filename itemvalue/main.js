@@ -209,7 +209,6 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 	};
 
 	$scope.loadItems = function(){
-		console.log('test');
 		if (!$scope.captchaKey || !$scope.UserID || $scope.UserID.trim() === "")
 			return;
 

@@ -44,17 +44,19 @@
 		<div style="margin: 6px; font-weight: bold">Load your inventory and sort the items by market value</div>
 
 		<div>
-			<form class="form-horizontal">
+			<form class="form-horizontal" ng-submit="loadItems()">
 				<div class="input-prepend input-append">
 					<span class="add-on">SteamID</span>
 					<input class="span3" type="text" ng-model="UserID">
 					<div style="display: inline-block; line-height: 30px;">
-					<button class="btn btn-inverse g-recaptcha" type="submit"
+					<button ng-show="captchaKey" class="btn btn-inverse" type="submit">
+						<i class="icon-user icon-white"></i> Fetch</button>
+					<button ng-hide="captchaKey" class="btn btn-inverse g-recaptcha" type="submit"
 						vc-recaptcha key="'6LfiCRkUAAAAAOk3W9Qc4zBY0rbNV5Um8ZJ33anE'"
 						on-create="setCaptchaId(widgetId)"
 						on-success="setCaptchaKey(response)"
-						on-expire="setCaptchaKey(false)"
-						ng-click="loadItems()"><i class="icon-user icon-white"></i> Fetch</button>
+						on-expire="expireCaptcha()">
+						<i class="icon-user icon-white"></i> Fetch</button>
 					</div>
 				</div>
 			</form>
