@@ -184,7 +184,7 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 	$scope.captchaKey = false;
 	$scope.setCaptchaKey = function(key) {
 		$scope.captchaKey = key;
-		$scope.loadItems();
+		if (key) $scope.loadItems();
 	}
 
 	$scope.setCaptchaId = function(id) {
@@ -263,18 +263,18 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 				help.innerHTML = "";
 			}
 
-			if (data.success === false){
-				if (data.key && data.ts) {
-					$scope.key = data.key;
-					$scope.ts = data.ts;
-				} else {
-					vcRecaptchaService.reload($scope.captchaId);
-					$scope.captchaKey = false;
-					$scope.key = false;
-					$scope.ts = false;
-					data.retry = false;
-				}
+			if (data.key && data.ts) {
+				$scope.key = data.key;
+				$scope.ts = data.ts;
+			} else {
+				vcRecaptchaService.reload($scope.captchaId);
+				$scope.captchaKey = false;
+				$scope.key = false;
+				$scope.ts = false;
+				data.retry = false;
+			}
 
+			if (data.success === false){
 				if (data.retry && $scope.retries < $scope.SERVERS.length) {
 					$scope.status = "Something went wrong, retrying...";
 					$scope.retries++;
