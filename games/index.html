@@ -1,6 +1,14 @@
 <!DOCTYPE HTML>
 <html lang="en-US" ng-app="Steam">
 <head>
+	<!-- Google Tag Manager -->
+	<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+	new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+	j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+	'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+	})(window,document,'script','dataLayer','GTM-PX596BB');</script>
+	<!-- End Google Tag Manager -->
+
 	<meta charset="UTF-8">
 	<meta name="description" content="See the intersection of your Steam games with someone else's, and filter them by categories.">
 	<meta name="keywords" content="Steam,games,filter,compare,intersection">
@@ -19,6 +27,11 @@
 	<link rel="stylesheet" type="text/css" href="style.css" media="all">
 </head>
 <body ng-controller="SteamCtrl" ng-cloak>
+	<!-- Google Tag Manager (noscript) -->
+	<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PX596BB"
+	height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+	<!-- End Google Tag Manager (noscript) -->
+
 	<a class="corner topbutton" style="left: 25px;" href="../">&laquo; Hub</a>
 	<div class="corner" style="right: 25px;">
 		<a target="_blank" href="https://twitter.com/SteamTools"><img src="/img/twitter.png" alt="Twitter"></a>
@@ -28,7 +41,7 @@
 			popover="Got a suggestion? Found a bug? Leave feedback!">Feedback</a>
 	</div>
 
-	<div id="switch_placeholder_f37c7b4999258037274f1c470dc41520" class="switch_placeholder" style="margin: auto"></div>
+	<div id="nn_leaderboard" style="margin: 0px auto; text-align: center;"></div>
 
 	<div id="container">
 		<div id="user-selection">
@@ -130,9 +143,6 @@
 	</div>
 
 	<script type="text/javascript" src="steam.js"></script>
-
-	<script> (__scads = window.__scads || []).push({"z":3189,"targetId":"switch_placeholder_f37c7b4999258037274f1c470dc41520","domain":"delivery.e.switchadhub.com","width":"728","height":"90"}); </script>
-	<script async src="//delivery.e.switchadhub.com/adserver/sat.js?v=2"></script>
 
 	<!-- Start of UserVoice code -->
 	<script>

@@ -1,6 +1,14 @@
 <!doctype html>
 <html lang="en" ng-app="valueApp">
 <head>
+	<!-- Google Tag Manager -->
+	<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+	new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+	j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+	'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+	})(window,document,'script','dataLayer','GTM-PX596BB');</script>
+	<!-- End Google Tag Manager -->
+
 	<meta charset="UTF-8">
 	<title>Item Value Sorter</title>
 	<meta name="description" content="Load your Steam Community items and sort them by market value or filter them by type.">
@@ -17,6 +25,11 @@
 	<link rel="stylesheet" href="style.css">
 </head>
 <body ng-controller="InvCtrl" ng-cloak>
+	<!-- Google Tag Manager (noscript) -->
+	<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PX596BB"
+	height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+	<!-- End Google Tag Manager (noscript) -->
+
 	<a class="corner topbutton" style="left: 25px;" href="../">&laquo; Hub</a>
 	<div class="corner" style="right: 25px;">
 		<a target="_blank" href="https://twitter.com/SteamTools"><img src="/img/twitter.png" alt="Twitter"></a>
@@ -59,9 +72,7 @@
 		<div id="error">{{status}}</div>
 		<div id="help"></div>
 
-		<div id="switch_placeholder_f37c7b4999258037274f1c470dc41520" class="switch_placeholder" style="margin: auto; margin-top: 10px"></div>
-		<script> (__scads = window.__scads || []).push({"z":3189,"targetId":"switch_placeholder_f37c7b4999258037274f1c470dc41520","domain":"delivery.e.switchadhub.com","width":"728","height":"90"}); </script>
-		<script async src="//delivery.e.switchadhub.com/adserver/sat.js?v=2"></script>
+		<div id="nn_leaderboard" style="margin: 10px auto"></div>
 
 		<div ng-show="items.length">
 			<hr>
@@ -151,9 +162,7 @@
 	<script src="jquery.thumbhover.js"></script>
 	<script src="main.js"></script>
 
-	<div id="switch_placeholder_b335c229579208f471f90f8e8b24b27f" class="adswitch_skin"></div>
-	<script> (__scads = window.__scads || []).push({"z":3185,"targetId":"switch_placeholder_b335c229579208f471f90f8e8b24b27f","domain":"delivery.e.switchadhub.com","width":"1642","height":"970"}); </script>
-	<script async src="//delivery.e.switchadhub.com/adserver/sat.js?v=2"></script>
+	<div id="nn_skin" class="adswitch_skin"></div>
 
 	<!-- Start of UserVoice code -->
 	<script>
