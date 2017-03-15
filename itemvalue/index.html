@@ -50,7 +50,7 @@
 					<input class="span3" type="text" ng-model="UserID">
 					<button ng-show="captchaKey" class="btn btn-inverse" type="submit">
 						<i class="icon-user icon-white"></i> Fetch</button>
-					<div ng-show="!captchaKey" style="display: inline-block; line-height: 30px;">
+					<div ng-show="!captchaKey" class="captcha-submit">
 					<button class="btn btn-inverse g-recaptcha" type="submit"
 						vc-recaptcha key="'6LfiCRkUAAAAAOk3W9Qc4zBY0rbNV5Um8ZJ33anE'"
 						on-create="setCaptchaId(widgetId)"
