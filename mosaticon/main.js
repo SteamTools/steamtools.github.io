@@ -44,7 +44,7 @@ angular.module('mosaticonApp', ['ui.bootstrap', 'cfp.hotkeys'])
 
 .controller('mosaticonCtrl', ['$scope', '$http', '$timeout', '$filter', '$modal', 'hotkeys',
 function($scope, $http, $timeout, $filter, $modal, hotkeys){
-	$scope.CDN = "http://cdn.steam.tools/emote";
+	$scope.CDN = "http://cdn.steam.tools/emotes/";
 	$scope.width = new Size(30);
 	$scope.height = new Size(30);
 	$scope.status = "";
@@ -186,7 +186,7 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 			$scope.emoticons.remove(e);
 			$scope.process();
 		};
-		img.src = "http://cdn.steam.tools/emote/" + e.name;
+		img.src = $scope.CDN + e.name;
 	};
 
 	$scope.getHue = function(hsl) {
