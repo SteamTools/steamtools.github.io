@@ -140,7 +140,6 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 		"238460",
 		"321360",
 		"232090",
-		"437220",
 		"322330",
 	]
 
@@ -157,7 +156,6 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 		'238460': "BattleBlock Theater",
 		'321360': "Primal Carnage: Extinction",
 		'232090': "Killing Floor 2",
-		'437220': "The Culling",
 		'322330': "Don't Starve Together",
 	};
 
@@ -174,7 +172,6 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 		'238460': "f1e4fa88188fe97c8292b27ff1359e61fdc4bcd7",
 		'321360': "acdedc2593c79f1082355e43744c9aa9efe226bf",
 		'232090': "98ab6d7da74551839cba1896f012f5e7398072a8",
-		'437220': "35718688eb35709cb00790da1cc8e0ff2599920c",
 		'322330': "5176d189ff929acc8d29a2e5f0466e18798db436",
 	};
 
@@ -379,7 +376,6 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 		'238460': [0, 1, 6, 7],
 		'321360': [0, 1, 6, 7],
 		'232090': [0, 1, 6, 7],
-		'437220': [0, 1, 6, 7],
 		'322330': [0, 1, 3, 5, 6, 7],
 	};
 
