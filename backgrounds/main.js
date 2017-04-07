@@ -157,8 +157,7 @@ function($scope, $http, $location) {
 		if (e.target.tagName !== "DIV")
 			return;
 
-		var server = $scope.SERVERS[parseInt(Math.random() * 4)];
-		var url = "http://" + server + ".appspot.com/FetchBackgroundImage?url=" + btoa(b.url);
+		var url = "http://mosaticon3.appspot.com/FetchBackgroundImage?url=" + btoa(b.url);
 		$http.get(url).success(function(data){
 			$scope.open(data)
 		}).error(function(){
