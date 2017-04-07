@@ -158,7 +158,7 @@ function($scope, $http, $location) {
 			return;
 
 		var server = $scope.SERVERS[parseInt(Math.random() * 4)];
-		var url = "http://mosaticon3.appspot.com/FetchBackgroundImage?url=" + b.url;
+		var url = "http://" + server + ".appspot.com/FetchBackgroundImage?url=" + btoa(b.url);
 		$http.get(url).success(function(data){
 			$scope.open(data)
 		}).error(function(){
