@@ -180,7 +180,7 @@
 
 	<div id="items" ng-show="bg.length > 0" ng-style="{'width': divWidth}">
 		<div class="bg" ng-repeat="b in bg | filter:ownTest | filter:filterText | orderBy:order:rev | range:limits | limitTo:numLines*itemsPerLine"
-		ng-style="getStyle(b.pos)" title="{{b.name}}" ng-click="open(b.img, $event)">
+		ng-style="getStyle(b.pos)" title="{{b.name}}" ng-click="load(b, $event)">
 			<div class="name">{{b.name}}</div>
 			<a target="_blank" ng-href="{{BASE_URL + b.url}}" class="market">{{b.price | currency}}</a>
 		</div>
