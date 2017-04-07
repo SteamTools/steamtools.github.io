@@ -153,10 +153,20 @@ function($scope, $http, $location) {
 		return style;
 	};
 
-	$scope.open = function(u, e){
+	$scope.load = function(b, e) {
 		if (e.target.tagName !== "DIV")
 			return;
 
+		var server = $scope.SERVERS[parseInt(Math.random() * 4)];
+		var url = "http://mosaticon3.appspot.com/FetchBackgroundImage?url=" + b.url;
+		$http.get(url).success(function(data){
+			$scope.open(data)
+		}).error(function(){
+			console.log('Failed to load image for: ', b);
+		});
+	};
+
+	$scope.open = function(u){
 		var img = document.createElement("img");
 		img.src = $scope.ECON_URL + u;
 		img.style.position = "fixed";
