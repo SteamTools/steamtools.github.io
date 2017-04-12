@@ -152,19 +152,19 @@ function($scope, $http, $location) {
 	};
 
 	$scope.getStyle = function(p){
-		var cdn = p[0] > 238 ? "cdn" : "cdn2";
+		var cdn = p[0] > 245 ? "cdn" : "cdn2";
 		var host = "http://" + cdn + ".steam.tools";
 		var url = host + "/emoticons/" + p[0];
 		var style;
 		if ($scope.small){
 			style = {
-				backgroundImage: "url(" + url + "s.png)",
+				backgroundImage: "url(" + url + "s.png?v2)",
 				backgroundPosition: (p[1] * -20) + "px " + (p[2] * -20) + "px"
 			};
 		}
 		else{
 			style = {
-				backgroundImage: "url(" + url + ".png)",
+				backgroundImage: "url(" + url + ".png?v2)",
 				backgroundPosition: (p[1] * -64) + "px " + (p[2] * -64) + "px"
 			};
 		}
