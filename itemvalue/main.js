@@ -463,26 +463,19 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 	if (!$scope.CDATA.hasOwnProperty($scope.curIndex))
 		$scope.curIndex = 0;
 
-
-
-
-	(function() {
-		var hash = document.location.hash.slice(1);
-		if (!hash || hash.trim().length === 0) return;
-
+	var hash = document.location.hash.slice(1);
+	if (hash && hash.trim().length > 0) {
 		hash = hash.replace('/', '');
-
 		var pos = hash.lastIndexOf("-");
-		if (pos < 0) return;
-
-		var name = hash.slice(0, pos);
-		var appid = hash.slice(pos + 1);
-		var validIDs = ["753", "570", "440", "730", "295110", "252490", "304930", "218620", "238460", "321360"];
-		if (validIDs.indexOf(appid) < 0) return;
-
-		$scope.UserID = name;
-		$scope.appid.model = appid;
-	})();
+		if (pos >= 0) {
+			var name = hash.slice(0, pos);
+			var appid = hash.slice(pos + 1);
+			if ($scope.apps.indexOf(appid) >= 0) {
+				$scope.UserID = name;
+				$scope.appid.model = appid;
+			}
+		}
+	}
 }
 
 // Set class holding all the information about a set
