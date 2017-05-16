@@ -292,6 +292,7 @@ function($scope, $http, $filter, $compile, $modal){
 
 		// Refresh rows to show updated data
 		$scope.table.rows().invalidate();
+		$scope.table.draw();
 	};
 
 	$scope.openLevelCalc = function () {
