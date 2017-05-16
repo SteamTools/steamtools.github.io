@@ -450,14 +450,14 @@ function($scope, $http, $filter, $compile, $modal){
 			if (row.f2p && f.hide_f2p) return false;
 			if (!row.f2p && f.hide_nonf2p) return false;
 			if ($scope.userLoaded) {
-				if (f.own_game && !row.game_owned) return false;
-				if (f.not_own_game && row.game_owned) return false;
-				if (f.own_cards && row.cards_owned === 0) return false;
-				if (f.hide_completed) {
+				if ($scope.userData.games === 3 && f.own_game && !row.game_owned) return false;
+				if ($scope.userData.games === 3 && f.not_own_game && row.game_owned) return false;
+				if ($scope.userData.cards === 3 && f.own_cards && row.cards_owned === 0) return false;
+				if ($scope.userData.badges === 3 && f.hide_completed) {
 					if (!row.foil && row.badge_lvl === 5) return false;
 					if (row.foil && row.badge_lvl === 1) return false;
 				}
-				if (f.hide_incompleted) {
+				if ($scope.userData.badges === 3 && f.hide_incompleted) {
 					if (!row.foil && row.badge_lvl < 5) return false;
 					if (row.foil && row.badge_lvl === 0) return false;
 				}
