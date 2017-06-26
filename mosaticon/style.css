@@ -67,7 +67,7 @@ select, input[type="number"] {width: 32px; margin-top: 0px; padding: 0 4px 01px;
 
 .adswitch_skin {
 	position: fixed !important;
-	top: 50px;
+	top: 50px !important;
 	left: 50%;
 	margin-left: -785px;
 	z-index: 0;

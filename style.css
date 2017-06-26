@@ -35,7 +35,7 @@ body {
 
 .adswitch_skin {
 	position: fixed !important;
-	top: 50px;
+	top: 50px !important;
 	left: 50%;
 	margin-left: -785px;
 	z-index: 0;
