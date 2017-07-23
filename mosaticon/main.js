@@ -95,6 +95,7 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 			$scope.emoticons = [];
 			$scope.mosaic = [];
 			$scope.processed = 0;
+			$scope.retry = 0;
 			$scope.fetchEmoticons(u);
 		}
 
@@ -102,12 +103,13 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 
 	$scope.retry = 0;
 	$scope.SERVERS = ['mosaticon', 'mosaticon2', 'mosaticon3', 'mosaticon4'];
-	$scope.fetchEmoticons = function(user) {
+	$scope.fetchEmoticons = function(user, offset = 0) {
 		$scope.status = "Loading...";
 		$scope.processedEmotes = false;
 
 		Math.seedrandom(user);
-		var server = $scope.SERVERS[parseInt(Math.random() * $scope.SERVERS.length)];
+		var serverInd = parseInt(Math.random() * $scope.SERVERS.length) + offset;
+		var server = $scope.SERVERS[serverInd % $scope.SERVERS.length];
 		var url = "http://" + server + ".appspot.com/FetchEmotes?id=" + user;
 		$http.get(url).success(function(data){
 			var help = document.getElementById("help");
@@ -127,7 +129,7 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 			if (!data || data.success === false) {
 				if ($scope.retry < 5) {
 					$scope.retry++;
-					setTimeout(() => $scope.fetchEmoticons(user), $scope.retry * 500);
+					setTimeout(() => $scope.fetchEmoticons(user, offset + 1), $scope.retry * 500);
 					return;
 				}
 				$scope.status = data.reason;
