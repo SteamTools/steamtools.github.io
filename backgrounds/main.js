@@ -143,7 +143,7 @@ function($scope, $http, $location) {
 	};
 
 	$scope.getStyle = function(p){
-		var cdn = p[0] > 215 ? "cdn" : "cdn2";
+		var cdn = p[0] > 224 ? "cdn" : "cdn2";
 		var host = "http://" + cdn + ".steam.tools";
 		var url = host + "/backgrounds/" + p[0] + ".jpg?v2";
 		var style = {
