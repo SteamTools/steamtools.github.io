@@ -140,6 +140,7 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 		"321360",
 		"232090",
 		"322330",
+		"578080",
 	]
 
 	$scope.typeMap = {
@@ -156,6 +157,7 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 		'321360': "Primal Carnage: Extinction",
 		'232090': "Killing Floor 2",
 		'322330': "Don't Starve Together",
+		'578080': "PLAYERUNKNOWN'S BATTLEGROUNDS",
 	};
 
 	$scope.iconMap = {
@@ -172,6 +174,7 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 		'321360': "acdedc2593c79f1082355e43744c9aa9efe226bf",
 		'232090': "98ab6d7da74551839cba1896f012f5e7398072a8",
 		'322330': "5176d189ff929acc8d29a2e5f0466e18798db436",
+		'578080': "93d896e7d7a42ae35c1d77239430e1d90bc82cae",
 	};
 
 	$scope.ts = false;
@@ -376,6 +379,7 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 		'321360': [0, 1, 6, 7],
 		'232090': [0, 1, 6, 7],
 		'322330': [0, 1, 3, 5, 6, 7],
+		'578080': [0, 1, 2, 3, 5, 6, 7],
 	};
 
 	// Create the table
