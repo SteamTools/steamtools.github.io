@@ -379,7 +379,7 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 		'321360': [0, 1, 6, 7],
 		'232090': [0, 1, 6, 7],
 		'322330': [0, 1, 3, 5, 6, 7],
-		'578080': [0, 1, 2, 3, 5, 6, 7],
+		'578080': [0, 1, 6, 7],
 	};
 
 	// Create the table
