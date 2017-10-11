@@ -200,9 +200,6 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 			$scope.emoticons.remove(e);
 			$scope.process();
 		};
-		console.log($scope.CDN);
-		console.log(e.name);
-		console.log($scope.CDN + e.name);
 		img.src = $scope.CDN + '/' + e.name;
 	};
 
@@ -371,7 +368,6 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 		for (var i = 0; i < similar.length; i++) {
 			e2 = similar[i][0].emote;
 			if (e1 === e2) continue;
-			console.log(e2.name);
 		}
 	};
 
