@@ -51,17 +51,17 @@
 				<span ng-if="emoticons.length > 0 && !status" style="color: #999">(left click to select / right click to disable)<br></span>
 				<img class="emote" ng-repeat="e in emoticons | filter:{disable: false}"
 					ng-src="{{CDN}}/{{e.name}}" ng-click="selectEmote($event, e)" ng-right-click="toggleEmote(e)" draggable="false"
-					ng-class="{select: e.select}" tooltip-popup-delay='200' tooltip-placement="top" tooltip=":{{e.name}}:" />
+					ng-class="{select: e.select}" tooltip-popup-delay='200' tooltip-placement="top" tooltip=":{{e.name}}:" crossorigin="anonymous" />
 			</div>
 			<div class="emotebox" style="background-color: #633; padding: 0 4px;" ng-right-click="">
 				<img class="emote" ng-repeat="e in emoticons | filter:{disable: true}"
 					ng-src="{{CDN}}/{{e.name}}" ng-click="selectEmote($event, e)" ng-right-click="toggleEmote(e)" draggable="false"
-					ng-class="{select: e.select}" tooltip-popup-delay='200' tooltip-placement="top" tooltip=":{{e.name}}:" />
+					ng-class="{select: e.select}" tooltip-popup-delay='200' tooltip-placement="top" tooltip=":{{e.name}}:" crossorigin="anonymous" />
 			</div>
 			<div class="emotebox" style="background-color: #363; padding: 0 4px;" ng-right-click="">
 				<img class="emote" ng-repeat="e in usedEmotes"
 					ng-src="{{CDN}}/{{e.name}}" ng-click="selectEmote($event, e)" ng-right-click="toggleEmote(e)" draggable="false"
-					ng-class="{select: e.select}" tooltip-popup-delay='200' tooltip-placement="top" tooltip=":{{e.name}}:" />
+					ng-class="{select: e.select}" tooltip-popup-delay='200' tooltip-placement="top" tooltip=":{{e.name}}:" crossorigin="anonymous" />
 			</div>
 			<div ng-if="emoticons.length > 0" style="text-align: center">
 				<div class="btn-group" style="display: inline-block">
