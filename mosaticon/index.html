@@ -166,7 +166,6 @@
 		</div>
 	</script>
 
-	<script src="//code.jquery.com/jquery-2.2.0.min.js"></script>
 	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.10/angular.min.js"></script>
 	<script src="//cdnjs.cloudflare.com/ajax/libs/seedrandom/2.3.6/seedrandom.min.js"></script>
 	<script src="hotkeys.min.js"></script>
@@ -177,7 +176,7 @@
 
 	<!-- Start of UserVoice code -->
 	<script>
-	$('#feedback').click(function() {
+	document.getElementById('feedback').addEventListener('click', function() {
 		UserVoice=window.UserVoice||[];
 		(function(){
 			var uv=document.createElement('script');
