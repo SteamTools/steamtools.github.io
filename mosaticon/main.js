@@ -68,7 +68,7 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 
 	$scope.emoticons = [];
 	$scope.emoteTree = new kdTree([], dist, Array.range(3));
-	$scope.processed = 0;
+	$scope.toProcess = 0;
 	$scope.loadEmoticons = function(){
 		if (window.navigator.userAgent.indexOf("Edge") > -1) {
 			$scope.status = "This tool does not work on Microsoft Edge.";
@@ -80,10 +80,10 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 
 		var u = $scope.UserID;
 		if (u[0] === ":" && u.slice(-1) === ":" && u.length > 2) {
+			$scope.toProcess += 1;
 			var emote = {'name': u.slice(1, -1)};
-			$scope.emoticons.push(emote);
-			emote.nsize = emote.name.length;
 			$scope.getEmoticonColor(emote);
+			emote.nsize = emote.name.length;
 			emote.disable = false;
 			emote.used = false;
 
@@ -94,7 +94,7 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 		} else {
 			$scope.emoticons = [];
 			$scope.mosaic = [];
-			$scope.processed = 0;
+			$scope.toProcess = 0;
 			$scope.retry = 0;
 			$scope.fetchEmoticons(u);
 		}
@@ -136,27 +136,17 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 			} else {
 				localStorage.lastUser = user;
 				$scope.status = "Processing...";
-				var oldLen = $scope.emoticons.length;
+				$scope.toProcess += data.items.length;
 				for (var i = 0; i < data.items.length; i++) {
-					$scope.emoticons.push({
-						'name': data.items[i],
-						'index': i
-					});
-				}
-
-				for (var j = oldLen; j < $scope.emoticons.length; j++) {
-					var emote = $scope.emoticons[j];
-					emote.nsize = emote.name.length;
+					var emote = {'name': data.items[i], 'index': i};
 					$scope.getEmoticonColor(emote);
+					emote.nsize = emote.name.length;
 					emote.disable = false;
 					emote.used = false;
 				}
 
-				if ($scope.emoticons.length === 0) {
+				if (data.items.length === 0) {
 					$scope.status = "You have no emoticons.";
-				} else if ($scope.selectedEmote === undefined) {
-					$scope.selectedEmote = $scope.emoticons[0];
-					$scope.selectedEmote.select = true;
 				}
 			}
 		});
@@ -194,10 +184,14 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 			obj.emote = e;
 			$scope.emoteTree.insert(obj);
 			e.hue = $scope.getHue(e.hsl1);
+			if (!$scope.selectedEmote) {
+				$scope.selectedEmote = e;
+				$scope.selectedEmote.select = true;
+			}
+			$scope.emoticons.push(e);
 			$scope.process();
 		};
 		img.onerror = function() {
-			$scope.emoticons.remove(e);
 			$scope.process();
 		};
 		img.src = $scope.CDN + '/' + e.name;
@@ -215,8 +209,8 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 
 	$scope.processedEmotes = false;
 	$scope.process = function() {
-		$scope.processed += 1;
-		if ($scope.processed >= $scope.emoticons.length) {
+		$scope.toProcess -= 1;
+		if ($scope.toProcess === 0) {
 			$scope.emoticons = $scope.orderBy($scope.emoticons, 'hue');
 			$scope.processedEmotes = true;
 			$scope.status = "";
