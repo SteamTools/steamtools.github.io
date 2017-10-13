@@ -60,7 +60,7 @@
 					ng-class="{select: e.select}" tooltip-popup-delay='200' tooltip-placement="top" tooltip=":{{e.name}}:" />
 			</div>
 			<div class="emotebox" style="background-color: #633; padding: 0 4px;" ng-right-click="">
-				<span ng-if="(e in emoticons | filter:{disable: true}).length > 0"
+				<span ng-if="(emoticons | filter:{disable: true}).length > 0"
 					style="color: #999">Disabled Emotes</span><br>
 				<img class="emote" ng-repeat="e in emoticons | filter:{disable: true}"
 					ng-src="{{CDN}}/{{e.name}}" ng-click="selectEmote($event, e)" ng-right-click="toggleEmote(e)" draggable="false"
