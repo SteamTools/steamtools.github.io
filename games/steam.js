@@ -248,8 +248,11 @@ function SteamCtrl($scope, $resource, $http){
 			results.push(e.name);
 		}
 		results.sort();
-		var data = "<pre>" + results.join("\n") + "</pre>";
-		window.open("data:text/html," + encodeURIComponent(data), "_blank");
+
+		var html = '<pre>' + results.join("\n") + '</pre>';
+		var newPage = window.open("about:blank", "_blank");
+		newPage.document.write(html);
+		newPage.document.close();
 	};
 
 	$scope.getGameName = function(appid) {
