@@ -1,3 +1,5 @@
+/* global angular */
+/* global $ */
 
 var CURRENCY_DATA = [  // Thanks to Enhanced Steam
 	{name: "AED", ratio: 3.673018,  symbolFormat: " AED",  right: true},
@@ -141,7 +143,7 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 		"232090",
 		"322330",
 		"578080",
-	]
+	];
 
 	$scope.typeMap = {
 		'753': "Steam",
@@ -184,16 +186,16 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 	$scope.setCaptchaKey = function(key) {
 		$scope.captchaKey = key;
 		if (key) $scope.loadItems();
-	}
+	};
 
 	$scope.setCaptchaId = function(id) {
 		$scope.captchaId = id;
-	}
+	};
 
 	$scope.expireCaptcha = function() {
 		vcRecaptchaService.reload($scope.captchaId);
 		$scope.captchaKey = false;
-	}
+	};
 
 	$scope.getIcon = function(appid) {
 		var url = $scope.iconMap[appid] + ".ico";
@@ -201,7 +203,7 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 			url = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/" + appid + "/" + url;
 		}
 		return url;
-	}
+	};
 
 	$scope.setCurrency = function(i) {
 		$scope.curIndex = i;
@@ -212,8 +214,8 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 			return;
 
 		$scope.items = [];
-		localStorage.lastUser = $scope.UserID;
-		localStorage.lastAppid = $scope.appid.model;
+		window.localStorage.lastUser = $scope.UserID;
+		window.localStorage.lastAppid = $scope.appid.model;
 		$scope.fetchItems($scope.UserID, $scope.appid.model);
 		$scope.retries = 0;
 	};
@@ -280,7 +282,7 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 					$scope.fetchItems(user, appid);
 				} else {
 					$scope.status = "Failed: " + data.reason;
-					delete localStorage.lastUser;
+					delete window.localStorage.lastUser;
 				}
 				return;
 			}
@@ -425,12 +427,12 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 	);
 
 
-	if (localStorage.hasOwnProperty("lastUser")) {
-		$scope.UserID = localStorage.lastUser.replace('/', '');
+	if (window.localStorage.hasOwnProperty("lastUser")) {
+		$scope.UserID = window.localStorage.lastUser.replace('/', '');
 	}
 
-	if (localStorage.hasOwnProperty("lastAppid")) {
-		$scope.appid.model = localStorage.lastAppid;
+	if (window.localStorage.hasOwnProperty("lastAppid")) {
+		$scope.appid.model = window.localStorage.lastAppid;
 	}
 
 	// if (window.localStorage !== undefined && !localStorage.feedbackPrompt) {
@@ -440,11 +442,11 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 	// 	}, 100000);
 	// }
 
-	if (localStorage.curIndex) $scope.curIndex = localStorage.curIndex;
-	if (localStorage.appid) $scope.appid.model = localStorage.appid;
-	if (localStorage.useTable) $scope.useTable = JSON.parse(localStorage.useTable);
-	$scope.$watch('appid', function(){localStorage.appid = $scope.appid.model;});
-	$scope.$watch('useTable', function(){localStorage.useTable = $scope.useTable;});
+	if (window.localStorage.curIndex) $scope.curIndex = window.localStorage.curIndex;
+	if (window.localStorage.appid) $scope.appid.model = window.localStorage.appid;
+	if (window.localStorage.useTable) $scope.useTable = JSON.parse(window.localStorage.useTable);
+	$scope.$watch('appid', function(){window.localStorage.appid = $scope.appid.model;});
+	$scope.$watch('useTable', function(){window.localStorage.useTable = $scope.useTable;});
 	$scope.$watch('flags.fee', function(){$scope.table.rows().invalidate();});
 	$scope.$watch('flags.dupes', function(){$scope.table.draw();});
 	$scope.$watch('flags.stack', function(old_value, new_value){
@@ -455,7 +457,7 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 	});
 	$scope.$watch('type', function(){$scope.table.draw();});
 	$scope.$watch('curIndex', function(){
-		localStorage.curIndex = $scope.curIndex;
+		window.localStorage.curIndex = $scope.curIndex;
 		$scope.table.rows().invalidate();
 	});
 	$scope.$watch('filterText', function(v){
@@ -525,10 +527,6 @@ function overflow(data) {
 
 
 var RARITY_SORT = {
-	"Common": 10,
-	"Uncommon": 20,
-	"Rare": 30,
-
 	"Base Grade": 10,
 	"Consumer Grade": 20,
 	"Industrial Grade": 30,
