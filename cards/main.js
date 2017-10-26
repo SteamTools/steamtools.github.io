@@ -1,4 +1,7 @@
 /* global moment */
+/* global angular */
+/* global $ */
+
 var CURRENCY_DATA = [  // Thanks to Enhanced Steam
 	{name: "AED", ratio: 3.673018,  symbolFormat: " AED",  right: true},
 	{name: "AUD", ratio: 1.2542,    symbolFormat: "A$ ",   right: false},
@@ -34,8 +37,7 @@ var CURRENCY_DATA = [  // Thanks to Enhanced Steam
 	{name: "ZAR", ratio: 12.94028,  symbolFormat: "R ",    right: false},
 ];
 
-angular
-.module('cardApp', ['ui.bootstrap', 'normalizeForSearch'])
+angular.module('cardApp', ['ui.bootstrap', 'normalizeForSearch'])
 .filter('currency', function($filter){
 	return function(input, ind, noCurrency) {
 		if (isNaN(input)) return "N/A";
@@ -93,14 +95,14 @@ function($scope, $http, $filter, $compile, $modal){
 	$scope.overflow = function(data, type) {
 		if (type === "export") return data;
 		return '<span class="game">' + data + '</span>';
-	}
+	};
 
 	// Formats timestamp using moment.js
 	$scope.date = function(timestamp, type) {
 		if (type === "export") return moment(timestamp * 1000).format("YYYY-MM-DD");
 		if (type !== "display") return timestamp;
 		return moment(timestamp * 1000).format("MMM Do, YYYY");
-	}
+	};
 
 	$scope.localizeTime = function(time) {
 		return moment(time * 1000).fromNow();
@@ -131,7 +133,7 @@ function($scope, $http, $filter, $compile, $modal){
 			}
 
 			document.location.hash = '/' + $scope.UserID;
-			localStorage.lastUser = $scope.UserID;
+			window.localStorage.lastUser = $scope.UserID;
 			$scope.user = data;
 			$scope.userGames = {};
 			if (data.games !== null) {
@@ -172,7 +174,7 @@ function($scope, $http, $filter, $compile, $modal){
 		$scope.user = {games: games};
 
 		$scope.importUserData();
-	}
+	};
 
 	// Load user data into rows
 	$scope.importUserData = function() {
@@ -281,7 +283,7 @@ function($scope, $http, $filter, $compile, $modal){
 		$scope.userLoaded = false;
 		$scope.UserID = "";
 
-		delete localStorage.lastUser;
+		delete window.localStorage.lastUser;
 		delete $scope.userGames;
 		delete $scope.userBadges;
 		delete $scope.userCards;
@@ -332,12 +334,12 @@ function($scope, $http, $filter, $compile, $modal){
 		'hide_nonf2p': false,
 	};
 
-	if (localStorage.setTypeConfig !== undefined) {
-		$scope.setType = JSON.parse(localStorage.setTypeConfig);
+	if (window.localStorage.setTypeConfig !== undefined) {
+		$scope.setType = JSON.parse(window.localStorage.setTypeConfig);
 	}
 
-	if (localStorage.filtersConfig !== undefined) {
-		$scope.filters = JSON.parse(localStorage.filtersConfig);
+	if (window.localStorage.filtersConfig !== undefined) {
+		$scope.filters = JSON.parse(window.localStorage.filtersConfig);
 	}
 
 	$scope.tableColumns = [
@@ -524,25 +526,25 @@ function($scope, $http, $filter, $compile, $modal){
 		$scope.table.draw();
 	});
 
-	if (localStorage.hasOwnProperty("curIndex")) {
-		$scope.curIndex = parseInt(localStorage.curIndex, 10);
+	if (window.localStorage.hasOwnProperty("curIndex")) {
+		$scope.curIndex = parseInt(window.localStorage.curIndex, 10);
 		if (!$scope.CDATA.hasOwnProperty($scope.curIndex))
 			$scope.curIndex = 0;
 	}
 	// Update table whenever currency is changed
 	$scope.$watch('curIndex', function(){
-		localStorage.curIndex = $scope.curIndex;
+		window.localStorage.curIndex = $scope.curIndex;
 		$scope.table.rows().invalidate();
 	});
 
 	// Update table whenever filters are changed
 	$scope.$watch('setType', function(){
-		localStorage.setTypeConfig = JSON.stringify($scope.setType);
+		window.localStorage.setTypeConfig = JSON.stringify($scope.setType);
 		$scope.table.draw();
 	}, true);
 
 	$scope.$watch('filters', function(){
-		localStorage.filtersConfig = JSON.stringify($scope.filters);
+		window.localStorage.filtersConfig = JSON.stringify($scope.filters);
 		$scope.table.draw();
 	}, true);
 
@@ -553,8 +555,8 @@ function($scope, $http, $filter, $compile, $modal){
 	} else if (getCookie("oauth_steamid") !== null) {
 		$scope.UserID = getCookie("oauth_steamid");
 		$scope.userLogin($scope.UserID);
-	} else if (localStorage.hasOwnProperty("lastUser") && localStorage.lastUser !== "undefined") {
-		$scope.UserID = localStorage.lastUser;
+	} else if (window.localStorage.hasOwnProperty("lastUser") && window.localStorage.lastUser !== "undefined") {
+		$scope.UserID = window.localStorage.lastUser;
 		$scope.userLogin($scope.UserID);
 	}
 
@@ -637,7 +639,7 @@ var GameImporterCtrl = function($scope, $modalInstance, $filter) {
 		var mainScope = $scope.$parent;
 		if (!mainScope.dataLoaded) {
 			$scope.error = 'Card data not yet loaded...';
-			return
+			return;
 		}
 
 		var gameList = $scope.gameListInput.split('\n');
@@ -658,7 +660,7 @@ var GameImporterCtrl = function($scope, $modalInstance, $filter) {
 		if (appids.length > 0) {
 			$scope.$parent.loadGameList(appids);
 		} else {
-			$scope.error = 'No matching game found...'
+			$scope.error = 'No matching game found...';
 		}
 	};
 
