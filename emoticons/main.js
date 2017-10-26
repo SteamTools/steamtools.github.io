@@ -1,5 +1,4 @@
-angular
-.module('EmoteApp', ['ui-rangeSlider'])
+angular.module('EmoteApp', ['ui-rangeSlider'])
 .filter('range', function($filter) {
 	return function(input, limits) {
 		var newMin, newMax;
@@ -152,7 +151,7 @@ function($scope, $http, $location) {
 	};
 
 	$scope.getStyle = function(p){
-		var cdn = p[0] > 299 ? "cdn" : "cdn2";
+		var cdn = p[0] > 303 ? "cdn" : "cdn2";
 		var host = "http://" + cdn + ".steam.tools";
 		var url = host + "/emoticons/" + p[0];
 		var style;

@@ -1,5 +1,4 @@
-angular
-.module('BGApp', ['ui-rangeSlider'])
+angular.module('BGApp', ['ui-rangeSlider'])
 .filter('range', function($filter) {
 	return function(input, limits) {
 		var newMin, newMax;
@@ -143,7 +142,7 @@ function($scope, $http, $location) {
 	};
 
 	$scope.getStyle = function(p){
-		var cdn = p[0] > 239 ? "cdn" : "cdn2";
+		var cdn = p[0] > 241 ? "cdn" : "cdn2";
 		var host = "http://" + cdn + ".steam.tools";
 		var url = host + "/backgrounds/" + p[0] + ".jpg?v2";
 		var style = {
