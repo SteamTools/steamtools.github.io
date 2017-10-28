@@ -2,6 +2,7 @@
 /* global $ */
 
 var CURRENCY_DATA = [
+	{name: "USD", symbolFormat: "$",     right: false, ratio: 1.0},
 	{name: "AED", symbolFormat: " AED",  right: true,  ratio: 3.673014},
 	{name: "AUD", symbolFormat: "A$ ",   right: false, ratio: 1.296921},
 	{name: "BRL", symbolFormat: "R$ ",   right: false, ratio: 3.2331},
@@ -31,7 +32,6 @@ var CURRENCY_DATA = [
 	{name: "TRY", symbolFormat: " TL",   right: true,  ratio: 3.754188},
 	{name: "TWD", symbolFormat: "NT$ ",  right: false, ratio: 30.235161},
 	{name: "UAH", symbolFormat: "₴",     right: true,  ratio: 26.678615},
-	{name: "USD", symbolFormat: "$",     right: false, ratio: 1.0},
 	{name: "VND", symbolFormat: "₫",     right: false, ratio: 22720.786641},
 	{name: "ZAR", symbolFormat: "R ",    right: false, ratio: 14.037729},
 ];
