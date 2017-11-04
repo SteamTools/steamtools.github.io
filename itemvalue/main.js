@@ -226,17 +226,23 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 	};
 
 	$scope.retries = 0;
-	$scope.fetchItems = function(user, appid){
+	$scope.fetchItems = function(user, appid, huge=false){
 		$scope.iconLimit = 54;
 		$scope.status = "Loading...";
 		var help = document.getElementById("help");
 		help.innerHTML = "";
 
-		Math.seedrandom(user);
-		user = encodeURIComponent(user);
-		var ind = Math.floor(Math.random() * $scope.SERVERS.length);
-		ind = (ind + $scope.retries) % $scope.SERVERS.length;
-		var domain = "http://" + $scope.SERVERS[ind] + ".appspot.com";
+		var domain;
+		if (huge) {
+			domain = atob('aHR0cDovL2l0ZW0tdmFsdWUxNi5hcHBzcG90LmNvbQ==');
+		} else {
+			Math.seedrandom(user);
+			user = encodeURIComponent(user);
+			var ind = Math.floor(Math.random() * $scope.SERVERS.length);
+			ind = (ind + $scope.retries) % $scope.SERVERS.length;
+			domain = "http://" + $scope.SERVERS[ind] + ".appspot.com";
+		}
+
 		var url = domain + "/ItemValue?i=1&id=" + user + "&app=" + appid;
 
 		if ($scope.key && $scope.ts) {
@@ -247,7 +253,12 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 			return;
 		}
 
-		$http.get(url).success(function(data){
+		$http.get(url).success(function(data, status){
+			if (status === 500 & !huge) {
+				$scope.fetchItems(user, appid, true);
+				return;
+			}
+
 			if (!data) return;
 			$scope.type = "0";
 
