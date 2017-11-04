@@ -108,8 +108,12 @@
 				</div>
 			</div>
 
-			<button ng-class="{active: flags.fee}" class="btn" ng-click="flags.fee=!flags.fee" ng-model="flags.fee">Fees</button>
-			<button ng-class="{active: flags.dupes}" class="btn" ng-click="flags.dupes=!flags.dupes" ng-model="flags.dupes">Dupes</button>
+			<span tooltip-popup-delay='250' tooltip-placement="top" tooltip="Include Steam's selling fee">
+				<button ng-class="{active: flags.fee}" class="btn" ng-click="flags.fee=!flags.fee" ng-model="flags.fee">Fees</button>
+			</span>
+			<span tooltip-popup-delay='250' tooltip-placement="top" tooltip="Only show duplicate items">
+				<button ng-class="{active: flags.dupes}" class="btn" ng-click="flags.dupes=!flags.dupes" ng-model="flags.dupes">Dupes</button>
+			</span>
 			<span tooltip-popup-delay='250' tooltip-placement="top" tooltip="Show total price of item stacks rather than per item price">
 				<button ng-class="{active: flags.stack}" class="btn" ng-click="flags.stack=!flags.stack" ng-model="flags.stack">Stack Price</button>
 			</span>
