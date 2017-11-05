@@ -334,7 +334,7 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 				$scope.status = "No " + type + " items found.";
 			}
 
-		}).error(function(data){
+		}).error(function(data, status){
 			if (status === 500 & !huge) {
 				$scope.fetchItems(user, appid, true);
 				return;
