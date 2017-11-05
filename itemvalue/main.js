@@ -316,6 +316,12 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 				$scope.table.columns($scope.visCols[appid]).visible(true);
 				$scope.table.columns.adjust().draw(false);
 				$scope.table.rows.add($scope.rows).draw();
+				
+				
+				if ($scope.items[0].icon === null) {
+					$scope.table.column(0).visible(0);
+					$scope.useTable = true;
+				}
 
 				var url = "http://steamcommunity.com/";
 				if (data.name.length === 17 && !isNaN(data.name)) {
