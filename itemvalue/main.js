@@ -254,11 +254,6 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 		}
 
 		$http.get(url).success(function(data, status){
-			if (status === 500 & !huge) {
-				$scope.fetchItems(user, appid, true);
-				return;
-			}
-
 			if (!data) return;
 			$scope.type = "0";
 
@@ -316,8 +311,7 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 				$scope.table.columns($scope.visCols[appid]).visible(true);
 				$scope.table.columns.adjust().draw(false);
 				$scope.table.rows.add($scope.rows).draw();
-				
-				
+
 				if ($scope.items[0].icon === null) {
 					$scope.table.column(0).visible(0);
 					$scope.useTable = true;
@@ -341,6 +335,11 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 			}
 
 		}).error(function(data){
+			if (status === 500 & !huge) {
+				$scope.fetchItems(user, appid, true);
+				return;
+			}
+
 			$scope.status = "Something went wrong... try again later.";
 			vcRecaptchaService.reload($scope.captchaId);
 			$scope.captchaKey = false;
