@@ -39,7 +39,7 @@ var CURRENCY_DATA = [
 angular.module('valueApp', ['ui.bootstrap', 'vcRecaptcha'])
 .config(['$tooltipProvider', function($tooltipProvider){
 	$tooltipProvider.setTriggers({
-		'mouseenter': 'mouseleave',
+		'motaenter': 'mouseleave',
 		'click': 'click',
 		'focus': 'blur',
 		'show': 'mouseleave'
@@ -114,7 +114,7 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 		stack: false
 	};
 	$scope.iconLimit = 54;
-	$scope.useTable = false;
+	$scope.useTable = true;
 
 	$http.get('http://cdn.steam.tools/data/currency.json').success(function(data){
 		var count = 0;
