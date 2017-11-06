@@ -283,7 +283,9 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 			}
 
 			if (data.success === false){
-				if (data.retry && $scope.retries < $scope.SERVERS.length) {
+				if (data.huge && !huge) {
+					$scope.fetchItems(user, appid, true);
+				} else if (data.retry && $scope.retries < $scope.SERVERS.length) {
 					$scope.status = "Something went wrong, retrying...";
 					$scope.retries++;
 					$scope.fetchItems(user, appid);
@@ -335,11 +337,6 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 				$scope.status = "No " + type + " items found.";
 			}
 		}, (response) => {
-			if (response.status === 500 & !huge) {
-				$scope.fetchItems(user, appid, true);
-				return;
-			}
-
 			$scope.status = "Something went wrong... try again later.";
 			vcRecaptchaService.reload($scope.captchaId);
 			$scope.captchaKey = false;
