@@ -253,7 +253,8 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 			return;
 		}
 
-		$http.get(url).success(function(data, status){
+		$http({method: 'GET', url: url}).then((response) => {
+			let data = response.data;
 			if (!data) return;
 			$scope.type = "0";
 
@@ -333,9 +334,8 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 				var type = $scope.typeMap[$scope.appid.model];
 				$scope.status = "No " + type + " items found.";
 			}
-
-		}).error(function(data, status){
-			if (status === 500 & !huge) {
+		}, (response) => {
+			if (response.status === 500 & !huge) {
 				$scope.fetchItems(user, appid, true);
 				return;
 			}
