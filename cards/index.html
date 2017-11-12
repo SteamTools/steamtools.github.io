@@ -47,7 +47,6 @@
 				</form>
 			</div>
 			<div class="openid" ng-show="userLoaded">
-				<div><a href="http://steamcommunity.com/profiles/{{user.steamid64}}">Profile</a></div>
 				<button class="button btn btn-info" ng-click="userLogin(user.steamid64)">Reload</button>
 				<button class="button btn btn-danger" ng-click="userLogout()">Logout</button>
 			</div>
@@ -59,6 +58,9 @@
 			<div class="center status">{{user_status}}</div>
 			<div ng-show="!userLoaded" style="text-align: center;">
 				<button class="button btn" ng-click="openGameImporter()">Import Game List</button>
+			</div>
+			<div ng-show="userLoaded" style="text-align: center;">
+				<a href="http://steamcommunity.com/profiles/{{user.steamid64}}">Profile link</a>
 			</div>
 			<br>
 		<h4>Set Types</h4>
