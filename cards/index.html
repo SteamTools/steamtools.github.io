@@ -55,12 +55,12 @@
 				<span ng-class="labelType[userData.cards]" class="label">Cards</span>
 				<span ng-class="labelType[userData.badges]" class="label">Badges</span>
 			</div>
+			<div ng-show="userLoaded" style="text-align: center;">
+				<a href="http://steamcommunity.com/profiles/{{user.steamid64}}">Profile link</a>
+			</div>
 			<div class="center status">{{user_status}}</div>
 			<div ng-show="!userLoaded" style="text-align: center;">
 				<button class="button btn" ng-click="openGameImporter()">Import Game List</button>
-			</div>
-			<div ng-show="userLoaded" style="text-align: center;">
-				<a href="http://steamcommunity.com/profiles/{{user.steamid64}}">Profile link</a>
 			</div>
 			<br>
 		<h4>Set Types</h4>
