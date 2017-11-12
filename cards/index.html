@@ -36,7 +36,7 @@
 
 	<div class="panel left">
 		<span class="icon glyphicon glyphicon-cog"></span>
-		<h4>Import Profile</h4>
+		<center><h4>Import Profile</h4></center>
 			<div class="openid" ng-show="!userLoaded">
 				<a href='http://oauth.steam.tools/login.php'><img src='/img/steam_openid.png'/></a>
 				<form class="input-group" style="margin-top: 8px">
@@ -47,6 +47,7 @@
 				</form>
 			</div>
 			<div class="openid" ng-show="userLoaded">
+				<div><a href="http://steamcommunity.com/profiles/{{user.steamid64}}">Profile</a></div>
 				<button class="button btn btn-info" ng-click="userLogin(user.steamid64)">Reload</button>
 				<button class="button btn btn-danger" ng-click="userLogout()">Logout</button>
 			</div>
