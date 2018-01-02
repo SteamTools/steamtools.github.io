@@ -1,0 +1,3 @@
+# PCGamerN
+google.com, pub-6177961780147591, DIRECT, f08c47fec0942fa0 # AdSense
+google.com, pub-2322157869609449, RESELLER, f08c47fec0942fa0 # Publisher Desk AdEx
