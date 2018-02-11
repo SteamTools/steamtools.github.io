@@ -179,7 +179,7 @@
 
 	<!-- Start of UserVoice code -->
 	<script>
-	document.getElementById('feedback').addEventListener('click', function() {
+	document.getElementById('feedback').addEventListener('click', function(event) {
 		UserVoice=window.UserVoice||[];
 		(function(){
 			var uv=document.createElement('script');
@@ -206,6 +206,7 @@
 				clearInterval(int);
 			}
 		}, 100);
+		event.preventDefault();
 		return false;
 	});
 	</script>

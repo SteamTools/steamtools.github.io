@@ -146,7 +146,7 @@
 
 	<!-- Start of UserVoice code -->
 	<script>
-	$('#feedback').click(function() {
+	$('#feedback').click(function(event) {
 		UserVoice=window.UserVoice||[];
 		(function(){
 			var uv=document.createElement('script');
@@ -173,6 +173,7 @@
 				clearInterval(int);
 			}
 		}, 100);
+		event.preventDefault();
 		return false;
 	});
 	</script>
