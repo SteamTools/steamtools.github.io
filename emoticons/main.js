@@ -151,7 +151,7 @@ function($scope, $http, $location) {
 	};
 
 	$scope.getStyle = function(p){
-		var cdn = p[0] > 303 ? "cdn" : "cdn2";
+		var cdn = p[0] > 326 ? "cdn" : "cdn2";
 		var host = "http://" + cdn + ".steam.tools";
 		var url = host + "/emoticons/" + p[0];
 		var style;
