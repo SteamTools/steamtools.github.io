@@ -650,11 +650,11 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 	};
 
 	$scope.horizontalFlip = function() {
-		$scope.mosaic.reverse();
+		$scope.mosaic.forEach((e) => e.reverse());
 	}
 
 	$scope.verticalFlip = function() {
-		$scope.mosaic.forEach((e) => e.reverse());
+		$scope.mosaic.reverse();
 	}
 
 	// Hotkeys
