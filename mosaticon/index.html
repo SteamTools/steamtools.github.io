@@ -103,7 +103,10 @@
 			</div>
 		</div>
 		<div id="preview" ng-show="processedEmotes && emoticons.length > 0">
+			<button class="btn btn-inverse action-btn" ng-click="importMenu()">Import</button>
+			<button class="btn btn-inverse action-btn" ng-click="exportMosaic()">Export</button>
 			<div class="btn-group" style="display: inline-block" ng-show="imageLoaded">
+				<br>
 				<span class="input-prepend" style="margin-bottom:0;">
 					<span class="add-on" style="width: 100px">Compare Mode</span>
 				</span>
@@ -134,8 +137,10 @@
 				<button type="button" class="btn tool-btn" ng-model="tool" btn-radio="'move'"><i class="icon-move"></i></button>
 				<button type="button" class="btn tool-btn" ng-model="tool" btn-radio="'fill'"><i class="icon-tint"></i></button>
 			</div>
-			<button class="btn btn-inverse action-btn" ng-click="importMenu()">Import</button>
-			<button class="btn btn-inverse action-btn" ng-click="exportMosaic()">Export</button>
+			<div class="btn-group" style="margin: 8px; margin-bottom: 0; display: inline-block" ng-show="imageLoaded || blankLoaded">
+				<button type="button" class="btn tool-btn" ng-click=horizontalFlip><i class="icon-resize-horizontal"></i></button>
+				<button type="button" class="btn tool-btn" ng-click=verticalFlip><i class="icon-resize-vertical"></i></button>
+			</div>
 			<br>
 			<div style="margin-bottom: -12px; font-size: 10px;">Press <b>?</b> for keyboard shortcuts</div>
 			<br>

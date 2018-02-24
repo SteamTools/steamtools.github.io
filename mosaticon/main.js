@@ -649,14 +649,24 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 		}
 	};
 
+	$scope.horizontalFlip = function() {
+		$scope.mosaic.reverse();
+	}
+
+	$scope.verticalFlip = function() {
+		$scope.mosaic.forEach((e) => e.reverse());
+	}
+
 	// Hotkeys
 	hotkeys.add('ctrl+z', 'Undo', $scope.undo);
-	hotkeys.add('q', 'Pen Tool', function(){$scope.tool = "pen";});
-	hotkeys.add('w', 'Line Tool', function(){$scope.tool = "line";});
-	hotkeys.add('e', 'Rectangle Tool', function(){$scope.tool = "rect";});
-	hotkeys.add('a', 'Circle Tool', function(){$scope.tool = "circ";});
-	hotkeys.add('s', 'Move Tool', function(){$scope.tool = "move";});
-	hotkeys.add('d', 'Bucket Tool', function(){$scope.tool = "fill";});
+	hotkeys.add('q', 'Pen Tool', () => $scope.tool = "pen");
+	hotkeys.add('w', 'Line Tool', () => $scope.tool = "line");
+	hotkeys.add('e', 'Rectangle Tool', () => $scope.tool = "rect");
+	hotkeys.add('a', 'Circle Tool', () => $scope.tool = "circ");
+	hotkeys.add('s', 'Move Tool', () => $scope.tool = "move");
+	hotkeys.add('d', 'Bucket Tool', () => $scope.tool = "fill");
+	hotkeys.add('h', 'Horizontal flip', () => $scope.horizontalFlip());
+	hotkeys.add('v', 'Vertical flip', () => $scope.verticalFlip());
 
 	$scope.wSliderActive = false;
 	$scope.hSliderActive = false;
