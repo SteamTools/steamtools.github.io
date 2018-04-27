@@ -563,7 +563,6 @@ function($scope, $http, $filter, $compile, $modal){
 		const oauth = unescape(getCookie("oauth_steamid"))
 		$scope.UserID = parsed.split('/id/')[1];
 		console.log(oauth, $scope.UserID);
-		 = getCookie("oauth_steamid");
 		$scope.userLogin($scope.UserID);
 	} else if (window.localStorage.hasOwnProperty("lastUser") && window.localStorage.lastUser !== "undefined") {
 		$scope.UserID = window.localStorage.lastUser;
