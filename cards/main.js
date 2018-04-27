@@ -560,7 +560,10 @@ function($scope, $http, $filter, $compile, $modal){
 		$scope.UserID = hash;
 		$scope.userLogin($scope.UserID);
 	} else if (getCookie("oauth_steamid") !== null) {
-		$scope.UserID = getCookie("oauth_steamid");
+		const oauth = unescape(getCookie("oauth_steamid"))
+		$scope.UserID = parsed.split('/id/')[1];
+		console.log(oauth, $scope.UserID);
+		 = getCookie("oauth_steamid");
 		$scope.userLogin($scope.UserID);
 	} else if (window.localStorage.hasOwnProperty("lastUser") && window.localStorage.lastUser !== "undefined") {
 		$scope.UserID = window.localStorage.lastUser;
