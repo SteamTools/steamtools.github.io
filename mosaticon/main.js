@@ -70,11 +70,6 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 	$scope.emoteTree = new kdTree([], dist, Array.range(3));
 	$scope.toProcess = 0;
 	$scope.loadEmoticons = function(){
-		if (window.navigator.userAgent.indexOf("Edge") > -1) {
-			$scope.status = "This tool does not work on Microsoft Edge.";
-			return;
-		}
-
 		if (!$scope.UserID || $scope.UserID.trim() === "")
 			return;
 
