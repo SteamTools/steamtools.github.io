@@ -274,7 +274,7 @@ function($scope, $http, $location) {
 
 	if (getCookie("oauth_steamid") !== null) {
 		const oauth = unescape(getCookie("oauth_steamid"))
-		const steamid64 = oauth.split('/id/')[1];
+		const steamid64 = oauth.split('/id/')[1].replace('"', '');
 		console.log(oauth, steamid64);
 		$scope.userLogin(steamid64);
 	}
