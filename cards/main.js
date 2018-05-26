@@ -130,7 +130,9 @@ function($scope, $http, $filter, $compile, $modal){
 		$scope.userData = {'games': 2, 'cards': 2, 'badges': 2};
 		$scope.user_status = "";
 
-		var url = "http://stc-price.appspot.com/UserInfo?id=" + steamid;
+		const serverIndex = steamid.slice(-1).charCodeAt(0) % 2;
+		const server = ['stc-price', 'stc-price2'][serverIndex]
+		var url = "http://" + server + ".appspot.com/UserInfo?id=" + steamid;
 
 		$http.get(url).success(function(data){
 			if (!data.success){
