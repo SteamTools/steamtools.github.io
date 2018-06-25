@@ -52,6 +52,9 @@ angular.module('valueApp', ['ui.bootstrap', 'vcRecaptcha'])
 		'show': 'mouseleave'
 	});
 }])
+.config(['$locationProvider', function($locationProvider) {
+  $locationProvider.hashPrefix('');
+}])
 .filter('sumByKey', function() {
 	return function(data, key, mult, fee) {
 		if (data === undefined || key === undefined) {
