@@ -100,9 +100,9 @@ angular.module('valueApp', ['ui.bootstrap', 'vcRecaptcha'])
 		if (after) return out + symbol;
 		else return symbol + out;
 	};
-});
-
-function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
+}).controller('InvCtrl',
+	['$scope', '$http', '$filter', 'vcRecaptchaService',
+ 		($scope, $http, $filter, vcRecaptchaService) => {
 	$scope.SERVERS = ["item-value", "item-value2", "item-value3", "item-value4", "item-value5",
 					  "item-value6", "item-value7", "item-value8", "item-value9", "item-value10",
 					  "item-value11", "item-value12", "item-value13", "item-value14", "item-value15"];
@@ -123,7 +123,7 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 	$scope.iconLimit = 54;
 	$scope.useTable = true;
 
-	$http.get('http://cdn.steam.tools/data/currency.json').success(function(data){
+	$http.get('http://cdn.steam.tools/data/currency.json').then(({data}) => {
 		var count = 0;
 		for (var i = 0; i < $scope.CDATA.length; i++) {
 			var code = $scope.CDATA[i].name;
@@ -501,7 +501,7 @@ function InvCtrl($scope, $http, $filter, vcRecaptchaService) {
 			}
 		}
 	}
-}
+}]);
 
 // Set class holding all the information about a set
 function Item(data) {
