@@ -45,7 +45,7 @@ angular.module('mosaticonApp', ['ui.bootstrap', 'cfp.hotkeys'])
 .controller('mosaticonCtrl', ['$scope', '$http', '$timeout', '$filter', '$modal', 'hotkeys',
 function($scope, $http, $timeout, $filter, $modal, hotkeys){
 	$scope.orderBy = $filter('orderBy');
-	$scope.CDN = "http://cdn.steam.tools/emotes";
+	$scope.CDN = "https://cdn.steam.tools/emotes";
 	$scope.width = new Size(30);
 	$scope.height = new Size(30);
 	$scope.status = "";
@@ -105,7 +105,7 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 		Math.seedrandom(user);
 		var serverInd = parseInt(Math.random() * $scope.SERVERS.length) + offset;
 		var server = $scope.SERVERS[serverInd % $scope.SERVERS.length];
-		var url = "http://" + server + ".appspot.com/FetchEmotes?id=" + user;
+		var url = "https://" + server + ".appspot.com/FetchEmotes?id=" + user;
 		$http.get(url).success(function(data){
 			var help = document.getElementById("help");
 			if (data.help === 1) {

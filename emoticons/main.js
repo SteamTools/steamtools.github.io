@@ -73,7 +73,7 @@ function($scope, $http, $location) {
 		maxPrice: 400,
 	};
 
-	$http.get('http://cdn.steam.tools/data/emote.json').success(function(data){
+	$http.get('https://cdn.steam.tools/data/emote.json').success(function(data){
 		var maxPrice = 0;
 		for (var i = 0; i < data.length; i++) {
 			data[i].appid = data[i].url.split('-')[0].substr(4);
@@ -87,7 +87,7 @@ function($scope, $http, $location) {
 		$scope.genDates();
 	});
 
-	$http.get('http://cdn.steam.tools/data/dates.json').success(function(data){
+	$http.get('https://cdn.steam.tools/data/dates.json').success(function(data){
 		$scope.dates = data;
 		$scope.genDates();
 	});
@@ -98,7 +98,7 @@ function($scope, $http, $location) {
 	$scope.userLogin = function(steamid64) {
 		$scope.loggedIn = false;
 		var server = $scope.SERVERS[parseInt(Math.random() * 4)];
-		var url = "http://" + server + ".appspot.com/FetchEmotes?id=" + steamid64;
+		var url = "https://" + server + ".appspot.com/FetchEmotes?id=" + steamid64;
 		$http.get(url).success(function(data){
 			if (!data.success) {
 				$scope.user_status = data.reason;
@@ -152,7 +152,7 @@ function($scope, $http, $location) {
 
 	$scope.getStyle = function(p){
 		var cdn = p[0] > 326 ? "cdn" : "cdn2";
-		var host = "http://" + cdn + ".steam.tools";
+		var host = "https://" + cdn + ".steam.tools";
 		var url = host + "/emoticons/" + p[0];
 		var style;
 		if ($scope.small){

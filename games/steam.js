@@ -90,12 +90,12 @@ function SteamCtrl($scope, $resource, $http){
 	$scope.fullGameList = [];
 	$scope.Users = users.slice();
 
-	var url = "http://cdn.steam.tools/data/game_data.json";
+	var url = "https://cdn.steam.tools/data/game_data.json";
 	$http.get(url).success(function(data){
 		$scope.gameData = data;
 	});
 
-	$scope.userData = $resource('http://st-games.appspot.com/info',
+	$scope.userData = $resource('https://st-games.appspot.com/info',
 							{callback:'JSON_CALLBACK'},
 							{getData: {method:'JSONP'} });
 

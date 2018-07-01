@@ -70,7 +70,7 @@ function($scope, $http, $location) {
 	};
 
 
-	$http.get('http://cdn.steam.tools/data/bg.json').success(function(data){
+	$http.get('https://cdn.steam.tools/data/bg.json').success(function(data){
 		var maxPrice = 0;
 		for (var i = 0; i < data.length; i++) {
 			data[i].appid = data[i].url.split('-')[0].substr(4);
@@ -84,7 +84,7 @@ function($scope, $http, $location) {
 		$scope.genDates();
 	});
 
-	$http.get('http://cdn.steam.tools/data/dates.json').success(function(data){
+	$http.get('https://cdn.steam.tools/data/dates.json').success(function(data){
 		$scope.dates = data;
 		$scope.genDates();
 	});
@@ -143,7 +143,7 @@ function($scope, $http, $location) {
 
 	$scope.getStyle = function(p){
 		var cdn = p[0] > 258 ? "cdn" : "cdn2";
-		var host = "http://" + cdn + ".steam.tools";
+		var host = "https://" + cdn + ".steam.tools";
 		var url = host + "/backgrounds/" + p[0] + ".jpg?v2";
 		var style = {
 			backgroundImage: "url(" + url + ")",
@@ -156,7 +156,7 @@ function($scope, $http, $location) {
 		if (e.target.tagName !== "DIV")
 			return;
 
-		var url = "http://mosaticon3.appspot.com/FetchBackgroundImage?url=" + btoa(b.url);
+		var url = "https://mosaticon3.appspot.com/FetchBackgroundImage?url=" + btoa(b.url);
 		$http.get(url).success(function(data){
 			$scope.open(data)
 		}).error(function(){

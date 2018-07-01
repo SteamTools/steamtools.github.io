@@ -126,7 +126,7 @@ angular.module('valueApp', ['ui.bootstrap', 'vcRecaptcha'])
 	$scope.iconLimit = 54;
 	$scope.useTable = true;
 
-	$http.get('http://cdn.steam.tools/data/currency.json').then(({data}) => {
+	$http.get('https://cdn.steam.tools/data/currency.json').then(({data}) => {
 		var count = 0;
 		for (var i = 0; i < $scope.CDATA.length; i++) {
 			var code = $scope.CDATA[i].name;
@@ -250,7 +250,7 @@ angular.module('valueApp', ['ui.bootstrap', 'vcRecaptcha'])
 			user = encodeURIComponent(user);
 			var ind = Math.floor(Math.random() * $scope.SERVERS.length);
 			ind = (ind + $scope.retries) % $scope.SERVERS.length;
-			domain = "http://" + $scope.SERVERS[ind] + ".appspot.com";
+			domain = "https://" + $scope.SERVERS[ind] + ".appspot.com";
 		}
 
 		var url = domain + "/ItemValue?i=1&id=" + user + "&app=" + appid;
