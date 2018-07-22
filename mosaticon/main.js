@@ -110,12 +110,12 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 			var help = document.getElementById("help");
 			if (data.help === 1) {
 				help.innerHTML = "Make sure your " +
-					"<a href='http://steamcommunity.com/my/edit/settings'" +
+					"<a href='https://steamcommunity.com/my/edit/settings'" +
 					"target='_blank'>inventory privacy</a> " +
 					"is set to public.";
 			} else if (data.help === 2) {
 				help.innerHTML = "Try pasting the " +
-					"<a href='http://steamcommunity.com/my/'" +
+					"<a href='https://steamcommunity.com/my/'" +
 					"target='_blank'>Steam profile URL</a>.";
 			} else {
 				help.innerHTML = "";

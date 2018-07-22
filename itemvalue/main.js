@@ -110,8 +110,8 @@ angular.module('valueApp', ['ui.bootstrap', 'vcRecaptcha'])
 					  "item-value6", "item-value7", "item-value8", "item-value9", "item-value10",
 					  "item-value11", "item-value12", "item-value13", "item-value14", "item-value15"];
 	$scope.CDATA = CURRENCY_DATA;
-	$scope.ECONOMY = "http://cdn.steamcommunity.com/economy/image/";
-	$scope.LISTING = "http://steamcommunity.com/market/listings/";
+	$scope.ECONOMY = "https://cdn.steamcommunity.com/economy/image/";
+	$scope.LISTING = "https://steamcommunity.com/market/listings/";
 	$scope.status = "Import your profile";
 	$scope.TYPES =["all", "emoticon", "background", "card", "booster"];
 	$scope.type = "0";
@@ -270,12 +270,12 @@ angular.module('valueApp', ['ui.bootstrap', 'vcRecaptcha'])
 
 			if (data.help === 1) {
 				help.innerHTML = "Make sure your " +
-					"<a href='http://steamcommunity.com/my/edit/settings'" +
+					"<a href='https://steamcommunity.com/my/edit/settings'" +
 					"target='_blank'>inventory privacy</a> " +
 					"is set to public.";
 			} else if (data.help === 2) {
 				help.innerHTML = "Try pasting the " +
-					"<a href='http://steamcommunity.com/my/'" +
+					"<a href='https://steamcommunity.com/my/'" +
 					"target='_blank'>Steam profile URL</a>.";
 			} else {
 				help.innerHTML = "";
@@ -330,7 +330,7 @@ angular.module('valueApp', ['ui.bootstrap', 'vcRecaptcha'])
 					$scope.useTable = true;
 				}
 
-				var url = "http://steamcommunity.com/";
+				var url = "https://steamcommunity.com/";
 				if (data.name.length === 17 && !isNaN(data.name)) {
 					url += "profiles/" + data.name;
 				} else {
@@ -339,7 +339,7 @@ angular.module('valueApp', ['ui.bootstrap', 'vcRecaptcha'])
 				url += "/inventory/#" + $scope.appidLoaded;
 				$scope.status = "";
 				var html = "<a href='" + url + "' target='_blank'>Inventory</a> ";
-				html += "| <a href='http://steamrep.com/search?q=" + data.name + "' target='_blank'>SteamRep</a>";
+				html += "| <a href='https://steamrep.com/search?q=" + data.name + "' target='_blank'>SteamRep</a>";
 				help.innerHTML = html;
 
 			} else {
@@ -508,7 +508,7 @@ angular.module('valueApp', ['ui.bootstrap', 'vcRecaptcha'])
 
 // Set class holding all the information about a set
 function Item(data) {
-	var market_link = "http://steamcommunity.com/market/listings/" + data.url;
+	var market_link = "https://steamcommunity.com/market/listings/" + data.url;
 	this.name = "<a href='" + market_link + "' target='_blank'><span style='color: #";
 	this.name = this.name +  data.color + "'>" + data.name + "</span></a>";
 	this.game = data.game || null;
@@ -518,7 +518,7 @@ function Item(data) {
 	this.count = data.count;
 	this.price = data.price;
 	this.stack_price = data.price * data.count;
-	var image_url = "http://cdn.steamcommunity.com/economy/image/" + data.icon + "/360fx360f";
+	var image_url = "https://cdn.steamcommunity.com/economy/image/" + data.icon + "/360fx360f";
 	this.image = "<i class='icon icon-fullscreen icon-white' src='" + image_url + "'></i>";
 }
 

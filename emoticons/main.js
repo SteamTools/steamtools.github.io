@@ -59,7 +59,7 @@ angular.module('EmoteApp', ['ui-rangeSlider'])
 })
 .controller('EmoteCtrl', ['$scope', '$http', '$location',
 function($scope, $http, $location) {
-	$scope.BASE_URL = "http://steamcommunity.com/market/listings/";
+	$scope.BASE_URL = "https://steamcommunity.com/market/listings/";
 	$scope.SERVERS = ['mosaticon', 'mosaticon2', 'mosaticon3', 'mosaticon4'];
 	$scope.emotes = [];
 	$scope.numLines = 20;

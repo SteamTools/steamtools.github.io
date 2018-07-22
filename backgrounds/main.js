@@ -54,8 +54,8 @@ angular.module('BGApp', ['ui-rangeSlider'])
 })
 .controller('BGCtrl', ['$scope', '$http', '$location',
 function($scope, $http, $location) {
-	$scope.BASE_URL = "http://steamcommunity.com/market/listings/";
-	$scope.ECON_URL = "http://cdn.steamcommunity.com/economy/image/";
+	$scope.BASE_URL = "https://steamcommunity.com/market/listings/";
+	$scope.ECON_URL = "https://cdn.steamcommunity.com/economy/image/";
 	$scope.SERVERS = ['mosaticon', 'mosaticon2', 'mosaticon3', 'mosaticon4'];
 	$scope.bg = [];
 	$scope.numLines = 20;
@@ -95,7 +95,7 @@ function($scope, $http, $location) {
 	$scope.userLogin = function(steamid64) {
 		$scope.loggedIn = false;
 		var server = $scope.SERVERS[parseInt(Math.random() * 4)];
-		var url = "http://" + server + ".appspot.com/FetchBackgrounds?id=" + steamid64;
+		var url = "https://" + server + ".appspot.com/FetchBackgrounds?id=" + steamid64;
 		$http.get(url).success(function(data){
 			if (!data.success) {
 				$scope.user_status = data.reason;
