@@ -589,7 +589,7 @@ function Set(data, isFoil) {
 	else {
 		var v1 = this.price_avg;
 		var v2 = this.booster_avg;
-		var game = encodeURIComponent(this.game);
+		var game = encodeURIComponent(this.game).replace(/'/g, "%27");
 		var booster_link = "http://steamcommunity.com/market/listings/753/";
 		booster_link += data.appid + "-" + game + "%20Booster%20Pack";
 		this.booster_eff = [booster_link, (v1 - v2) / v1];
@@ -613,7 +613,7 @@ function Set(data, isFoil) {
 
 // Generates the links for a set
 function generateLinks(game, appid, isFoil, steamid) {
-	game = encodeURIComponent(game);
+	game = encodeURIComponent(game).replace(/'/g, "%27");
 	var profile = !!steamid ? "profiles/" + steamid : "my";
 	var market_link = generateMarketLink(appid, isFoil);
 	var badge_link = "http://steamcommunity.com/" + profile + "/gamecards/" + appid;
