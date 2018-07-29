@@ -1,4 +1,4 @@
-@import url(http://fonts.googleapis.com/css?family=Raleway:300|Geo|Oswald:300);
+@import url(//fonts.googleapis.com/css?family=Raleway:300|Geo|Oswald:300);
 
 *, *:after, *:before { -webkit-box-sizing: border-box; -moz-box-sizing: border-box; box-sizing: border-box; }
 body, html { margin: 0; padding: 0; height: 100%; font-size: 100%;}
