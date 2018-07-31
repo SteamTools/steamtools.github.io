@@ -110,7 +110,7 @@ angular.module('valueApp', ['ui.bootstrap', 'vcRecaptcha'])
 					  "item-value6", "item-value7", "item-value8", "item-value9", "item-value10",
 					  "item-value11", "item-value12", "item-value13", "item-value14", "item-value15"];
 	$scope.CDATA = CURRENCY_DATA;
-	$scope.ECONOMY = "https://cdn.steamcommunity.com/economy/image/";
+	$scope.ECONOMY = "https://steamcommunity-a.akamaihd.net/economy/image/";
 	$scope.LISTING = "https://steamcommunity.com/market/listings/";
 	$scope.status = "Import your profile";
 	$scope.TYPES =["all", "emoticon", "background", "card", "booster"];
@@ -518,7 +518,7 @@ function Item(data) {
 	this.count = data.count;
 	this.price = data.price;
 	this.stack_price = data.price * data.count;
-	var image_url = "https://cdn.steamcommunity.com/economy/image/" + data.icon + "/360fx360f";
+	var image_url = "https://steamcommunity-a.akamaihd.net/economy/image/" + data.icon + "/360fx360f";
 	this.image = "<i class='icon icon-fullscreen icon-white' src='" + image_url + "'></i>";
 }
 
