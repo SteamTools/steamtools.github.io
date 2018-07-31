@@ -55,7 +55,7 @@ angular.module('BGApp', ['ui-rangeSlider'])
 .controller('BGCtrl', ['$scope', '$http', '$location',
 function($scope, $http, $location) {
 	$scope.BASE_URL = "https://steamcommunity.com/market/listings/";
-	$scope.ECON_URL = "https://cdn.steamcommunity.com/economy/image/";
+	$scope.ECON_URL = "https://steamcommunity-a.akamaihd.net/economy/image/";
 	$scope.SERVERS = ['mosaticon', 'mosaticon2', 'mosaticon3', 'mosaticon4'];
 	$scope.bg = [];
 	$scope.numLines = 20;
