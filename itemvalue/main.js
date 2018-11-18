@@ -244,7 +244,7 @@ angular.module('valueApp', ['ui.bootstrap', 'vcRecaptcha'])
 
 		var domain;
 		if (huge) {
-			domain = atob('aHR0cDovL2l0ZW0tdmFsdWUxNi5hcHBzcG90LmNvbQ==');
+			domain = atob('aHR0cHM6Ly9pdGVtLXZhbHVlMTYuYXBwc3BvdC5jb20=');
 		} else {
 			Math.seedrandom(user);
 			user = encodeURIComponent(user);
