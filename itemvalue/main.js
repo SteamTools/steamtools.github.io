@@ -211,7 +211,8 @@ angular.module('valueApp', ['ui.bootstrap', 'vcRecaptcha'])
 	};
 
 	$scope.getIcon = function(appid) {
-		var ico = $scope.iconMap[appid] + ".ico";
+		var ext = ['753', '583950', '218620'].includes(appid) ? '.jpg' : '.ico';
+		var ico = $scope.iconMap[appid] + ext;
 		return "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/" + appid + "/" + ico;
 	};
 
