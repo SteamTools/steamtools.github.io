@@ -4,44 +4,44 @@
 
 var CURRENCY_DATA = [
 	{name: "USD", symbolFormat: "$",     right: false, ratio: 1.0},
-	{name: "AED", symbolFormat: " AED",  right: true,  ratio: 3.673014},
-	{name: "ARS", symbolFormat: "$",     right: false, ratio: 17.476},
-	{name: "AUD", symbolFormat: "A$ ",   right: false, ratio: 1.296921},
-	{name: "BRL", symbolFormat: "R$ ",   right: false, ratio: 3.2331},
-	{name: "CAD", symbolFormat: "CDN$ ", right: false, ratio: 1.278936},
-	{name: "CHF", symbolFormat: "CHF ",  right: false, ratio: 0.989012},
-	{name: "CLP", symbolFormat: "CLP$ ", right: false, ratio: 630.958442},
-	{name: "CNY", symbolFormat: "¥ ",    right: false, ratio: 6.6322},
-	{name: "COP", symbolFormat: "COL$ ", right: false, ratio: 2983.25},
-	{name: "CRC", symbolFormat: "₡",     right: false, ratio: 567.245059},
-	{name: "EUR", symbolFormat: "€",     right: true,  ratio: 0.845344},
-	{name: "GBP", symbolFormat: "£",     right: false, ratio: 0.753239},
-	{name: "HKD", symbolFormat: "HK$ ",  right: false, ratio: 7.8031},
-	{name: "IDR", symbolFormat: "Rp ",   right: false, ratio: 13536.913381},
-	{name: "ILS", symbolFormat: "₪",     right: false, ratio: 3.51644},
-	{name: "INR", symbolFormat: "₹ ",    right: false, ratio: 64.785},
-	{name: "JPY", symbolFormat: "¥ ",    right: false, ratio: 113.44850015},
-	{name: "KRW", symbolFormat: "₩ ",    right: false, ratio: 1125.12},
-	{name: "KWD", symbolFormat: " KD",   right: true,  ratio: 0.302103},
-	{name: "KZT", symbolFormat: "₸",     right: false, ratio: 331.641382},
-	{name: "MXN", symbolFormat: "Mex$ ", right: false, ratio: 19.04625},
-	{name: "MYR", symbolFormat: "RM",    right: false, ratio: 4.230478},
-	{name: "NOK", symbolFormat: " kr",   right: true,  ratio: 8.010029},
-	{name: "NZD", symbolFormat: "NZ$ ",  right: false, ratio: 1.451801},
-	{name: "PEN", symbolFormat: "S/.",   right: false, ratio: 3.234487},
-	{name: "PHP", symbolFormat: "P",     right: false, ratio: 51.78},
-	{name: "PLN", symbolFormat: "zł",    right: true,  ratio: 3.58675},
-	{name: "QAR", symbolFormat: " QR",   right: true,  ratio: 3.87},
-	{name: "RUB", symbolFormat: " pуб.", right: true,  ratio: 57.6858},
-	{name: "SAR", symbolFormat: " SR",   right: true,  ratio: 3.75055},
-	{name: "SGD", symbolFormat: "S$",    right: false, ratio: 1.359619},
-	{name: "THB", symbolFormat: "฿",     right: false, ratio: 33.140017},
-	{name: "TRY", symbolFormat: " TL",   right: true,  ratio: 3.754188},
-	{name: "TWD", symbolFormat: "NT$ ",  right: false, ratio: 30.235161},
-	{name: "UAH", symbolFormat: "₴",     right: true,  ratio: 26.678615},
-	{name: "UYU", symbolFormat: "$",     right: false, ratio: 29.515579},
-	{name: "VND", symbolFormat: "₫",     right: false, ratio: 22720.786641},
-	{name: "ZAR", symbolFormat: "R ",    right: false, ratio: 14.037729},
+	{name: "AED", symbolFormat: " AED",  right: true,  ratio: 3.673181},
+	{name: "ARS", symbolFormat: "$",     right: false, ratio: 38.452},
+	{name: "AUD", symbolFormat: "A$ ",   right: false, ratio: 1.370726},
+	{name: "BRL", symbolFormat: "R$ ",   right: false, ratio: 3.85075},
+	{name: "CAD", symbolFormat: "CDN$ ", right: false, ratio: 1.328503},
+	{name: "CHF", symbolFormat: "CHF ",  right: false, ratio: 0.992987},
+	{name: "CLP", symbolFormat: "CLP$ ", right: false, ratio: 674.923234},
+	{name: "CNY", symbolFormat: "¥ ",    right: false, ratio: 6.9453},
+	{name: "COP", symbolFormat: "COL$ ", right: false, ratio: 3237.418987},
+	{name: "CRC", symbolFormat: "₡",     right: false, ratio: 598.698888},
+	{name: "EUR", symbolFormat: "€",     right: true,  ratio: 0.879456},
+	{name: "GBP", symbolFormat: "£",     right: false, ratio: 0.779497},
+	{name: "HKD", symbolFormat: "HK$ ",  right: false, ratio: 7.8245},
+	{name: "IDR", symbolFormat: "Rp ",   right: false, ratio: 14441.45},
+	{name: "ILS", symbolFormat: "₪",     right: false, ratio: 3.7327},
+	{name: "INR", symbolFormat: "₹ ",    right: false, ratio: 70.299386},
+	{name: "JPY", symbolFormat: "¥ ",    right: false, ratio: 113.4641875},
+	{name: "KRW", symbolFormat: "₩ ",    right: false, ratio: 1123.6},
+	{name: "KWD", symbolFormat: " KD",   right: true,  ratio: 0.304268},
+	{name: "KZT", symbolFormat: "₸",     right: false, ratio: 370.805572},
+	{name: "MXN", symbolFormat: "Mex$ ", right: false, ratio: 20.2865},
+	{name: "MYR", symbolFormat: "RM",    right: false, ratio: 4.194478},
+	{name: "NOK", symbolFormat: " kr",   right: true,  ratio: 8.554511},
+	{name: "NZD", symbolFormat: "NZ$ ",  right: false, ratio: 1.462264},
+	{name: "PEN", symbolFormat: "S/.",   right: false, ratio: 3.377479},
+	{name: "PHP", symbolFormat: "P",     right: false, ratio: 52.404035},
+	{name: "PLN", symbolFormat: "zł",    right: true,  ratio: 3.770043},
+	{name: "QAR", symbolFormat: " QR",   right: true,  ratio: 3.641082},
+	{name: "RUB", symbolFormat: " pуб.", right: true,  ratio: 67.0968},
+	{name: "SAR", symbolFormat: " SR",   right: true,  ratio: 3.75205},
+	{name: "SGD", symbolFormat: "S$",    right: false, ratio: 1.373206},
+	{name: "THB", symbolFormat: "฿",     right: false, ratio: 32.8975},
+	{name: "TRY", symbolFormat: " TL",   right: true,  ratio: 5.225845},
+	{name: "TWD", symbolFormat: "NT$ ",  right: false, ratio: 30.862888},
+	{name: "UAH", symbolFormat: "₴",     right: true,  ratio: 28.082503},
+	{name: "UYU", symbolFormat: "$",     right: false, ratio: 32.54397},
+	{name: "VND", symbolFormat: "₫",     right: false, ratio: 23246.912672},
+	{name: "ZAR", symbolFormat: "R ",    right: false, ratio: 13.785231},
 ];
 
 angular.module('cardApp', ['ui.bootstrap', 'normalizeForSearch'])
@@ -590,7 +590,7 @@ function Set(data, isFoil) {
 		var v1 = this.price_avg;
 		var v2 = this.booster_avg;
 		var game = encodeURIComponent(this.game).replace(/'/g, "%27");
-		var booster_link = "http://steamcommunity.com/market/listings/753/";
+		var booster_link = "https://steamcommunity.com/market/listings/753/";
 		booster_link += data.appid + "-" + game + "%20Booster%20Pack";
 		this.booster_eff = [booster_link, (v1 - v2) / v1];
 	}
@@ -616,9 +616,9 @@ function generateLinks(game, appid, isFoil, steamid) {
 	game = encodeURIComponent(game).replace(/'/g, "%27");
 	var profile = !!steamid ? "profiles/" + steamid : "my";
 	var market_link = generateMarketLink(appid, isFoil);
-	var badge_link = "http://steamcommunity.com/" + profile + "/gamecards/" + appid;
-	var store_link = "http://store.steampowered.com/app/" + appid;
-	var cs_link = "http://steam.cards/index.php?gamepage-appid-" + appid;
+	var badge_link = "https://steamcommunity.com/" + profile + "/gamecards/" + appid;
+	var store_link = "https://store.steampowered.com/app/" + appid;
+	var cs_link = "https://steam.cards/index.php?gamepage-appid-" + appid;
 	if (isFoil) badge_link += "?border=1";
 
 	var links = "";
@@ -630,7 +630,7 @@ function generateLinks(game, appid, isFoil, steamid) {
 }
 
 function generateMarketLink(appid, foil) {
-	var url = "http://steamcommunity.com/market/search";
+	var url = "https://steamcommunity.com/market/search";
 	url += "?category_753_Game%5B%5D=tag_app_" + appid;
 	url += "&category_753_cardborder%5B%5D=tag_cardborder_" + (foil ? 1 : 0);
 	url += "&category_753_item_class%5B%5D=tag_item_class_2";
