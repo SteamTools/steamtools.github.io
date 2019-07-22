@@ -19,7 +19,7 @@
 	<script src="jquery.mCustomScrollbar.concat.min.js"></script>
 	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js"></script>
 	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular-resource.min.js"></script>
-	<script src="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/js/bootstrap.min.js"></script>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.2/js/bootstrap.min.js"></script>
 
 	<link rel="shortcut icon" href="/favicon.ico">
 	<link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" rel="stylesheet">
@@ -35,8 +35,8 @@
 	<a class="corner topbutton" style="left: 25px;" href="../">&laquo; Hub</a>
 	<div class="corner" style="right: 25px;">
 		<a target="_blank" href="https://twitter.com/SteamTools"><img src="/img/twitter.png" alt="Twitter"></a>
-		<a target="_blank" href="http://steamcommunity.com/groups/steam_tools"><img src="/img/steam.png" alt="Steam Group"></a>
-		<a class="topbutton" id="feedback"  href="http://steamcommunity.com/id/Ph0X"
+		<a target="_blank" href="https://steamcommunity.com/groups/steam_tools"><img src="/img/steam.png" alt="Steam Group"></a>
+		<a class="topbutton" id="feedback"  href="https://steamcommunity.com/id/Ph0X"
 			popover-placement="bottom" popover-trigger="show" popover-animation="true"
 			popover="Got a suggestion? Found a bug? Leave feedback!">Feedback</a>
 	</div>
@@ -105,7 +105,7 @@
 			</ng:switch>
 			<div id="game-content">
 				<a ng-repeat="game in gameList | orderBy:getGameName" adjust-size
-					ng-href="http://store.steampowered.com/app/[[game]]" target="_blank">
+					ng-href="https://store.steampowered.com/app/[[game]]" target="_blank">
 					<div class="game"  draggable="true" ng-bind-html-unsafe="gameData[game].name" scrollbar></div>
 				</a>
 			</div>
