@@ -132,7 +132,7 @@
 	<footer id="copyright">
 		<div class="rightbar" style="display: inline-block; text-align: right;">
 			Website by <a target="_blank" href="https://ehsankia.com">Ehsan Kia</a><br>
-			<a target="_blank" href="https://steam.tools">steam.tools</a> &copy; 2013-2020
+			<a target="_blank" href="https://steam.tools">steam.tools</a> &copy; 2013-<span id="year">2019</span>
 		</div>
 		<div style="display: inline-block; text-align: left;">
 			Powered by <a target="_blank" href="https://steampowered.com">Steam</a><br>
@@ -186,6 +186,8 @@
 		bgImg.onload = function(){
 			document.getElementById('whitebg').style.opacity = 0;
 		};
+		
+		document.getElementById("year").innerHTML = new Date().getFullYear();
 	</script>
 
 	<script type="application/ld+json">
