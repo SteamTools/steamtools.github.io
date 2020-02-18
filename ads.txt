@@ -1,41 +1,42 @@
-# Network N Ads.txt file 10-01-2020
+# Network N Ads.txt file 17-02-2020
 
 google.com, pub-6177961780147591, DIRECT, f08c47fec0942fa0 # AdSense
 google.com, pub-2145138345242651, DIRECT, f08c47fec0942fa0 # Network N AdX
 
-# Header Bidding
+# Header Bidding/Open Bidding
 
 contextweb.com, 561998, RESELLER, 89ff185a4c4e857c # Conversant HB
-sovrn.com, 240955, DIRECT, fafdf38b16bf6b2b # Sovrn HB/EB
-lijit.com, 240955, DIRECT, fafdf38b16bf6b2b # Sovrn HB/EB
-gumgum.com, 11645, RESELLER, ffdef49475d318a9 # Sovrn HB/EB
-openx.com, 537120960, RESELLER # Sovrn HB
-openx.com, 83499, RESELLER # Sovrn HB
-openx.com, 538959099, RESELLER # Sovrn HB/EB
-openx.com, 539924617, RESELLER, 6a698e2ec38604c6 # Sovrn HB/EB
+sovrn.com, 240955, DIRECT, fafdf38b16bf6b2b # Sovrn HB/OB
+lijit.com, 240955, DIRECT, fafdf38b16bf6b2b # Sovrn HB/OB
+gumgum.com, 11645, RESELLER, ffdef49475d318a9 # Sovrn HB/OB
+openx.com, 537120960, RESELLER, 6a698e2ec38604c6 # Sovrn HB
+openx.com, 83499, RESELLER, 6a698e2ec38604c6 # Sovrn HB
+openx.com, 538959099, RESELLER, 6a698e2ec38604c6 # Sovrn HB/OB
+openx.com, 539924617, RESELLER, 6a698e2ec38604c6 # Sovrn HB/OB
 openx.com, 540031703, RESELLER, 6a698e2ec38604c6 # Conversant
-openx.com, 540447791, RESELLER, 6a698e2ec38604c6 # OpenX EB
-pubmatic.com, 137711, RESELLER # Sovrn HB/EB
-pubmatic.com, 156212, RESELLER # Sovrn HB/EB
-pubmatic.com, 62483, RESELLER # Sovrn HB
-pubmatic.com, 156700, RESELLER, 5d62403b186f2ace # Sovrn HB/EB
-openx.com, 539870614, DIRECT # OpenX HB
+openx.com, 540447791, RESELLER, 6a698e2ec38604c6 # OpenX OB
+pubmatic.com, 137711, RESELLER, 5d62403b186f2ace # Sovrn HB/OB
+pubmatic.com, 156212, RESELLER, 5d62403b186f2ace # Sovrn HB/OB
+pubmatic.com, 62483, RESELLER, 5d62403b186f2ace # Sovrn HB
+pubmatic.com, 156700, RESELLER, 5d62403b186f2ace # Sovrn HB/OB
+openx.com, 539870614, DIRECT, 6a698e2ec38604c6 # OpenX HB
 rubiconproject.com, 18580, DIRECT, 0bfd66d529a55807 # Rubicon HB and Video
-rubiconproject.com, 20406, RESELLER, 0bfd66d529a55807 # Rubicon EB
+rubiconproject.com, 20406, RESELLER, 0bfd66d529a55807 # Rubicon OB
 appnexus.com, 1908, RESELLER, f5ab79cb980f11d1  # DistrictM HB
-appnexus.com, 4052, RESELLER # Conversant HB
-appnexus.com, 1360, RESELLER, f5ab79cb980f11d1 # Sovrn EB
+appnexus.com, 4052, RESELLER, f5ab79cb980f11d1 # Conversant HB
+appnexus.com, 1360, RESELLER, f5ab79cb980f11d1 # Sovrn OB
 google.com, pub-9685734445476814, RESELLER, f08c47fec0942fa0  # DistrictM HB
-indexexchange.com, 189344, DIRECT # Index Exchange HB
-indexexchange.com, 189345, DIRECT # Index Exchange EB
+indexexchange.com, 189344, DIRECT, 50b1c356f2c5c8fc # Index Exchange HB
+indexexchange.com, 189345, DIRECT, 50b1c356f2c5c8fc # Index Exchange OB
 conversantmedia.com, 42024, DIRECT, 03113cd04947736d # Conversant HB
-rubiconproject.com, 17960, RESELLER, 0bfd66d529a55807 # Sovrn EB
-pubmatic.com, 158540, RESELLER, 5d62403b186f2ace # Pubmatic EB
+rubiconproject.com, 17960, RESELLER, 0bfd66d529a55807 # Sovrn OB
+pubmatic.com, 158540, RESELLER, 5d62403b186f2ace # Pubmatic OB
 EMXDGT.com, 1290, DIRECT, 1e1d41537f7cad7f # EMX HB
 Appnexus.com, 1356, RESELLER, f5ab79cb980f11d1 # EMX HB
 pubmatic.com, 158684, DIRECT, 5d62403b186f2ace # Pubmatic HB
 appnexus.com, 11440, DIRECT, f5ab79cb980f11d1 # AppNexus HB
-
+rhythmone.com,2327730584,DIRECT, a670c89d4a324e47 #Rhythmone OB
+rhythmone.com,907951026,DIRECT,a670c89d4a324e47 #Rhythmone HB
 
 # Amazon
 
@@ -50,7 +51,6 @@ districtm.io,100962,RESELLER,3fd707be9c4527c3
 rhythmone.com,1654642120,RESELLER,a670c89d4a324e47
 appnexus.com,3663,RESELLER,f5ab79cb980f11d1
 adtech.com, 4958, DIRECT, e1a5b5b6e3255540 #VMG
-
 
 # Video [SpringServe]
 
@@ -104,7 +104,7 @@ spotx.tv, 268145, RESELLER, 7842df1d2fe2db34
 # Video [EMX]
 
 EMXDGT.com,1309, DIRECT, 1e1d41537f7cad7f
-Appnexus.com, 1356, RESELLER, f5ab79cb980f11d1
+appnexus.com, 1356, RESELLER, f5ab79cb980f11d1
 
 # Video [Pubmatic]
 pubmatic.com, 158682, DIRECT, 5d62403b186f2ace
@@ -114,3 +114,6 @@ telaria.com,znsps-tw3lc,DIRECT,1a4e959a1b50034a
 tremorhub.com,znsps-tw3lc,DIRECT,1a4e959a1b50034a
 telaria.com,znsps-tw3lc,RESELLER,1a4e959a1b50034a
 tremorhub.com,znsps-tw3lc,RESELLER,1a4e959a1b50034a
+
+# Video [OpenX]
+openx.com, 540886248, DIRECT, 6a698e2ec38604c6
