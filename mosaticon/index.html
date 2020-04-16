@@ -48,11 +48,11 @@
 				<span id="error">{{status}}</span>
 				<div id="help"></div>
 				<span style="color: white" ng-if="!status">{{emoticons.length}} emoticon(s) loaded<br></span>
-				<div ng-if="emoticons.length > 0 && !status">
+				<div ng-show="emoticons.length > 0 && !status">
 					<span style="color: #999">(left click to select / right click to disable)</span>
 					<br>
 					<form id="addinput" class="input-prepend form-horizontal">
-						<span class="add-on">Filter</span>
+						<span class="add-on" style="color: black;">Filter</span>
 						<input class="span2" type="text" ng-model="emoteFilter">
 					</form>
 				</div>
