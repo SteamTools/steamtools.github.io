@@ -1,5 +1,6 @@
 # Network N Ads.txt file 17-02-2020
 
+google.com, pub-5094996988136058, DIRECT, f08c47fec0942fa0 # EhsanKia
 google.com, pub-6177961780147591, DIRECT, f08c47fec0942fa0 # AdSense
 google.com, pub-2145138345242651, DIRECT, f08c47fec0942fa0 # Network N AdX
 
