@@ -1,13 +1,8 @@
 <!doctype html>
 <html lang="en">
 <head>
-	<!-- Google Tag Manager -->
-	<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-	new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-	j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-	'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-	})(window,document,'script','dataLayer','GTM-PX596BB');</script>
-	<!-- End Google Tag Manager -->
+	<!-- NetworkN CMP Tool -->
+	<script async src="/dist/steamtools.min.js"></script>
 
 	<meta charset="UTF-8">
 	<meta name="description" content="A set of Steam related WebApps built around trading cards, emoticons and backgrounds. They allow you to view, sort and filter the up-to-date list of items.">
@@ -15,9 +10,7 @@
 	<meta name="author" content="Ehsan Kia">
 	<title>Steam Tools Hub</title>
 
-	<!-- NetworkN CMP Tool -->
-	<script>window.__cmp={config:{globalVendorListLocation:'https://cmp.network-n.com/vendorlist.json'}};</script>
-	<script src="https://cmp.network-n.com/js/cmp.complete.bundle.js" async></script>
+
 
 	<link rel="shortcut icon" href="/favicon.ico">
 	<link rel="stylesheet" href="style.css">
@@ -29,8 +22,8 @@
 	<!-- End Google Tag Manager (noscript) -->
 
 	<div id="whitebg"></div>
-	<div id="nn_skinl" class="adswitch_skin"></div>
-	<div id="nn_skinr" class="adswitch_skin"></div>
+	<div id="nn_skinl"></div>
+	<div id="nn_skinr"></div>
 	<div id="container">
 	<svg class="logo" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
 		 width="250px" height="130px" viewBox="417.5 106.5 2252 1172" style="enable-background:new 417.5 106.5 2252 1172;"
@@ -126,7 +119,7 @@
 	</ul>
 	<br>
 	<div style="padding-bottom: 80px;">
-		<div id="nn_leaderboard" style="margin: 0px auto"></div>
+		<div id="nn_lb1" style="margin: 0px auto"></div>
 	</div>
 
 	<footer id="copyright">
@@ -138,6 +131,7 @@
 			Powered by <a target="_blank" href="https://steampowered.com">Steam</a><br>
 			<a target="_blank" href="/privacy.html">Privacy</a>. All Rights Reserved
 		</div>
+		<div><a class="nn-cmp-show" href="#">Manage Cookie Settings</a></div>
 		<div id="affiliates">
 			Affiliates:
 			<a target="_blank" href="https://steamcustomizer.com/">Steam UI Customizer</a>
@@ -185,7 +179,7 @@
 		bgImg.onload = function(){
 			document.getElementById('whitebg').style.opacity = 0;
 		};
-		
+
 		document.getElementById("year").innerHTML = new Date().getFullYear();
 	</script>
 
