@@ -1,13 +1,8 @@
 <!doctype html>
 <html lang="en" ng-app="EmoteApp">
 <head>
-	<!-- Google Tag Manager -->
-	<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-	new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-	j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-	'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-	})(window,document,'script','dataLayer','GTM-PX596BB');</script>
-	<!-- End Google Tag Manager -->
+	<!-- NetworkN CMP Tool -->
+	<script async src="/dist/steamtools.min.js"></script>
 
 	<meta charset="UTF-8">
 	<meta name="description" content="Easily browse, filter and sort an up to date list of Steam emoticons in one page.">
@@ -107,11 +102,6 @@
 	</style>
 </head>
 <body ng-controller="EmoteCtrl" ng-cloak>
-	<!-- Google Tag Manager (noscript) -->
-	<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PX596BB"
-	height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-	<!-- End Google Tag Manager (noscript) -->
-
 	<a class="corner topbutton" style="left: 25px;" href="../">&laquo; Hub</a>
 	<div class="corner" style="right: 25px;">
 		<a target="_blank" href="https://twitter.com/SteamTools"><img src="/img/twitter.png" alt="Twitter"></a>
@@ -170,7 +160,7 @@
 
 	<br>
 
-	<div id="nn_leaderboard" style="margin: 5px auto 0 auto"></div>
+	<div id="nn_lb1" style="margin: 5px auto 0 auto"></div>
 
 	<div id="loading" ng-if="emotes.length == 0">Loading...</div>
 
