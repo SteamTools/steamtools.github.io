@@ -12,8 +12,10 @@ item_hash = item_url.split('/')[-1]
 item_appid = item_url.split('/')[-2]
 parser = HTMLParser.HTMLParser()
 
-CURRENCIES = [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 19, 20, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]
+CURRENCIES = [1, 32, 34, 21, 7, 20, 4, 25, 23, 27, 40, 3, 2, 29, 10, 35, 24, 8, 16, 38, 37, 19, 11, 9, 22, 26, 12, 6, 39, 5, 31, 13, 14, 17, 30, 18, 41, 15, 28]
 CURRENCIES.reverse()
+
+print('using', item_url)
 
 prices = []
 while CURRENCIES:
@@ -22,9 +24,9 @@ while CURRENCIES:
     r = requests.get(url)
 
     if r.status_code != 200:
-        print i, "bad status code"
+        print i, "bad status code, waiting 60s"
         CURRENCIES.append(i)
-        time.sleep(10)
+        time.sleep(60)
         continue
 
     try:
@@ -41,14 +43,14 @@ while CURRENCIES:
         print i, "no lowest price"
         continue
 
-    price = data.get('lowest_price')
-    price = parser.unescape(price)
+    price_str = data.get('lowest_price')
+    price = parser.unescape(price_str)
     price = re.sub('[^0-9]', '', price)
     price = int(price)
-    if i == 5:
+    if i == 4:
         price *= 100
     prices.append(price)
-    print i, "added"
+    print(i, price_str)
 
 for p in prices:
     r = round(p / prices[0], 4)
