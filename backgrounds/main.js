@@ -144,7 +144,7 @@ function($scope, $http, $location) {
 	$scope.getStyle = function(p){
 		var cdn = p[0] > 346 ? "cdn" : "cdn2";
 		var host = "https://" + cdn + ".steam.tools";
-		var url = host + "/backgrounds/" + p[0] + ".jpg?v2";
+		var url = host + "/backgrounds/" + p[0] + ".jpg?v3";
 		var style = {
 			backgroundImage: "url(" + url + ")",
 			backgroundPosition: (p[1] * -256) + "px " + (p[2] * -160) + "px"

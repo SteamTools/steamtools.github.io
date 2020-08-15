@@ -157,13 +157,13 @@ function($scope, $http, $location) {
 		var style;
 		if ($scope.small){
 			style = {
-				backgroundImage: "url(" + url + "s.png?v2)",
+				backgroundImage: "url(" + url + "s.png?v3)",
 				backgroundPosition: (p[1] * -20) + "px " + (p[2] * -20) + "px"
 			};
 		}
 		else{
 			style = {
-				backgroundImage: "url(" + url + ".png?v2)",
+				backgroundImage: "url(" + url + ".png?v3)",
 				backgroundPosition: (p[1] * -64) + "px " + (p[2] * -64) + "px"
 			};
 		}
