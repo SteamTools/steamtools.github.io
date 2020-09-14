@@ -449,7 +449,7 @@ angular.module('valueApp', ['ui.bootstrap', 'vcRecaptcha'])
 
 
 	if (window.localStorage.hasOwnProperty("lastUser")) {
-		$scope.UserID = window.localStorage.lastUser.replace('/', '');
+		$scope.UserID = window.localStorage.lastUser;
 	}
 
 	if (window.localStorage.hasOwnProperty("lastAppid")) {
