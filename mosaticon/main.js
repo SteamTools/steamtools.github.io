@@ -102,9 +102,8 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 		$scope.status = "Loading...";
 		$scope.processedEmotes = false;
 
-		Math.seedrandom(user);
-		var serverInd = parseInt(Math.random() * $scope.SERVERS.length) + offset;
-		var server = $scope.SERVERS[serverInd % $scope.SERVERS.length];
+		var serverIdx = user.slice(-1).charCodeAt(0);
+		var server = $scope.SERVERS[serverIdx % $scope.SERVERS.length];
 		var url = "https://" + server + ".appspot.com/FetchEmotes?id=" + user;
 		$http.get(url).success(function(data){
 			var help = document.getElementById("help");

@@ -94,7 +94,8 @@ function($scope, $http, $location) {
 	$scope.user_status = "Login to filter owned items";
 	$scope.userLogin = function(steamid64) {
 		$scope.loggedIn = false;
-		var server = $scope.SERVERS[parseInt(Math.random() * 4)];
+		var serverIdx = user.slice(-1).charCodeAt(0);
+		var server = $scope.SERVERS[serverIdx % $scope.SERVERS.length];
 		var url = "https://" + server + ".appspot.com/FetchBackgrounds?id=" + steamid64;
 		$http.get(url).success(function(data){
 			if (!data.success) {
