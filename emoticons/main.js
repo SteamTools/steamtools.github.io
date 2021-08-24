@@ -97,7 +97,7 @@ function($scope, $http, $location) {
 	$scope.user_status = "Login to filter owned items";
 	$scope.userLogin = function(steamid64) {
 		$scope.loggedIn = false;
-		var serverIdx = user.slice(-1).charCodeAt(0);
+		var serverIdx = steamid64.slice(-1).charCodeAt(0);
 		var server = $scope.SERVERS[serverIdx % $scope.SERVERS.length];
 		var url = "https://" + server + ".appspot.com/FetchEmotes?id=" + steamid64;
 		$http.get(url).success(function(data){
