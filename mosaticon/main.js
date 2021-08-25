@@ -45,7 +45,7 @@ angular.module('mosaticonApp', ['ui.bootstrap', 'cfp.hotkeys'])
 .controller('mosaticonCtrl', ['$scope', '$http', '$timeout', '$filter', '$modal', 'hotkeys',
 function($scope, $http, $timeout, $filter, $modal, hotkeys){
 	$scope.orderBy = $filter('orderBy');
-	$scope.CDN = "https://cdn.steam.tools/emotes";
+	$scope.CDN = "https://emotes.steam.tools";
 	$scope.width = new Size(30);
 	$scope.height = new Size(30);
 	$scope.status = "";
