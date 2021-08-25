@@ -32,9 +32,8 @@ body.fade {
 	border-radius: 3px;
 	box-shadow: 0px 3px 0px 0px #888;
 	border: 1px solid #666;
-	width: 75px;
 	text-align: center;
-	margin: 0 3px;
+	margin: 5px;
 	box-sizing: content-box;
 }
 .corner img:hover {opacity: 0.8;}
