@@ -184,24 +184,32 @@ select.input-sm {
 	padding: 0 10px;
 }
 
-.dataTables_paginate {
-	height: 25px;
-}
-
 .pagination ul>li>a, .pagination ul>li>span {
 	padding: 2px 11px;
-}
-
-div.dataTables_paginate {
-    float: right;
-    margin: -15px 0 5px 0;
 }
 
 div.dataTables_paginate ul.pagination {
 	margin: 6px 0 0 0;
 }
 
+.bottomRow {
+    height: 50px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+}
+
+div.dataTables_length {
+	height: 30px;
+}
+
+div.dataTables_paginate {
+
+}
+
 div.dataTables_info {
+	padding: 0;
 	font-size: 8pt;
 }
 
