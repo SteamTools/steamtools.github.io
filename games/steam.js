@@ -90,7 +90,7 @@ function SteamCtrl($scope, $resource, $http){
 	$scope.fullGameList = [];
 	$scope.Users = users.slice();
 
-	var url = "https://cdn.steam.tools/data/game_data.json";
+	var url = "https://data.steam.tools/data/game_data.json";
 	$http.get(url).success(function(data){
 		$scope.gameData = data;
 	});

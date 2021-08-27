@@ -73,7 +73,7 @@ function($scope, $http, $location) {
 		maxPrice: 400,
 	};
 
-	$http.get('https://cdn.steam.tools/data/emote.json').success(function(data){
+	$http.get('https://data.steam.tools/data/emote.json').success(function(data){
 		var maxPrice = 0;
 		for (var i = 0; i < data.length; i++) {
 			data[i].appid = data[i].url.split('-')[0].substr(4);
@@ -87,7 +87,7 @@ function($scope, $http, $location) {
 		$scope.genDates();
 	});
 
-	$http.get('https://cdn.steam.tools/data/dates.json').success(function(data){
+	$http.get('https://data.steam.tools/data/dates.json').success(function(data){
 		$scope.dates = data;
 		$scope.genDates();
 	});

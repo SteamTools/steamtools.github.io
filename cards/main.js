@@ -68,7 +68,7 @@ angular.module('cardApp', ['ui.bootstrap', 'normalizeForSearch'])
 function($scope, $http, $filter, $compile, $modal){
 	$scope.CDATA = CURRENCY_DATA;
 
-	$http.get('https://cdn.steam.tools/data/currency.json').success(function(data){
+	$http.get('https://data.steam.tools/data/currency.json').success(function(data){
 		var count = 0;
 		for (var i = 0; i < $scope.CDATA.length; i++) {
 			var code = $scope.CDATA[i].name;
@@ -503,7 +503,7 @@ function($scope, $http, $filter, $compile, $modal){
 
 	// Get and load set data from the server
 	$scope.dataLoaded = false;
-	var url = "https://cdn.steam.tools/data/set_data.json";
+	var url = "https://data.steam.tools/data/set_data.json";
 	$http.get(url).success(function(data){
 		$scope.dataLoaded = true;
 		$scope.data = data;
