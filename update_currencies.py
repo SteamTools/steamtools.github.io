@@ -1,5 +1,5 @@
 from __future__ import division
-import HTMLParser
+from html.parser import HTMLParser
 import requests
 import time
 import re
@@ -10,7 +10,7 @@ data = requests.get(MARKET_URL).json()
 item_url = re.findall("href=\"(.+?)\" id=", data['results_html'])[0]
 item_hash = item_url.split('/')[-1]
 item_appid = item_url.split('/')[-2]
-parser = HTMLParser.HTMLParser()
+parser = HTMLParser()
 
 CURRENCIES = [1, 32, 34, 21, 7, 20, 4, 25, 23, 27, 40, 3, 2, 29, 10, 35, 24, 8, 16, 38, 37, 19, 11, 9, 22, 26, 12, 6, 39, 5, 31, 13, 14, 17, 30, 18, 41, 15, 28]
 CURRENCIES.reverse()
@@ -24,7 +24,7 @@ while CURRENCIES:
     r = requests.get(url)
 
     if r.status_code != 200:
-        print i, "bad status code, waiting 60s"
+        print(i, "bad status code, waiting 60s")
         CURRENCIES.append(i)
         time.sleep(60)
         continue
@@ -32,15 +32,15 @@ while CURRENCIES:
     try:
         data = r.json()
     except:
-        print i, "non json:", r.content
+        print(i, "non json:", r.content)
         continue
 
     if 'success' in data and not data['success']:
-        print i, "success false"
+        print(i, "success false")
         continue
 
     if 'lowest_price' not in data:
-        print i, "no lowest price"
+        print(i, "no lowest price")
         continue
 
     price_str = data.get('lowest_price')
@@ -54,6 +54,6 @@ while CURRENCIES:
 
 for p in prices:
     r = round(p / prices[0], 4)
-    print r
+    print(r)
 
-raw_input()
+input()
