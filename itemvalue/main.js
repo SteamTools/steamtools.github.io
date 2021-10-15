@@ -245,6 +245,12 @@ angular.module('valueApp', ['ui.bootstrap', 'vcRecaptcha'])
 			domain = atob('aHR0cHM6Ly9pdGVtLXZhbHVlMTYuYXBwc3BvdC5jb20=');
 		} else {
 			Math.seedrandom(user);
+			var servers = $scope.SERVERS.length;
+			if (appid == '753' || appid == '730') {
+				servers = servers.slice(0, 8);
+			} else if (appid == '440' || appid == '570') {
+				servers = servers.slice(8);
+			}
 			user = encodeURIComponent(user);
 			var ind = Math.floor(Math.random() * $scope.SERVERS.length);
 			ind = (ind + $scope.retries) % $scope.SERVERS.length;
