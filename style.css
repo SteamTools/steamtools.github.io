@@ -234,3 +234,16 @@ footer #affiliates a:hover {
 	margin-bottom: -125px;
 	fill: rgba(200, 100, 15, 0.3);
 }
+
+#nn_skinr,
+#nn_skinl {
+    position: absolute;
+    top: 140px;
+    left: 50%;
+    margin-left: -787px;
+    z-index: 100;
+}
+
+#nn_skinr {
+    margin-left: 487px;
+}

@@ -271,3 +271,16 @@ th, td { white-space: nowrap; }
 .pagination ul>li>a, .pagination ul>li>a:focus { background-color: #333; }
 .pagination ul>li>a:hover { background-color: #555; }
 .pagination ul>li>a { border: 1px solid #666; border-left-width: 0; }
+
+#nn_skinr,
+#nn_skinl {
+    position: absolute;
+    top: 140px;
+    left: 50%;
+    margin-left: -787px;
+    z-index: 100;
+}
+
+#nn_skinr {
+    margin-left: 487px;
+}

@@ -72,3 +72,16 @@ select, input[type="number"] {width: 32px; margin-top: 0px; padding: 0 4px 01px;
 	margin-left: -785px;
 	z-index: 0;
 }
+
+#nn_skinr,
+#nn_skinl {
+    position: absolute;
+    top: 140px;
+    left: 50%;
+    margin-left: -787px;
+    z-index: 100;
+}
+
+#nn_skinr {
+    margin-left: 487px;
+}
