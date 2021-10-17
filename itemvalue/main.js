@@ -245,19 +245,19 @@ angular.module('valueApp', ['ui.bootstrap', 'vcRecaptcha'])
 			domain = atob('aHR0cHM6Ly9pdGVtLXZhbHVlMTYuYXBwc3BvdC5jb20=');
 		} else {
 			Math.seedrandom(user);
-			var servers = $scope.SERVERS.length;
+			var servers = $scope.SERVERS;
 			if (appid == '753' || appid == '730') {
 				servers = servers.slice(0, 8);
 			} else if (appid == '440' || appid == '570') {
 				servers = servers.slice(8);
 			}
-			user = encodeURIComponent(user);
-			var ind = Math.floor(Math.random() * $scope.SERVERS.length);
-			ind = (ind + $scope.retries) % $scope.SERVERS.length;
-			domain = "https://" + $scope.SERVERS[ind] + ".appspot.com";
+
+			var ind = Math.floor(Math.random() * servers.length);
+			ind = (ind + $scope.retries) % servers.length;
+			domain = `https://${servers[ind]}.appspot.com`;
 		}
 
-		var url = domain + "/ItemValue?i=1&id=" + user + "&app=" + appid;
+		var url = `${domain}/ItemValue?i=1&id=${encodeURIComponent(user)}&app=${appid}`;
 
 		if ($scope.key && $scope.ts) {
 			url += '&ts=' + $scope.ts + '&key=' + $scope.key;
