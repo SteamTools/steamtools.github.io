@@ -173,6 +173,22 @@
 		</div>
 	</script>
 
+	<script type="text/ng-template" id="inventoryMenu.html">
+		<div class="modal-header" style="text-align: center;">
+			<h3 class="modal-title">Import Inventory</h3>
+		</div>
+		<div style="text-align: center;">
+			Open <a target=_blank ng-href="https://steamcommunity.com/inventory/{{data.steamid}}/753/6?l=english&count=5000">this link</a>
+			and paste the content in the textbox below:
+
+			<textarea class="form-control" ng-model="data.text" style="width: 400px; height: 300px; margin: 10px"></textarea>
+		</div>
+		<div class="modal-footer" style="text-align: center">
+			<button class="btn" ng-click="closeModal()">Cancel</button>
+			<button class="btn btn-success" ng-click="importInventory()">Import</button>
+		</div>
+	</script>
+
 	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.10/angular.min.js"></script>
 	<script src="hotkeys.min.js"></script>
 	<script src="ui-bootstrap-tpls-0.12.0.min.js"></script>

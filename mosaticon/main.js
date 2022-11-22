@@ -2,7 +2,6 @@
 /* global RGB_to_HSL */
 /* global RGB_to_Lab */
 
-
 angular.module('mosaticonApp', ['ui.bootstrap', 'cfp.hotkeys'])
 .config(['$tooltipProvider', function($tooltipProvider){
     $tooltipProvider.setTriggers({
@@ -41,7 +40,6 @@ angular.module('mosaticonApp', ['ui.bootstrap', 'cfp.hotkeys'])
 		return sum;
 	};
 })
-
 .controller('mosaticonCtrl', ['$scope', '$http', '$timeout', '$filter', '$modal', 'hotkeys',
 function($scope, $http, $timeout, $filter, $modal, hotkeys){
 	$scope.orderBy = $filter('orderBy');
@@ -91,59 +89,65 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 			$scope.mosaic = [];
 			$scope.toProcess = 0;
 			$scope.retry = 0;
-			$scope.fetchEmoticons(u);
+			if (/^\d{17}$/.test(u)) {
+				$scope.loadInventory(u);
+			} else {
+				$scope.fetchSteamId(u);
+			}
 		}
 
 	};
 
 	$scope.retry = 0;
-	$scope.SERVERS = ['mosaticon', 'mosaticon2', 'mosaticon3', 'mosaticon4'];
-	$scope.fetchEmoticons = function(user, offset = 0) {
+	$scope.SERVERS = ['mosaticon'];
+	$scope.fetchSteamId = function(user, offset = 0) {
 		$scope.status = "Loading...";
-		$scope.processedEmotes = false;
 
 		var serverIdx = user.slice(-1).charCodeAt(0);
 		var server = $scope.SERVERS[serverIdx % $scope.SERVERS.length];
-		var url = "https://" + server + ".appspot.com/FetchEmotes?id=" + user;
-		$http.get(url).success(function(data){
-			var help = document.getElementById("help");
-			if (data.help === 1) {
-				help.innerHTML = "Make sure your " +
-					"<a href='https://steamcommunity.com/my/edit/settings'" +
-					"target='_blank'>inventory privacy</a> " +
-					"is set to public.";
-			} else if (data.help === 2) {
-				help.innerHTML = "Try pasting the " +
-					"<a href='https://steamcommunity.com/my/'" +
-					"target='_blank'>Steam profile URL</a>.";
-			} else {
-				help.innerHTML = "";
-			}
-
-			if (!data || data.success === false) {
-				if ($scope.retry < 5) {
-					$scope.retry++;
-					setTimeout(() => $scope.fetchEmoticons(user, offset + 1), $scope.retry * 500);
-					return;
-				}
-				$scope.status = data.reason;
+		var url = "https://mosaticon.appspot.com/ResolveSteamId?id=" + user;
+		$http.get(url).success(function(steamid64){
+			if (!steamid64) {
+				$scope.status = 'Failed to resolve SteamId';
 			} else {
 				localStorage.lastUser = user;
-				$scope.status = "Processing...";
-				$scope.toProcess += data.items.length;
-				for (var i = 0; i < data.items.length; i++) {
-					var emote = {'name': data.items[i], 'index': i};
-					$scope.getEmoticonColor(emote);
-					emote.nsize = emote.name.length;
-					emote.disable = false;
-					emote.used = false;
-				}
-
-				if (data.items.length === 0) {
-					$scope.status = "You have no emoticons.";
-				}
+				$scope.loadInventory(steamid64);
 			}
 		});
+	};
+
+	$scope.loadInventory = function(steamid64) {
+		$scope.inventoryMenu(steamid64).then((result) => {
+			const inventory = JSON.parse(result);
+			console.log(inventory);
+			const emotes = [];
+			inventory.descriptions.forEach((item) => {
+				console.log(item.name);
+				if (item.name.slice(0, 1) !== ':') return;
+				if (item.name.slice(-1) !== ':') return;
+				emotes.push(item.name.slice(1, -1));
+			});
+
+			if (emotes.length === 0) {
+				$scope.status = "You have no emoticons.";
+			} else {
+				emotes.push("steambored", "steamfacepalm", "steamhappy", "steammocking", "steamsad", "steamsalty");
+				$scope.loadEmotes(emotes);
+			}
+		});
+	}
+
+	$scope.loadEmotes = function(emotes) {
+		$scope.processedEmotes = false;
+		$scope.status = "Processing...";
+		$scope.toProcess += emotes.length;
+		for (var i = 0; i < emotes.length; i++) {
+			var emote = {'name': emotes[i], 'index': i};
+			$scope.getEmoticonColor(emote);
+			emote.nsize = emote.name.length;
+			emote.disable = false;
+			emote.used = false;
+		}
 	};
 
 	$scope.getEmoticonColor = function(e) {
@@ -376,12 +380,24 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 	};
 
 	$scope.importMenu = function () {
-		$modal.open({
+		return $modal.open({
 			templateUrl: 'importMenu.html',
 			controller: ImportMenuCtrl,
 			size: 'lg',
 			scope: $scope
-		});
+		}).result;
+	};
+
+	$scope.inventoryMenu = function (steamid) {
+		return $modal.open({
+			templateUrl: 'inventoryMenu.html',
+			controller: InventoryMenuCtrl,
+			size: 'lg',
+			scope: $scope,
+			resolve: {
+				steamid: function() { return steamid; },
+			}
+		}).result;
 	};
 
 	$scope.mouseMove = function(e) {
@@ -821,5 +837,17 @@ var ImportMenuCtrl = function($scope, $modalInstance) {
 		ms.updateUsed();
 		ms.blankLoaded = true;
 		$modalInstance.dismiss('close');
+	};
+};
+
+var InventoryMenuCtrl = function($scope, $modalInstance, steamid) {
+	$scope.data = {text: "", steamid: steamid};
+
+	$scope.closeModal = function() {
+		$modalInstance.dismiss('close');
+	}
+
+	$scope.importInventory = function() {
+		$modalInstance.close($scope.data.text);
 	};
 };
