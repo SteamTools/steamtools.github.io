@@ -101,7 +101,8 @@ function($scope, $http, $filter, $compile, $modal){
 	// Little hack to have overflow ellipsis
 	$scope.overflow = function(data, type) {
 		if (type === "export") return data;
-		return '<span class="game">' + data + '</span>';
+		const game = data.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+		return '<span class="game">' + game + '</span>';
 	};
 
 	// Formats timestamp using moment.js
