@@ -854,7 +854,7 @@ var InventoryMenuCtrl = function($scope, $modalInstance, steamid) {
 		try {
 			inventory = JSON.parse($scope.data.text);
 		} catch(e) {
-			$scope.data.error = "Invalid inventory, make sure to copy everything."
+			$scope.data.error = "Invalid inventory, make sure the page finished loading and to copy everything."
 			return;
 		}
 
