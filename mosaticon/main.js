@@ -57,10 +57,6 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 		$scope.UserID = localStorage.lastUser;
 	}
 
-	if (localStorage.hasOwnProperty("lastEmotes")) {
-		$scope.loadEmotes(JSON.parse(localStorage.lastEmotes));
-	}
-
 	// if (window.localStorage !== undefined && !localStorage.feedbackPrompt) {
 	// 	$timeout(function(){
 	// 		FireEvent("feedback", "show");
@@ -301,7 +297,7 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 		}
 		$scope.usedEmotes = [];
 
-		var ctx = $scope.smallCvs.getContext("2d");
+		var ctx = $scope.smallCvs.getContext("2d", {willReadFrequently: true});
 		$scope.mosaic = [];
 		for (var y=0; y < $scope.smallCvs.height; y+=q) {
 			var row = [];
@@ -702,6 +698,10 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 			$scope.resizeBlank();
 		}
 	});
+
+	if (localStorage.hasOwnProperty("lastEmotes")) {
+		$scope.loadEmotes(JSON.parse(localStorage.lastEmotes));
+	}
 }]);
 
 function Size(v) {
