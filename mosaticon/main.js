@@ -57,12 +57,16 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 		$scope.UserID = localStorage.lastUser;
 	}
 
-	if (window.localStorage !== undefined && !localStorage.feedbackPrompt) {
-		$timeout(function(){
-			FireEvent("feedback", "show");
-			localStorage.feedbackPrompt = true;
-		}, 100000);
+	if (localStorage.hasOwnProperty("lastEmotes")) {
+		$scope.loadEmotes(JSON.parse(localStorage.lastEmotes));
 	}
+
+	// if (window.localStorage !== undefined && !localStorage.feedbackPrompt) {
+	// 	$timeout(function(){
+	// 		FireEvent("feedback", "show");
+	// 		localStorage.feedbackPrompt = true;
+	// 	}, 100000);
+	// }
 
 	$scope.emoticons = [];
 	$scope.emoteTree = new kdTree([], dist, Array.range(3));
@@ -117,17 +121,7 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 	};
 
 	$scope.loadInventory = function(steamid64) {
-		$scope.inventoryMenu(steamid64).then((result) => {
-			const inventory = JSON.parse(result);
-			console.log(inventory);
-			const emotes = [];
-			inventory.descriptions.forEach((item) => {
-				console.log(item.name);
-				if (item.name.slice(0, 1) !== ':') return;
-				if (item.name.slice(-1) !== ':') return;
-				emotes.push(item.name.slice(1, -1));
-			});
-
+		$scope.inventoryMenu(steamid64).then((emotes) => {
 			if (emotes.length === 0) {
 				$scope.status = "You have no emoticons.";
 			} else {
@@ -138,6 +132,7 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 	}
 
 	$scope.loadEmotes = function(emotes) {
+		localStorage.lastEmotes = JSON.stringify(emotes);
 		$scope.processedEmotes = false;
 		$scope.status = "Processing...";
 		$scope.toProcess += emotes.length;
@@ -841,13 +836,38 @@ var ImportMenuCtrl = function($scope, $modalInstance) {
 };
 
 var InventoryMenuCtrl = function($scope, $modalInstance, steamid) {
-	$scope.data = {text: "", steamid: steamid};
+	$scope.data = {
+		text: "",
+		steamid: steamid,
+		error: '',
+		emotes: [],
+		lastAssetId: null,
+	};
 
 	$scope.closeModal = function() {
 		$modalInstance.dismiss('close');
 	}
 
 	$scope.importInventory = function() {
-		$modalInstance.close($scope.data.text);
+		let inventory;
+		try {
+			inventory = JSON.parse($scope.data.text);
+		} catch(e) {
+			$scope.data.error = "Invalid inventory, make sure to copy everything."
+			return;
+		}
+
+		inventory?.descriptions.forEach((item) => {
+			if (item.name.slice(0, 1) !== ':') return;
+			if (item.name.slice(-1) !== ':') return;
+			$scope.data.emotes.push(item.name.slice(1, -1));
+		});
+
+		if (inventory.more_items && inventory.last_assetid) {
+			$scope.data.text = "";
+			$scope.data.lastAssetId = inventory.last_assetid;
+		} else {
+			$modalInstance.close($scope.data.emotes);
+		}
 	};
 };
