@@ -150,7 +150,7 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 		emoteCvs.width = 18;
 		emoteCvs.height = 18;
 
-		var ctx = emoteCvs.getContext("2d");
+		var ctx = emoteCvs.getContext("2d", {willReadFrequently: true});
 		var img = document.createElement("img");
 		img.crossOrigin = "Anonymous";
 		img.onload = function() {
@@ -842,6 +842,7 @@ var InventoryMenuCtrl = function($scope, $modalInstance, steamid) {
 		error: '',
 		emotes: [],
 		lastAssetId: null,
+		itemCount: 0,
 	};
 
 	$scope.closeModal = function() {
@@ -866,6 +867,7 @@ var InventoryMenuCtrl = function($scope, $modalInstance, steamid) {
 		if (inventory.more_items && inventory.last_assetid) {
 			$scope.data.text = "";
 			$scope.data.lastAssetId = inventory.last_assetid;
+			$scope.data.itemCount += 5000;
 		} else {
 			$modalInstance.close($scope.data.emotes);
 		}
