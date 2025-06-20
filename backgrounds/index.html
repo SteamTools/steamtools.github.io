@@ -122,9 +122,7 @@
 	<div class="corner" style="right: 25px;">
 		<a target="_blank" href="https://twitter.com/toolssteam"><img src="/img/twitter.png" alt="Twitter"></a>
 		<a target="_blank" href="https://steamcommunity.com/groups/steam_tools"><img src="/img/steam.png" alt="Steam Group"></a>
-		<a class="topbutton" id="feedback"  href="https://steamcommunity.com/id/ehsankia"
-			popover-placement="bottom" popover-trigger="show" popover-animation="true"
-			popover="Got a suggestion? Found a bug? Leave feedback!">Feedback</a>
+		<a class="topbutton" id="feedback"  href="https://steamcommunity.com/id/ehsankia">Feedback</a>
 		<a class="topbutton" id="donate" href="https://www.paypal.com/donate/?business=HLRYRKCXRYX7C">Donate</a>
 	</div>
 
@@ -183,41 +181,6 @@
 	<script src="ng-infinite-scroll.min.js"></script>
 	<script src="angular.rangeSlider.js"></script>
 	<script src="main.js"></script>
-
-	<!-- Start of UserVoice code -->
-	<script>
-	$('#feedback').click(function(event) {
-		UserVoice=window.UserVoice||[];
-		(function(){
-			var uv=document.createElement('script');
-			uv.type='text/javascript';
-			uv.async=true;
-			uv.src='//widget.uservoice.com/XTFNtBU14F9kxY4Wh9Wo0A.js';
-			var s=document.getElementsByTagName('script')[0];
-			s.parentNode.insertBefore(uv,s)
-		})();
-
-		UserVoice.push(['set', {
-			accent_color: '#448dd6',
-			trigger_color: 'white',
-			trigger_background_color: '#448dd6',
-			smartvote_enabled: false,
-			menu_enabled: false,
-			contact_title: "Bugs / Suggestions"
-		}]);
-
-		UserVoice.push(['identify', {}]);
-		var int = setInterval(function() {
-			if (UserVoice.show) {
-				UserVoice.showLightbox();
-				clearInterval(int);
-			}
-		}, 100);
-		event.preventDefault();
-		return false;
-	});
-	</script>
-	<!-- End of UserVoice code -->
 
 	<!-- Start of Google Analytics code -->
 	<script>
