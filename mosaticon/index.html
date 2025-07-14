@@ -176,14 +176,8 @@
 			<h3 class="modal-title">Import Inventory</h3>
 		</div>
 		<div style="text-align: center; padding: 10px 40px;">
-			<div ng-if="!data.lastAssetId">
-				Open <a target=_blank ng-href="https://steamcommunity.com/inventory/{{data.steamid}}/753/6?l=english&count=5000">this link</a>
-				and paste the content in the textbox below:
-			</div>
-
-			<div ng-if="data.lastAssetId">
-				You have more than {{data.itemCount}} items, please open <a target=_blank ng-href="https://steamcommunity.com/inventory/{{data.steamid}}/753/6?l=english&count=5000&start_assetid={{data.lastAssetId}}">this next link</a> and paste the content in the textbox below again:
-			</div>
+			Open <a target=_blank ng-href="https://steamcommunity.com/actions/EmoticonList">this link</a> (make sure you're logged in)
+			and paste the content below:
 
 			<textarea class="form-control" ng-model="data.text" style="width: 400px; height: 300px; margin: 10px"></textarea>
 

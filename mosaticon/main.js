@@ -64,6 +64,16 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 	// 	}, 100000);
 	// }
 
+	$scope.loadInventory = function() {
+		$scope.inventoryMenu().then((emotes) => {
+			if (emotes.length === 0) {
+				$scope.status = "You have no emoticons.";
+			} else {
+				$scope.loadEmotes(emotes);
+			}
+		});
+	};
+
 	$scope.emoticons = [];
 	$scope.emoteTree = new kdTree([], dist, Array.range(3));
 	$scope.toProcess = 0;
@@ -85,47 +95,10 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 				$scope.selectedEmote.select = true;
 			}
 		} else {
-			$scope.emoticons = [];
-			$scope.mosaic = [];
-			$scope.toProcess = 0;
-			$scope.retry = 0;
-			if (/^\d{17}$/.test(u)) {
-				$scope.loadInventory(u);
-			} else {
-				$scope.fetchSteamId(u);
-			}
+			$scope.loadInventory();
 		}
 
 	};
-
-	$scope.retry = 0;
-	$scope.SERVERS = ['mosaticon'];
-	$scope.fetchSteamId = function(user, offset = 0) {
-		$scope.status = "Loading...";
-
-		var serverIdx = user.slice(-1).charCodeAt(0);
-		var server = $scope.SERVERS[serverIdx % $scope.SERVERS.length];
-		var url = "https://mosaticon.appspot.com/ResolveSteamId?id=" + user;
-		$http.get(url).success(function(steamid64){
-			if (!steamid64) {
-				$scope.status = 'Failed to resolve SteamId';
-			} else {
-				localStorage.lastUser = user;
-				$scope.loadInventory(steamid64);
-			}
-		});
-	};
-
-	$scope.loadInventory = function(steamid64) {
-		$scope.inventoryMenu(steamid64).then((emotes) => {
-			if (emotes.length === 0) {
-				$scope.status = "You have no emoticons.";
-			} else {
-				emotes.push("steambored", "steamfacepalm", "steamhappy", "steammocking", "steamsad", "steamsalty");
-				$scope.loadEmotes(emotes);
-			}
-		});
-	}
 
 	$scope.loadEmotes = function(emotes) {
 		localStorage.lastEmotes = JSON.stringify(emotes);
@@ -379,15 +352,12 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 		}).result;
 	};
 
-	$scope.inventoryMenu = function (steamid) {
+	$scope.inventoryMenu = function () {
 		return $modal.open({
 			templateUrl: 'inventoryMenu.html',
 			controller: InventoryMenuCtrl,
 			size: 'lg',
 			scope: $scope,
-			resolve: {
-				steamid: function() { return steamid; },
-			}
 		}).result;
 	};
 
@@ -835,14 +805,11 @@ var ImportMenuCtrl = function($scope, $modalInstance) {
 	};
 };
 
-var InventoryMenuCtrl = function($scope, $modalInstance, steamid) {
+var InventoryMenuCtrl = function($scope, $modalInstance) {
 	$scope.data = {
 		text: "",
-		steamid: steamid,
 		error: '',
 		emotes: [],
-		lastAssetId: null,
-		itemCount: 0,
 	};
 
 	$scope.closeModal = function() {
@@ -858,18 +825,10 @@ var InventoryMenuCtrl = function($scope, $modalInstance, steamid) {
 			return;
 		}
 
-		inventory?.descriptions.forEach((item) => {
-			if (item.name.slice(0, 1) !== ':') return;
-			if (item.name.slice(-1) !== ':') return;
-			$scope.data.emotes.push(item.name.slice(1, -1));
+		inventory?.forEach((item) => {
+			$scope.data.emotes.push(item.slice(1, -1));
 		});
 
-		if (inventory.more_items && inventory.last_assetid) {
-			$scope.data.text = "";
-			$scope.data.lastAssetId = inventory.last_assetid;
-			$scope.data.itemCount += 5000;
-		} else {
-			$modalInstance.close($scope.data.emotes);
-		}
+		$modalInstance.close($scope.data.emotes);
 	};
 };
