@@ -1,4 +1,4 @@
-var SteamApp = angular.module('Steam', ['ngResource']);
+var SteamApp = angular.module('Steam', []);
 
 SteamApp
   .config(function($httpProvider){
@@ -84,20 +84,41 @@ function updateLS(){
 	localStorage.privates = JSON.stringify(privates);
 }
 
-function SteamCtrl($scope, $resource, $http){
+function SteamCtrl($scope, $http){
+	var CFG = window.STEAMTOOLS_CONFIG;
+	var GAMES_INFO_URL = CFG.GAMES_API_BASE + '/info';
+
+	for (var u = 0; u < users.length; u++) {
+		if (users[u] && users[u].avatar) {
+			users[u].avatar = CFG.normalizeSteamAssetUrl(users[u].avatar);
+		}
+	}
+
 	$scope.gameStatus = 1;
 	$scope.gameList = [];
 	$scope.fullGameList = [];
 	$scope.Users = users.slice();
+	$scope.userError = "";
 
-	var url = "https://cdn.steam.tools/data/game_data.json";
+	var url = CFG.CDN_BASE + "/data/game_data.json";
 	$http.get(url).success(function(data){
+		if (data && typeof data === 'object') {
+			var keys = Object.keys(data);
+			for (var k = 0; k < keys.length; k++) {
+				var entry = data[keys[k]];
+				if (entry && typeof entry.name === 'string') {
+					entry.name = entry.name.replace(/http:\/\//gi, 'https://');
+				}
+			}
+		}
 		$scope.gameData = data;
 	});
 
-	$scope.userData = $resource('https://st-games.appspot.com/info',
-							{callback:'JSON_CALLBACK'},
-							{getData: {method:'JSONP'} });
+	function fetchGamesInfo(params) {
+		return $http.get(GAMES_INFO_URL, { params: params }).then(function(resp) {
+			return resp && resp.data ? resp.data : null;
+		});
+	}
 
 	$scope.f = {
 		"singleplayer":     0,
@@ -135,9 +156,16 @@ function SteamCtrl($scope, $resource, $http){
 		if (!$scope.UserID || $scope.UserID.trim() === "")
 			return;
 
-		$scope.Users.push( {"name": "Loading","avatar":"img/loading.gif"} );
-		$scope.result = $scope.userData.getData({user:$scope.UserID}, appendUsers );
+		var query = $scope.UserID.trim();
 		$scope.UserID = "";
+		$scope.userError = "";
+		$scope.Users.push( {"name": "Loading","avatar":"img/loading.gif"} );
+		fetchGamesInfo({ user: query }).then(function(data) {
+			appendUsers(data);
+		}, function() {
+			$scope.Users = users.slice();
+			$scope.userError = "Failed to load user profile.";
+		});
 	};
 
 	$scope.removeUser = function(userid){
@@ -175,7 +203,11 @@ function SteamCtrl($scope, $resource, $http){
 		$scope.friendStatus = 1;
 		$scope.selectedName = name;
 		$scope.Friends = [];
-		$scope.userData.getData({friends:userid}, appendFriends );
+		fetchGamesInfo({ friends: userid }).then(function(data) {
+			appendFriends(data);
+		}, function() {
+			$scope.friendStatus = 2;
+		});
 	};
 
 	$scope.selectFriend = function (steamid){
@@ -222,13 +254,20 @@ function SteamCtrl($scope, $resource, $http){
 
 	$scope.importGames = function(){
 		$scope.gameStatus = 2;
+		$scope.userError = "";
 		$scope.fullGameList = [];
 		$scope.selectedUsers = subtract( $scope.selectedUsers, privates );
 		for (var i=0; i<$scope.selectedUsers.length ; i++){
 			var steamid = $scope.selectedUsers[i];
 			if (!steamid || steamid === undefined) return;
-			if (!games.hasOwnProperty(steamid))
-				$scope.userData.getData({games:steamid}, appendGames);
+			if (!games.hasOwnProperty(steamid)) {
+				fetchGamesInfo({ games: steamid }).then(function(data) {
+					appendGames(data);
+				}, function() {
+					$scope.gameStatus = 1;
+					$scope.userError = "Failed to load games from server.";
+				});
+			}
 		}
 		if (gamesLoaded())
 			filterGames();
@@ -243,20 +282,22 @@ function SteamCtrl($scope, $resource, $http){
 		var results = [];
 		for (var i = 0; i < $scope.gameList.length; i++) {
 			var appid = $scope.gameList[i];
-			var e = $scope.gameData[appid];
+			var e = $scope.gameData && $scope.gameData[appid];
 			if (e === undefined) break;
 			results.push(e.name);
 		}
 		results.sort();
 
-		var html = '<pre>' + results.join("\n") + '</pre>';
 		var newPage = window.open("about:blank", "_blank");
-		newPage.document.write(html);
-		newPage.document.close();
+		if (newPage && newPage.document) {
+			var pre = newPage.document.createElement("pre");
+			pre.textContent = results.join("\n");
+			newPage.document.body.appendChild(pre);
+		}
 	};
 
 	$scope.getGameName = function(appid) {
-		return $scope.gameData[appid].name;
+		return ($scope.gameData && $scope.gameData[appid]) ? $scope.gameData[appid].name : String(appid);
 	};
 
 	function gamesLoaded(){
@@ -282,6 +323,10 @@ function SteamCtrl($scope, $resource, $http){
 	}
 
 	function appendGames(data){
+		if (!data) {
+			$scope.gameStatus = 1;
+			return;
+		}
 		if (data.hasOwnProperty("private")){
 			privates.push(data.steamid);
 			updateLS();
@@ -296,17 +341,19 @@ function SteamCtrl($scope, $resource, $http){
 
 	function appendFriends(data){
 		$scope.selectedUsers = [];
-		if (data.hasOwnProperty("private")){
+		if (!data || data.hasOwnProperty("private") || !data.response || !data.response.players){
 			$scope.friendStatus = 3;
-			privates.push( data.steamid );
-			updateLS();
+			if (data && data.steamid) {
+				privates.push( data.steamid );
+				updateLS();
+			}
 		}
 		else{
 			var players = data.response.players;
 			for (var i in players){
 				if (ids.indexOf(players[i].steamid) === -1){
 					var d = {'name':    players[i].personaname,
-							'avatar':   players[i].avatarmedium,
+							'avatar':   CFG.normalizeSteamAssetUrl(players[i].avatarmedium),
 							'steamid':  players[i].steamid };
 					$scope.Friends.push(d);
 				}
@@ -319,9 +366,9 @@ function SteamCtrl($scope, $resource, $http){
 		}
 	}
 
-	function appendUsers(){
-		if ($scope.result.success !== false){
-			var players = $scope.result.response.players;
+	function appendUsers(data){
+		if (data && data.success !== false && data.response && data.response.players){
+			var players = data.response.players;
 			for (var i in players){
 				if (players.hasOwnProperty(i)){
 					if (players[i].communityvisibilitystate !== 3)
@@ -332,13 +379,15 @@ function SteamCtrl($scope, $resource, $http){
 
 					if (ids.indexOf(players[i].steamid) === -1){
 						var d = {'name':    players[i].personaname,
-								'avatar':   players[i].avatarmedium,
+								'avatar':   CFG.normalizeSteamAssetUrl(players[i].avatarmedium),
 								'steamid':  players[i].steamid };
 						ids.push(players[i].steamid);
 						users.push(d);
 					}
 				}
 			}
+		} else {
+			$scope.userError = (data && data.reason) ? data.reason : "User not found or unavailable.";
 		}
 		$scope.Users = users.slice();
 		updateLS();

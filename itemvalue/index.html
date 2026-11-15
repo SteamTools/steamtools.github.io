@@ -17,12 +17,14 @@
 	<link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" rel="stylesheet">
 	<link rel="stylesheet" href="//cdn.datatables.net/plug-ins/725b2a2115b/integration/bootstrap/2/dataTables.bootstrap.css">
 	<link rel="stylesheet" href="style.css">
+	<link rel="stylesheet" href="../css/steamtools-import.css">
+	<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 </head>
 <body ng-controller="InvCtrl" ng-cloak>
 	<a class="corner topbutton" style="left: 25px;" href="../">&laquo; Hub</a>
 	<div class="corner" style="right: 25px;">
-		<a target="_blank" href="https://twitter.com/SteamTools"><img src="/img/twitter.png" alt="Twitter"></a>
-		<a target="_blank" href="https://steamcommunity.com/groups/steam_tools"><img src="/img/steam.png" alt="Steam Group"></a>
+		<a target="_blank" href="https://twitter.com/SteamTools"><img src="/img/twitter.png" alt="Twitter" width="25" height="25"></a>
+		<a target="_blank" href="https://steamcommunity.com/groups/steam_tools"><img src="/img/steam.png" alt="Steam Group" width="25" height="25"></a>
 		<a class="topbutton" id="feedback"  href="https://steamcommunity.com/groups/steam_tools">Feedback</a>
 		<a class="topbutton" id="donate" href="https://www.paypal.com/donate/?business=HLRYRKCXRYX7C">PayPal</a>
 	</div>
@@ -33,34 +35,43 @@
 		<div>
 			<form class="form-horizontal" ng-submit="loadItems()">
 				<div class="input-prepend input-append">
-					<span class="add-on">SteamID</span>
-					<input class="span3" type="text" ng-model="UserID">
-					<button ng-show="captchaKey" class="btn btn-inverse" type="submit">
+					<label for="iv-steamid" class="add-on" style="display:inline-block;margin-bottom:0;">SteamID</label>
+					<input id="iv-steamid" class="span3" type="text" ng-model="UserID"
+						autocorrect="off" autocapitalize="none" spellcheck="false"
+						placeholder="SteamID64, custom URL, or profile URL"
+						aria-invalid="false">
+					<button class="btn btn-inverse" type="submit" ng-disabled="isLoading || (!hasValidPass() && !turnstileToken)">
 						<i class="icon-user icon-white"></i> Fetch</button>
-					<div ng-show="!captchaKey" class="captcha-submit">
-					<button class="btn btn-inverse g-recaptcha" type="submit"
-						vc-recaptcha key="'6LfiCRkUAAAAAOk3W9Qc4zBY0rbNV5Um8ZJ33anE'"
-						on-create="setCaptchaId(widgetId)"
-						on-success="setCaptchaKey(response)"
-						on-expire="expireCaptcha()">
-						<i class="icon-user icon-white"></i> Fetch</button>
-					</div>
+					<button class="btn btn-primary" type="button" ng-click="openImportModal()" style="margin-left:4px;">
+						<i class="icon-upload icon-white"></i> Import Inventory</button>
+				</div>
+				<div id="turnstile-container" style="margin: 8px auto 4px; min-height: 65px;" ng-show="!hasValidPass()"></div>
+				<div ng-show="hasValidPass()" class="muted" style="font-size: 12px; margin-bottom: 4px;">
+					Verification pass active — no captcha needed for follow-up fetches.
+				</div>
+				<div ng-show="!turnstileConfigured && !hasValidPass()" class="muted" style="font-size: 12px; margin-bottom: 4px;">
+					Turnstile sitekey not configured in this environment — use <strong>Import Inventory</strong> (no captcha) or set <code>st_turnstile_sitekey</code>.
 				</div>
 			</form>
 		</div>
 
-		<div class="btn-group" style="margin-bottom: 5px;">
+		<div class="btn-group" style="margin-bottom: 5px;" role="group" aria-label="Select game">
 			<span class="input-prepend" style="margin-bottom:0">
 					<span class="add-on" style="width: 60px; height: 32px; line-height: 32px;">Game</span>
 			</span>
 			<button ng-repeat="app in apps" type="button" class="btn" ng-model="appid.model" btn-radio="app">
-				<img ng-src="{{getIcon(app)}}" class="game-icon" alt="{{typeMap[app]}}"
+				<img ng-src="{{getIcon(app)}}" class="game-icon" width="32" height="32" alt="{{typeMap[app]}}"
 					 tooltip-popup-delay="250" tooltip-placement="top" tooltip="{{ typeMap[app] }}">
 			</button>
 		</div>
 
-		<div id="error">{{status}}</div>
+		<div id="error" role="status" aria-live="polite" aria-atomic="true">{{status}}</div>
 		<div id="help"></div>
+		<div ng-show="showImportCta" style="margin: 8px 0;">
+			<button type="button" class="btn btn-primary" ng-click="openImportModal()">
+				<i class="icon-upload icon-white"></i> Import Inventory Directly (Bypass Rate Limit / No Captcha)
+			</button>
+		</div>
 
 		<div id="nn_lb1" style="margin: 10px auto"></div>
 
@@ -119,8 +130,8 @@
 			</div>
 
 			<div class="input-prepend" style="margin: 6px">
-				<span class="add-on" style="width:50px">Filter</span>
-				<input class="span3" type="text" ng-model="filterText">
+				<label for="iv-filter-text" class="add-on" style="width:50px;display:inline-block;margin-bottom:0;">Filter</label>
+				<input id="iv-filter-text" class="span3" type="text" ng-model="filterText" autocorrect="off" autocapitalize="none" spellcheck="false">
 			</div>
 
 
@@ -134,11 +145,11 @@
 		<div ng-hide="useTable" class="itemBox">
 			<a class="item" ng-repeat="i in items | filter:dupesFilter | filter:typeFilter | filter:filterText | orderBy:'price':1 | limitTo:iconLimit"
 				ng-style="{'border': '2px solid #' + i.color, 'background-color': '#' + i.bg}"
-				target="_blank" ng-href="{{LISTING + i.url}}">
+				target="_blank" rel="noopener noreferrer" ng-href="{{LISTING + i.url}}">
 				<span ng-hide="i.count == 1" class="counter">x{{i.count}}</span>
 				<span ng-show="i.rarity || i.rcolor" class="rarity {{i.rarity + appidLoaded}}" ng-style="{'background-color': '#' + i.rcolor}"
 					tooltip-popup-delay='250' tooltip-placement="top" tooltip="{{i.rarity}}">.</span>
-					<img ng-src="{{ECONOMY + i.icon + '/62fx62f'}}" tooltip-popup-delay='250' tooltip-placement="top" tooltip="{{i.name}}" class="itemicon"><br>
+					<img ng-src="{{ECONOMY + i.icon + '/62fx62f'}}" width="62" height="62" loading="lazy" alt="{{i.name}}" tooltip-popup-delay='250' tooltip-placement="top" tooltip="{{i.name}}" class="itemicon"><br>
 					<span class="price">
 						{{((i.price * (flags.stack ? i.count : 1) || 'x') | currency:curIndex:flags.fee) || 'N/A'}}
 					</span>
@@ -151,10 +162,12 @@
 
 	<script src="//cdn.datatables.net/plug-ins/725b2a2115b/integration/bootstrap/2/dataTables.bootstrap.js"></script>
 	<script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.6.5/angular.min.js"></script>
-	<script src="angular-recaptcha.min.js"></script>
 	<script src="//cdnjs.cloudflare.com/ajax/libs/seedrandom/2.3.6/seedrandom.min.js"></script>
 	<script src="ui-bootstrap-custom-tpls-0.7.0.min.js"></script>
 	<script src="jquery.thumbhover.js"></script>
+	<script src="../js/steamtools-config.js"></script>
+	<script src="../js/import-worker.js"></script>
+	<script src="../js/steamtools-import.js"></script>
 	<script src="main.js"></script>
 
 	<div id="nn_skinl" class="adswitch_skin"></div>
@@ -178,17 +191,16 @@
 		var sc_project=9905430;
 		var sc_invisible=1;
 		var sc_security="89ce89e8";
-		var scJsHost = (("https:" == document.location.protocol) ?
-		"https://secure." : "http://www.");
+		var scJsHost = "https://secure.";
 		document.write("<sc"+"ript type='text/javascript' src='" +
 		scJsHost+
 		"statcounter.com/counter/counter.js'></"+"script>");
 	</script>
 	<noscript><div class="statcounter"><a title="create counter"
-	href="http://statcounter.com/free-hit-counter/"
-	target="_blank"><img class="statcounter"
-	src="http://c.statcounter.com/9905430/0/89ce89e8/1/"
-	alt="create counter"></a></div></noscript>
+	href="https://statcounter.com/free-hit-counter/"
+	target="_blank" rel="noopener noreferrer"><img class="statcounter"
+	src="https://c.statcounter.com/9905430/0/89ce89e8/1/"
+	alt="create counter" width="1" height="1"></a></div></noscript>
 	<!-- End of StatCounter Code for Default Guide -->
 
 </body>

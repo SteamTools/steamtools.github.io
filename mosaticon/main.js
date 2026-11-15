@@ -42,8 +42,13 @@ angular.module('mosaticonApp', ['ui.bootstrap', 'cfp.hotkeys'])
 })
 .controller('mosaticonCtrl', ['$scope', '$http', '$timeout', '$filter', '$modal', 'hotkeys',
 function($scope, $http, $timeout, $filter, $modal, hotkeys){
+	var CFG = window.STEAMTOOLS_CONFIG;
+	var ColorTools = window.MosaticonColors;
+	var loadGeneration = 0;
+
 	$scope.orderBy = $filter('orderBy');
-	$scope.CDN = "https://emotes.steam.tools";
+	$scope.CDN = CFG.EMOTE_CORS_BASE;
+	$scope.EMOTE_IMG_BASE = CFG.STEAM_ECON_BASE + "/emoticon";
 	$scope.width = new Size(30);
 	$scope.height = new Size(30);
 	$scope.status = "";
@@ -57,64 +62,215 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 		$scope.UserID = localStorage.lastUser;
 	}
 
-	// if (window.localStorage !== undefined && !localStorage.feedbackPrompt) {
-	// 	$timeout(function(){
-	// 		FireEvent("feedback", "show");
-	// 		localStorage.feedbackPrompt = true;
-	// 	}, 100000);
-	// }
+	// ---- Precomputed emote_colors.json + IndexedDB (v1:<name>) fallback cache ----
+	var COLOR_DB_NAME = 'steamtools_mosaticon_colors_v1';
+	var COLOR_STORE_NAME = 'emote_colors';
+	var _colorDbPromise = null;
+	var _memEmoteBytes = new Map();
+	var _emoteCatalogPromise = null;
+
+	function openColorDb() {
+		if (_colorDbPromise) return _colorDbPromise;
+		if (!window.indexedDB) return Promise.resolve(null);
+		_colorDbPromise = new Promise(function(resolve) {
+			try {
+				var req = window.indexedDB.open(COLOR_DB_NAME, 1);
+				req.onupgradeneeded = function() {
+					var db = req.result;
+					if (!db.objectStoreNames.contains(COLOR_STORE_NAME)) {
+						db.createObjectStore(COLOR_STORE_NAME);
+					}
+				};
+				req.onsuccess = function() { resolve(req.result); };
+				req.onerror = function() { resolve(null); };
+			} catch (e) {
+				resolve(null);
+			}
+		});
+		return _colorDbPromise;
+	}
+
+	function idbGetEmoteBytes(name) {
+		var key = 'v1:' + name;
+		if (_memEmoteBytes.has(key)) {
+			return Promise.resolve(_memEmoteBytes.get(key));
+		}
+		return openColorDb().then(function(db) {
+			if (!db) return null;
+			return new Promise(function(resolve) {
+				try {
+					var tx = db.transaction(COLOR_STORE_NAME, 'readonly');
+					var req = tx.objectStore(COLOR_STORE_NAME).get(key);
+					req.onsuccess = function() {
+						var val = req.result;
+						if (Array.isArray(val) && val.length === 42) {
+							_memEmoteBytes.set(key, val);
+							resolve(val);
+						} else {
+							resolve(null);
+						}
+					};
+					req.onerror = function() { resolve(null); };
+				} catch (e) {
+					resolve(null);
+				}
+			});
+		});
+	}
+
+	function idbPutEmoteBytes(name, bytes42) {
+		if (!Array.isArray(bytes42) || bytes42.length !== 42) return;
+		var key = 'v1:' + name;
+		_memEmoteBytes.set(key, bytes42);
+		openColorDb().then(function(db) {
+			if (!db) return;
+			try {
+				var tx = db.transaction(COLOR_STORE_NAME, 'readwrite');
+				tx.objectStore(COLOR_STORE_NAME).put(bytes42, key);
+			} catch (e) {
+				// Ignore storage quota / private mode failures
+			}
+		});
+	}
+
+	function loadEmoteColorsCatalog() {
+		if (_emoteCatalogPromise) return _emoteCatalogPromise;
+		_emoteCatalogPromise = $http.get(CFG.CDN_BASE + '/data/emote_colors.json').then(function(resp) {
+			var body = resp && resp.data;
+			if (body && body.emotes && typeof body.emotes === 'object') {
+				return body.emotes;
+			}
+			return null;
+		}, function() {
+			return null;
+		});
+		return _emoteCatalogPromise;
+	}
+
+	function applyDecodedVectors(e, vecs) {
+		e.rgb1 = vecs.rgb1;
+		e.lab1 = vecs.lab1;
+		e.hsl1 = vecs.hsl1;
+		e.rgb2 = vecs.rgb2;
+		e.lab2 = vecs.lab2;
+		e.hsl2 = vecs.hsl2;
+		e.rgb3 = vecs.rgb3;
+		e.lab3 = vecs.lab3;
+		e.hsl3 = vecs.hsl3;
+		e.hue = vecs.hue;
+	}
 
 	$scope.loadInventory = function() {
-		$scope.inventoryMenu().then((emotes) => {
-			if (emotes.length === 0) {
-				$scope.status = "You have no emoticons.";
-			} else {
-				$scope.loadEmotes(emotes);
+		if (!window.SteamToolsImport) return;
+		var idHint = /^\d{17}$/.test(String($scope.UserID || '').trim()) ? String($scope.UserID).trim() : '';
+		window.SteamToolsImport.openImportDialog({
+			mode: 'emotes',
+			appid: '753',
+			contextid: '6',
+			steamId: idHint,
+			title: 'Load Owned Emoticons',
+			subtitle: 'Paste EmoticonList JSON (even []), or paste/drop/bookmarklet-sync your 753/6 Steam inventory JSON.',
+			onImport: function(parsed) {
+				$scope.$applyAsync(function() {
+					var emotes = Array.isArray(parsed && parsed.emoticons) ? parsed.emoticons : [];
+					if (emotes.length === 0) {
+						$scope.status = "No emoticons found in import.";
+					} else {
+						$scope.loadEmotes(emotes);
+					}
+				});
 			}
 		});
 	};
 
 	$scope.emoticons = [];
+	$scope.usedEmotes = [];
 	$scope.emoteTree = new kdTree([], dist, Array.range(3));
 	$scope.toProcess = 0;
-	$scope.loadEmoticons = function(){
-		if (!$scope.UserID || $scope.UserID.trim() === "")
-			return;
 
-		var u = $scope.UserID;
-		if (u[0] === ":" && u.slice(-1) === ":" && u.length > 2) {
+	$scope.loadEmoticons = function(){
+		var u = ($scope.UserID || '').trim();
+		if (u.charAt(0) === ":" && u.slice(-1) === ":" && u.length > 2) {
+			var cleanName = window.SteamToolsImport && window.SteamToolsImport.sanitizeEmoteName
+				? window.SteamToolsImport.sanitizeEmoteName(u.slice(1, -1))
+				: u.slice(1, -1);
+			if (!cleanName) return;
+			var activeGen = loadGeneration;
 			$scope.toProcess += 1;
-			var emote = {'name': u.slice(1, -1)};
-			$scope.getEmoticonColor(emote);
+			var emote = {'name': cleanName};
 			emote.nsize = emote.name.length;
 			emote.disable = false;
 			emote.used = false;
-
-			if ($scope.selectedEmote === undefined) {
-				$scope.selectedEmote = emote;
-				$scope.selectedEmote.select = true;
-			}
+			loadEmoteColorsCatalog().then(function(catalog) {
+				$scope.getEmoticonColor(emote, catalog, activeGen);
+			});
 		} else {
+			// Empty or SteamID input opens the accessible Import dialog directly.
 			$scope.loadInventory();
 		}
-
 	};
 
 	$scope.loadEmotes = function(emotes) {
-		localStorage.lastEmotes = JSON.stringify(emotes);
-		$scope.processedEmotes = false;
-		$scope.status = "Processing...";
-		$scope.toProcess += emotes.length;
-		for (var i = 0; i < emotes.length; i++) {
-			var emote = {'name': emotes[i], 'index': i};
-			$scope.getEmoticonColor(emote);
-			emote.nsize = emote.name.length;
-			emote.disable = false;
-			emote.used = false;
+		var gen = ++loadGeneration;
+		var seen = Object.create(null);
+		var cleanEmotes = [];
+		var rawList = Array.isArray(emotes) ? emotes : [];
+
+		for (var idx = 0; idx < rawList.length; idx++) {
+			var item = rawList[idx];
+			var rawName = typeof item === 'string'
+				? item
+				: (item && typeof item.name === 'string' ? item.name : '');
+			var name = window.SteamToolsImport && window.SteamToolsImport.sanitizeEmoteName
+				? window.SteamToolsImport.sanitizeEmoteName(rawName)
+				: String(rawName).trim().replace(/^:+|:+$/g, '');
+			if (name && !seen[name]) {
+				seen[name] = true;
+				cleanEmotes.push(name);
+			}
 		}
+
+		localStorage.lastEmotes = JSON.stringify(cleanEmotes);
+		$scope.processedEmotes = false;
+		$scope.emoticons = [];
+		$scope.usedEmotes = [];
+		$scope.selectedEmote = undefined;
+		$scope.emoteTree = new kdTree([], dist, Array.range(3));
+		$scope.toProcess = cleanEmotes.length;
+
+		if (cleanEmotes.length === 0) {
+			$scope.status = "No emoticons loaded.";
+			return;
+		}
+
+		$scope.status = "Processing...";
+		loadEmoteColorsCatalog().then(function(catalog) {
+			if (gen !== loadGeneration) return;
+			for (var i = 0; i < cleanEmotes.length; i++) {
+				var emote = {'name': cleanEmotes[i], 'index': i};
+				emote.nsize = emote.name.length;
+				emote.disable = false;
+				emote.used = false;
+				$scope.getEmoticonColor(emote, catalog, gen);
+			}
+		});
 	};
 
-	$scope.getEmoticonColor = function(e) {
+	function commitEmoteVectors(e, vecs, gen) {
+		if (gen !== loadGeneration) return;
+		applyDecodedVectors(e, vecs);
+		var obj = e.rgb1.toObject();
+		obj.emote = e;
+		$scope.emoteTree.insert(obj);
+		if (!$scope.selectedEmote) {
+			$scope.selectedEmote = e;
+			$scope.selectedEmote.select = true;
+		}
+		$scope.emoticons.push(e);
+		$scope.process(gen);
+	}
+
+	function extractEmoteFromCanvas(e, gen) {
 		var emoteCvs = document.createElement('canvas');
 		emoteCvs.width = 18;
 		emoteCvs.height = 18;
@@ -123,40 +279,60 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 		var img = document.createElement("img");
 		img.crossOrigin = "Anonymous";
 		img.onload = function() {
-			var step, data, rgb, lab, hsl;
-			ctx.drawImage(img, 0, 0);
-			for (var i = 1; i <= 3; i++) {
-				step = 18 / i;
-				e['rgb'+i] = [];
-				e['lab'+i] = [];
-				e['hsl'+i] = [];
-				for (var y = 0; y < i; y++) {
-					for (var x = 0; x < i; x++) {
-						data = ctx.getImageData(y * step, x * step, step, step);
-						rgb = $scope.averageColor(data.data);
-						lab = RGB_to_Lab(rgb[0], rgb[1], rgb[2]);
-						hsl = RGB_to_HSL(rgb[0], rgb[1], rgb[2]);
-						Array.prototype.push.apply(e['rgb'+i], rgb);
-						Array.prototype.push.apply(e['lab'+i], lab);
-						Array.prototype.push.apply(e['hsl'+i], hsl);
+			if (gen !== loadGeneration) return;
+			try {
+				ctx.clearRect(0, 0, 18, 18);
+				ctx.drawImage(img, 0, 0, 18, 18);
+				var bytes42 = [];
+				for (var i = 1; i <= 3; i++) {
+					var step = 18 / i;
+					for (var y = 0; y < i; y++) {
+						for (var x = 0; x < i; x++) {
+							var data = ctx.getImageData(x * step, y * step, step, step);
+							var rgbByte = ColorTools.extractBlockByteRgbFromRgba(data.data);
+							bytes42.push(rgbByte[0], rgbByte[1], rgbByte[2]);
+						}
 					}
 				}
+				idbPutEmoteBytes(e.name, bytes42);
+				var vecs = ColorTools.decodeEmoteColorBytes(bytes42);
+				if (vecs) {
+					commitEmoteVectors(e, vecs, gen);
+					return;
+				}
+			} catch (err) {
+				// Canvas tainted or unreadable
 			}
-			var obj = e.rgb1.toObject();
-			obj.emote = e;
-			$scope.emoteTree.insert(obj);
-			e.hue = $scope.getHue(e.hsl1);
-			if (!$scope.selectedEmote) {
-				$scope.selectedEmote = e;
-				$scope.selectedEmote.select = true;
-			}
-			$scope.emoticons.push(e);
-			$scope.process();
+			$scope.process(gen);
 		};
 		img.onerror = function() {
-			$scope.process();
+			$scope.process(gen);
 		};
-		img.src = $scope.CDN + '/' + e.name;
+		img.src = CFG.EMOTE_CORS_BASE + '/' + encodeURIComponent(e.name);
+	}
+
+	$scope.getEmoticonColor = function(e, catalog, expectedGen) {
+		var gen = expectedGen !== undefined ? expectedGen : loadGeneration;
+
+		if (catalog && Object.prototype.hasOwnProperty.call(catalog, e.name)) {
+			var decoded = ColorTools.decodeEmoteColorB64(catalog[e.name]);
+			if (decoded) {
+				commitEmoteVectors(e, decoded, gen);
+				return;
+			}
+		}
+
+		idbGetEmoteBytes(e.name).then(function(cachedBytes) {
+			if (gen !== loadGeneration) return;
+			if (cachedBytes) {
+				var decodedCached = ColorTools.decodeEmoteColorBytes(cachedBytes);
+				if (decodedCached) {
+					commitEmoteVectors(e, decodedCached, gen);
+					return;
+				}
+			}
+			extractEmoteFromCanvas(e, gen);
+		});
 	};
 
 	$scope.getHue = function(hsl) {
@@ -170,18 +346,25 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 	};
 
 	$scope.processedEmotes = false;
-	$scope.process = function() {
-		$scope.toProcess -= 1;
-		if ($scope.toProcess === 0) {
-			$scope.emoticons = $scope.orderBy($scope.emoticons, 'hue');
-			$scope.processedEmotes = true;
-			$scope.status = "";
-			if (!$scope.imageLoaded) {
-				$timeout($scope.displayEmoticons, 0);
-			} else {
-				$timeout($scope.generateMosaic, 0);
+	$scope.process = function(gen) {
+		if (gen !== undefined && gen !== loadGeneration) return;
+		$scope.$applyAsync(function() {
+			if (gen !== undefined && gen !== loadGeneration) return;
+			$scope.toProcess -= 1;
+			if ($scope.toProcess <= 0) {
+				$scope.toProcess = 0;
+				$scope.emoticons = $scope.orderBy($scope.emoticons, 'hue');
+				$scope.processedEmotes = $scope.emoticons.length > 0;
+				$scope.status = $scope.emoticons.length > 0 ? "" : "Could not load emoticon images.";
+				if ($scope.emoticons.length > 0) {
+					if (!$scope.imageLoaded) {
+						$timeout($scope.displayEmoticons, 0);
+					} else {
+						$timeout($scope.generateMosaic, 0);
+					}
+				}
 			}
-		}
+		});
 	};
 
 	$scope.displayEmoticons = function() {
@@ -256,7 +439,7 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 		if ($scope.emoticons.length === 0 || !$scope.imageLoaded) return;
 
 		var q = $scope.q;
-		var tree = new kdTree([], dist, Array.range(q * 3));
+		var tree = new kdTree([], dist, Array.range(q * q * 3));
 
 		var emote, obj;
 		for (var j = 0; j < $scope.emoticons.length; j++) {
@@ -337,10 +520,13 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 			}
 			result += "\n";
 		}
-		var data = "<pre>" + result + "</pre>";
-		// window.open("data:text/html," + encodeURIComponent(data), "_blank");
 		var exportWin = window.open("", "ExportWindow");
-		exportWin.document.write(data);
+		if (exportWin && exportWin.document) {
+			exportWin.document.body.textContent = "";
+			var pre = exportWin.document.createElement("pre");
+			pre.textContent = result;
+			exportWin.document.body.appendChild(pre);
+		}
 	};
 
 	$scope.importMenu = function () {
@@ -349,15 +535,6 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 			controller: ImportMenuCtrl,
 			size: 'lg',
 			scope: $scope
-		}).result;
-	};
-
-	$scope.inventoryMenu = function () {
-		return $modal.open({
-			templateUrl: 'inventoryMenu.html',
-			controller: InventoryMenuCtrl,
-			size: 'lg',
-			scope: $scope,
 		}).result;
 	};
 
@@ -670,7 +847,14 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 	});
 
 	if (localStorage.hasOwnProperty("lastEmotes")) {
-		$scope.loadEmotes(JSON.parse(localStorage.lastEmotes));
+		try {
+			var parsedLastEmotes = JSON.parse(localStorage.lastEmotes);
+			if (Array.isArray(parsedLastEmotes) && parsedLastEmotes.length > 0) {
+				$scope.loadEmotes(parsedLastEmotes);
+			}
+		} catch (e) {
+			delete localStorage.lastEmotes;
+		}
 	}
 }]);
 
@@ -802,33 +986,5 @@ var ImportMenuCtrl = function($scope, $modalInstance) {
 		ms.updateUsed();
 		ms.blankLoaded = true;
 		$modalInstance.dismiss('close');
-	};
-};
-
-var InventoryMenuCtrl = function($scope, $modalInstance) {
-	$scope.data = {
-		text: "",
-		error: '',
-		emotes: [],
-	};
-
-	$scope.closeModal = function() {
-		$modalInstance.dismiss('close');
-	}
-
-	$scope.importInventory = function() {
-		let inventory;
-		try {
-			inventory = JSON.parse($scope.data.text);
-		} catch(e) {
-			$scope.data.error = "Invalid inventory, make sure the page finished loading and to copy everything."
-			return;
-		}
-
-		inventory?.forEach((item) => {
-			$scope.data.emotes.push(item.slice(1, -1));
-		});
-
-		$modalInstance.close($scope.data.emotes);
 	};
 };

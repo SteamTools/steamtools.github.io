@@ -43,7 +43,7 @@ var CURRENCY_DATA = [
 	{name: "ZAR", symbolFormat: "R ",    right: false, ratio: 14.9625},
 ];
 
-angular.module('valueApp', ['ui.bootstrap', 'vcRecaptcha'])
+angular.module('valueApp', ['ui.bootstrap'])
 .config(['$tooltipProvider', function($tooltipProvider){
 	$tooltipProvider.setTriggers({
 		'motaenter': 'mouseleave',
@@ -104,16 +104,17 @@ angular.module('valueApp', ['ui.bootstrap', 'vcRecaptcha'])
 		else return symbol + out;
 	};
 }).controller('InvCtrl',
-	['$scope', '$http', '$filter', 'vcRecaptchaService',
- 		($scope, $http, $filter, vcRecaptchaService) => {
-	$scope.SERVERS = ["item-value", "item-value2", "item-value3", "item-value4", "item-value5",
-					  "item-value6", "item-value7", "item-value8", "item-value9", "item-value10",
-					  "item-value11", "item-value12", "item-value13", "item-value14", "item-value15"];
+	['$scope', '$http', '$filter', '$timeout',
+ 		function($scope, $http, $filter, $timeout) {
+	var CFG = window.STEAMTOOLS_CONFIG;
+	var MAX_AUTO_RETRIES = 2;
+	var retryTimer = null;
+
 	$scope.CDATA = CURRENCY_DATA;
-	$scope.ECONOMY = "https://steamcommunity-a.akamaihd.net/economy/image/";
+	$scope.ECONOMY = CFG.STEAM_ECON_BASE + "/image/";
 	$scope.LISTING = "https://steamcommunity.com/market/listings/";
-	$scope.status = "Import your profile";
-	$scope.TYPES =["all", "emoticon", "background", "card", "booster"];
+	$scope.status = "Import your profile or use Import Inventory";
+	$scope.TYPES = ["all", "emoticon", "background", "card", "booster"];
 	$scope.type = "0";
 	$scope.appid = {model: "753"};
 	$scope.appidLoaded = "0";
@@ -125,12 +126,17 @@ angular.module('valueApp', ['ui.bootstrap', 'vcRecaptcha'])
 	};
 	$scope.iconLimit = 54;
 	$scope.useTable = true;
+	$scope.isLoading = false;
+	$scope.showImportCta = false;
+	$scope.turnstileConfigured = CFG.isTurnstileConfigured();
 
-	$http.get('https://cdn.steam.tools/data/currency.json').then(({data}) => {
+	$http.get(CFG.CDN_BASE + '/data/currency.json').then(function(resp) {
+		var data = resp && resp.data;
+		if (!data) return;
 		var count = 0;
 		for (var i = 0; i < $scope.CDATA.length; i++) {
 			var code = $scope.CDATA[i].name;
-			if (data.hasOwnProperty(code)) {
+			if (Object.prototype.hasOwnProperty.call(data, code)) {
 				$scope.CDATA[i].ratio = data[code];
 				count++;
 			}
@@ -140,75 +146,90 @@ angular.module('valueApp', ['ui.bootstrap', 'vcRecaptcha'])
 
 	$scope.apps = [
 		"753",
-		"440",
 		"730",
+		"440",
 		"570",
-		"583950",
-		"433850",
 		"252490",
-		"304930",
-		"218620",
-		"238460",
-		"321360",
-		"232090",
-		"322330",
-		"578080",
+		"322330"
 	];
 
 	$scope.typeMap = {
 		'753': "Steam",
+		'730': "Counter-Strike 2",
 		'440': "Team Fortress 2",
-		'730': "CS:GO",
 		'570': "Dota 2",
-		'583950': "Artifact",
-		'433850': "H1Z1: King of the Kill",
 		'252490': "Rust",
-		'304930': "Unturned",
-		'218620': "PAYDAY 2",
-		'238460': "BattleBlock Theater",
-		'321360': "Primal Carnage: Extinction",
-		'232090': "Killing Floor 2",
-		'322330': "Don't Starve Together",
-		'578080': "PLAYERUNKNOWN'S BATTLEGROUNDS",
+		'322330': "Don't Starve Together"
 	};
 
 	$scope.iconMap = {
 		'753': "135dc1ac1cd9763dfc8ad52f4e880d2ac058a36c",
-		'440': "033bdd91842b6aca0633ee1e5f3e6b82f2e8962f",
 		'730': "d1159d1a4d0e18da4d74f85dbb4934d7a92ace2b",
+		'440': "033bdd91842b6aca0633ee1e5f3e6b82f2e8962f",
 		'570': "c0d15684e6c186289b50dfe083f5c562c57e8fb6",
-		'583950': "dee44586fb8e07add8b86bfb59c958071d08b0e2",
-		'433850': "5b84d84ae300bbd409abef5ad0ef09b65383740e",
 		'252490': "acf87ad23570b3c81f8c9cfc19544a07edd8b632",
-		'304930': "7500f9e8568184afab30645d9fb0d18cdb4100fb",
-		'218620': "a6abc0d0c1e79c0b5b0f5c8ab81ce9076a542414",
-		'238460': "f1e4fa88188fe97c8292b27ff1359e61fdc4bcd7",
-		'321360': "acdedc2593c79f1082355e43744c9aa9efe226bf",
-		'232090': "98ab6d7da74551839cba1896f012f5e7398072a8",
-		'322330': "5176d189ff929acc8d29a2e5f0466e18798db436",
-		'578080': "ecb8776e4e2b3d962a16b58e1172d5c277a52fa0",
+		'322330': "5176d189ff929acc8d29a2e5f0466e18798db436"
 	};
 
 	$scope.ts = false;
 	$scope.key = false;
-	$scope.captchaId = 0;
-	$scope.captchaKey = false;
-	$scope.setCaptchaKey = function(key) {
-		$scope.captchaKey = key;
-		if (key) $scope.loadItems();
+	$scope.passExpiresAt = 0;
+	$scope.turnstileWidgetId = null;
+	$scope.turnstileToken = false;
+
+	$scope.hasValidPass = function() {
+		return Boolean($scope.key && $scope.ts && Date.now() < $scope.passExpiresAt);
 	};
 
-	$scope.setCaptchaId = function(id) {
-		$scope.captchaId = id;
-	};
+	function resetTurnstileWidget() {
+		$scope.turnstileToken = false;
+		if (window.turnstile && $scope.turnstileWidgetId !== null) {
+			try {
+				window.turnstile.reset($scope.turnstileWidgetId);
+			} catch (e) {
+				// Ignore widget reset race during teardown
+			}
+		}
+	}
 
-	$scope.expireCaptcha = function() {
-		vcRecaptchaService.reload($scope.captchaId);
-		$scope.captchaKey = false;
-	};
+	function initTurnstile(attempt) {
+		if (!$scope.turnstileConfigured) return;
+		var container = document.getElementById('turnstile-container');
+		if (!container) return;
+		if (window.turnstile && typeof window.turnstile.render === 'function') {
+			if ($scope.turnstileWidgetId !== null) return;
+			$scope.turnstileWidgetId = window.turnstile.render('#turnstile-container', {
+				sitekey: CFG.TURNSTILE_SITEKEY,
+				action: 'item_value',
+				theme: 'dark',
+				callback: function(token) {
+					$scope.$applyAsync(function() {
+						$scope.turnstileToken = token || false;
+					});
+				},
+				'expired-callback': function() {
+					$scope.$applyAsync(function() {
+						$scope.turnstileToken = false;
+					});
+				},
+				'error-callback': function() {
+					$scope.$applyAsync(function() {
+						$scope.turnstileToken = false;
+						$scope.status = 'Captcha failed to load. Use Import Inventory (no captcha) or reload.';
+						$scope.showImportCta = true;
+					});
+				}
+			});
+		} else if ((attempt || 0) < 30) {
+			$timeout(function() {
+				initTurnstile((attempt || 0) + 1);
+			}, 250);
+		}
+	}
+	$timeout(function() { initTurnstile(0); }, 0);
 
 	$scope.getIcon = function(appid) {
-		var ext = ['753', '583950', '218620'].includes(appid) ? '.jpg' : '.ico';
+		var ext = appid === '753' ? '.jpg' : '.ico';
 		var ico = $scope.iconMap[appid] + ext;
 		return "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/" + appid + "/" + ico;
 	};
@@ -217,15 +238,159 @@ angular.module('valueApp', ['ui.bootstrap', 'vcRecaptcha'])
 		$scope.curIndex = i;
 	};
 
-	$scope.loadItems = function(){
-		if (!$scope.captchaKey || !$scope.UserID || $scope.UserID.trim() === "")
-			return;
+	function cancelPendingRetry() {
+		if (retryTimer) {
+			$timeout.cancel(retryTimer);
+			retryTimer = null;
+		}
+	}
 
+	function clearHelpBox() {
+		var help = document.getElementById("help");
+		if (help) help.textContent = "";
+		return help;
+	}
+
+	function setHelpMode(mode, profileName, loadedAppId) {
+		var help = clearHelpBox();
+		if (!help) return;
+		if (mode === 1) {
+			help.appendChild(document.createTextNode("Make sure your "));
+			var a1 = document.createElement("a");
+			a1.href = "https://steamcommunity.com/my/edit/settings";
+			a1.target = "_blank";
+			a1.rel = "noopener noreferrer";
+			a1.textContent = "inventory privacy";
+			help.appendChild(a1);
+			help.appendChild(document.createTextNode(" is set to public, or click Import Inventory."));
+		} else if (mode === 2) {
+			help.appendChild(document.createTextNode("Try pasting the "));
+			var a2 = document.createElement("a");
+			a2.href = "https://steamcommunity.com/my/";
+			a2.target = "_blank";
+			a2.rel = "noopener noreferrer";
+			a2.textContent = "Steam profile URL";
+			help.appendChild(a2);
+			help.appendChild(document.createTextNode("."));
+		} else if (mode === 'profile' && profileName) {
+			var safeName = String(profileName);
+			var profileUrl = "https://steamcommunity.com/" +
+				(/^\d{17}$/.test(safeName) ? "profiles/" + safeName : "id/" + encodeURIComponent(safeName)) +
+				"/inventory/#" + encodeURIComponent(String(loadedAppId || "753"));
+			var invLink = document.createElement("a");
+			invLink.href = profileUrl;
+			invLink.target = "_blank";
+			invLink.rel = "noopener noreferrer";
+			invLink.textContent = "Inventory";
+			help.appendChild(invLink);
+			help.appendChild(document.createTextNode(" | "));
+			var repLink = document.createElement("a");
+			repLink.href = "https://steamrep.com/search?q=" + encodeURIComponent(safeName);
+			repLink.target = "_blank";
+			repLink.rel = "noopener noreferrer";
+			repLink.textContent = "SteamRep";
+			help.appendChild(repLink);
+		}
+	}
+
+	function renderValuedItems(items, appid, options) {
+		var opts = options || {};
+		$scope.type = "0";
+		$scope.appidLoaded = String(appid);
+		$scope.items = Array.isArray(items) ? items : [];
+		$scope.rows = [];
+
+		if ($scope.items.length > 0) {
+			for (var i = 0; i < $scope.items.length; i++) {
+				var item = $scope.items[i];
+				item.price = parseFloat(item.price) || 0;
+				$scope.rows.push(new Item(item));
+			}
+
+			$scope.table.clear();
+			$scope.table.columns().visible(false);
+			$scope.table.columns($scope.visCols[appid] || $scope.visCols['753']).visible(true);
+			$scope.table.columns.adjust().draw(false);
+			$scope.table.rows.add($scope.rows).draw();
+
+			if (!$scope.items[0].icon) {
+				$scope.table.column(0).visible(false);
+				$scope.useTable = true;
+			}
+			$scope.status = opts.statusMessage || "";
+			if (opts.profileName) {
+				setHelpMode('profile', opts.profileName, $scope.appidLoaded);
+			} else {
+				clearHelpBox();
+			}
+		} else {
+			var type = $scope.typeMap[$scope.appid.model] || "game";
+			$scope.status = "No " + type + " items found.";
+		}
+	}
+
+	$scope.openImportModal = function() {
+		if (!window.SteamToolsImport) return;
+		cancelPendingRetry();
+		var idHint = /^\d{17}$/.test(String($scope.UserID || '').trim()) ? String($scope.UserID).trim() : '';
+		window.SteamToolsImport.openImportDialog({
+			mode: 'itemvalue',
+			appid: $scope.appid.model,
+			steamId: idHint,
+			title: 'Import Inventory for ' + ($scope.typeMap[$scope.appid.model] || 'Steam'),
+			subtitle: 'Zero captcha & zero server rate limits — prices come directly from SteamTools CDN.',
+			onImport: function(parsed) {
+				var targetApp = $scope.apps.indexOf(parsed.detected_appid) !== -1
+					? parsed.detected_appid
+					: $scope.appid.model;
+				$scope.$applyAsync(function() {
+					$scope.appid.model = targetApp;
+					$scope.isLoading = true;
+					$scope.showImportCta = false;
+					$scope.status = "Pricing " + parsed.items.length + " unique item(s) from SteamTools CDN...";
+					clearHelpBox();
+				});
+
+				window.SteamToolsImport.valueInventoryClientSide(parsed.items, targetApp, { config: CFG })
+					.then(function(valued) {
+						$scope.$applyAsync(function() {
+							$scope.isLoading = false;
+							var msg = "Imported " + valued.items.length + " unique market item(s) across " +
+								parsed.page_count + " page(s)";
+							if (valued.usedBucketFallback) {
+								msg += " (using fallback value/753.json)";
+							}
+							msg += ".";
+							renderValuedItems(valued.items, targetApp, { statusMessage: msg });
+						});
+					})
+					.catch(function(err) {
+						$scope.$applyAsync(function() {
+							$scope.isLoading = false;
+							$scope.status = "CDN pricing failed: " + (err && err.message ? err.message : "Network error");
+						});
+					});
+			}
+		});
+	};
+
+	$scope.loadItems = function(){
+		if (!$scope.UserID || $scope.UserID.trim() === "") return;
+		if (!$scope.hasValidPass() && !$scope.turnstileToken) {
+			$scope.status = $scope.turnstileConfigured
+				? "Please complete the Turnstile check first, or click Import Inventory."
+				: "Turnstile sitekey is not configured — use Import Inventory instead.";
+			$scope.showImportCta = true;
+			return;
+		}
+
+		cancelPendingRetry();
 		$scope.items = [];
+		$scope.showImportCta = false;
 		window.localStorage.lastUser = $scope.UserID;
 		window.localStorage.lastAppid = $scope.appid.model;
-		$scope.fetchItems($scope.UserID, $scope.appid.model);
 		$scope.retries = 0;
+		$scope.fetchItems($scope.UserID, $scope.appid.model);
 	};
 
 	$scope.dupesFilter = function(item) {
@@ -234,128 +399,201 @@ angular.module('valueApp', ['ui.bootstrap', 'vcRecaptcha'])
 	};
 
 	$scope.retries = 0;
-	$scope.fetchItems = function(user, appid, huge=false){
+	$scope.fetchItems = function(user, appid, huge){
+		huge = Boolean(huge);
 		$scope.iconLimit = 54;
+		$scope.isLoading = true;
 		$scope.status = "Loading...";
-		var help = document.getElementById("help");
-		help.innerHTML = "";
+		clearHelpBox();
 
-		var domain;
+		var url = CFG.API_BASE + '/ItemValue?i=1&id=' + encodeURIComponent(user) +
+			'&app=' + encodeURIComponent(appid);
 		if (huge) {
-			domain = atob('aHR0cHM6Ly9pdGVtLXZhbHVlMTYuYXBwc3BvdC5jb20=');
-		} else {
-			Math.seedrandom(user);
-			var servers = $scope.SERVERS;
-			if (appid == '753' || appid == '730') {
-				servers = servers.slice(0, 8);
-			} else if (appid == '440' || appid == '570') {
-				servers = servers.slice(8);
-			}
-
-			var ind = Math.floor(Math.random() * servers.length);
-			ind = (ind + $scope.retries) % servers.length;
-			domain = `https://${servers[ind]}.appspot.com`;
+			url += '&huge=1';
 		}
 
-		var url = `${domain}/ItemValue?i=1&id=${encodeURIComponent(user)}&app=${appid}`;
-
-		if ($scope.key && $scope.ts) {
-			url += '&ts=' + $scope.ts + '&key=' + $scope.key;
-		} else if ($scope.captchaKey) {
-			url += '&captcha=' + $scope.captchaKey;
+		var usedTurnstile = false;
+		if ($scope.hasValidPass()) {
+			url += '&ts=' + encodeURIComponent($scope.ts) + '&key=' + encodeURIComponent($scope.key);
+		} else if ($scope.turnstileToken) {
+			url += '&cf-turnstile-response=' + encodeURIComponent($scope.turnstileToken);
+			usedTurnstile = true;
+			// Single-use Turnstile token is consumed by this submission; reset immediately so it cannot be reused.
+			resetTurnstileWidget();
 		} else {
+			$scope.isLoading = false;
+			$scope.showImportCta = true;
+			$scope.status = "Captcha verification required, or use Import Inventory.";
 			return;
 		}
 
-		$http({method: 'GET', url: url}).then((response) => {
-			let data = response.data;
+		$http({method: 'GET', url: url, withCredentials: true}).then(function(response) {
+			$scope.isLoading = false;
+			var data = response && response.data;
 			if (!data) return;
-			$scope.type = "0";
 
-			if (data.help === 1) {
-				help.innerHTML = "Make sure your " +
-					"<a href='https://steamcommunity.com/my/edit/settings'" +
-					"target='_blank'>inventory privacy</a> " +
-					"is set to public.";
-			} else if (data.help === 2) {
-				help.innerHTML = "Try pasting the " +
-					"<a href='https://steamcommunity.com/my/'" +
-					"target='_blank'>Steam profile URL</a>.";
-			} else {
-				help.innerHTML = "";
+			if (data.help === 1 || data.help === 2) {
+				setHelpMode(data.help);
 			}
 
 			if (data.key && data.ts) {
 				$scope.key = data.key;
 				$scope.ts = data.ts;
-			} else {
-				vcRecaptchaService.reload($scope.captchaId);
-				$scope.captchaKey = false;
+				$scope.passExpiresAt = Date.now() + (9 * 60 * 1000);
+			} else if (usedTurnstile) {
 				$scope.key = false;
 				$scope.ts = false;
-				data.retry = false;
+				$scope.passExpiresAt = 0;
 			}
 
-			if (data.success === false){
-				if (data.huge && !huge) {
-					$scope.fetchItems(user, appid, true);
-				} else if (data.retry && $scope.retries < $scope.SERVERS.length) {
-					$scope.status = "Something went wrong, retrying...";
-					$scope.retries++;
-					$scope.fetchItems(user, appid);
-				} else {
-					$scope.status = "Failed: " + data.reason;
-					delete window.localStorage.lastUser;
+			if (data.success === false) {
+				var errCode = data.error || '';
+				var isRateLimited = errCode === 'rate_limited' || /rate|429/i.test(data.reason || '');
+				var isPrivate = errCode === 'private_or_unavailable' || data.help === 1 || /private/i.test(data.reason || '');
+				if (isRateLimited || isPrivate) {
+					$scope.showImportCta = true;
 				}
+
+				var retryAfterSec = typeof data.retry_after === 'number' && data.retry_after > 0
+					? data.retry_after
+					: null;
+
+				if (data.huge && !huge && ($scope.hasValidPass() || $scope.turnstileToken)) {
+					$scope.fetchItems(user, appid, true);
+					return;
+				}
+
+				if (data.retry && $scope.retries < MAX_AUTO_RETRIES &&
+					($scope.hasValidPass()) && (!retryAfterSec || retryAfterSec <= 15)) {
+					var attempt = $scope.retries;
+					$scope.retries++;
+					var baseSec = retryAfterSec || Math.pow(2, attempt);
+					var delayMs = Math.min(30000, Math.round(baseSec * 1000 + Math.random() * 400));
+					$scope.status = "Steam temporary error — retrying in " + Math.ceil(delayMs / 1000) +
+						"s (" + $scope.retries + "/" + MAX_AUTO_RETRIES + ")... Or click Import Inventory.";
+					retryTimer = $timeout(function() {
+						$scope.fetchItems(user, appid, huge);
+					}, delayMs);
+					return;
+				}
+
+				$scope.status = "Failed: " + (data.reason || errCode || "Request could not complete.");
+				if (retryAfterSec) {
+					$scope.status += " Retry after " + retryAfterSec + "s, or use Import Inventory.";
+				}
+				delete window.localStorage.lastUser;
 				return;
 			}
 
-			document.location.hash = '/' + data.name + "-" + $scope.appid.model;
-
-			$scope.appidLoaded = appid;
-			$scope.items = data.items;
-			$scope.rows = [];
-
-			if ($scope.items.length > 0) {
-				for (var i = 0; i < $scope.items.length; i++) {
-					var item = $scope.items[i];
-					item.price = parseFloat(item.price);
-					$scope.rows.push(new Item(item));
-				}
-
-				$scope.table.clear();
-				$scope.table.columns().visible(false);
-				$scope.table.columns($scope.visCols[appid]).visible(true);
-				$scope.table.columns.adjust().draw(false);
-				$scope.table.rows.add($scope.rows).draw();
-
-				if ($scope.items[0].icon === null) {
-					$scope.table.column(0).visible(0);
-					$scope.useTable = true;
-				}
-
-				var url = "https://steamcommunity.com/";
-				if (data.name.length === 17 && !isNaN(data.name)) {
-					url += "profiles/" + data.name;
-				} else {
-					url += "id/" + data.name;
-				}
-				url += "/inventory/#" + $scope.appidLoaded;
-				$scope.status = "";
-				var html = "<a href='" + url + "' target='_blank'>Inventory</a> ";
-				html += "| <a href='https://steamrep.com/search?q=" + data.name + "' target='_blank'>SteamRep</a>";
-				help.innerHTML = html;
-
-			} else {
-				var type = $scope.typeMap[$scope.appid.model];
-				$scope.status = "No " + type + " items found.";
+			if (data.name) {
+				document.location.hash = '/' + encodeURIComponent(String(data.name)) + "-" + $scope.appid.model;
 			}
-		}, (response) => {
-			$scope.status = "Something went wrong... try again later.";
-			vcRecaptchaService.reload($scope.captchaId);
-			$scope.captchaKey = false;
-			$scope.key = false;
-			$scope.ts = false;
+			renderValuedItems(data.items, appid, {
+				statusMessage: "",
+				profileName: data.name
+			});
+		}, function(response) {
+			$scope.isLoading = false;
+			var body = response && response.data;
+			var status = response && response.status;
+			var detailObj = (body && body.detail && typeof body.detail === 'object') ? body.detail : null;
+			var errCode = String((body && body.error) || (detailObj && detailObj.error) || '');
+			var errReason = (body && (body.reason || body.message)) ||
+				(detailObj && (detailObj.reason || detailObj.message || detailObj.detail)) ||
+				(body && typeof body.detail === 'string' ? body.detail : '');
+			var helpCode = (body && (body.help === 1 || body.help === 2))
+				? body.help
+				: (detailObj && (detailObj.help === 1 || detailObj.help === 2) ? detailObj.help : 0);
+
+			var retryAfterHeader = response && typeof response.headers === 'function'
+				? parseInt(response.headers('Retry-After'), 10)
+				: NaN;
+			var retryAfterSec = (body && typeof body.retry_after === 'number')
+				? body.retry_after
+				: (detailObj && typeof detailObj.retry_after === 'number'
+					? detailObj.retry_after
+					: (Number.isFinite(retryAfterHeader) && retryAfterHeader > 0 ? retryAfterHeader : null));
+
+			var isCaptchaOrPassError = (
+				errCode === 'captcha_failed' ||
+				errCode === 'captcha_required' ||
+				errCode === 'invalid_pass' ||
+				(!errCode && status === 403 && /turnstile|captcha|pass/i.test(String(errReason)))
+			);
+
+			if (isCaptchaOrPassError) {
+				$scope.key = false;
+				$scope.ts = false;
+				$scope.passExpiresAt = 0;
+				resetTurnstileWidget();
+				$scope.status = "Verification expired or failed. Complete Turnstile again or use Import Inventory.";
+				$scope.showImportCta = true;
+				return;
+			}
+
+			// Preserve freshly issued session pass attached to non-captcha error responses (e.g. 429/403 private/503) so auto-retries reuse it.
+			if (body && body.key && body.ts) {
+				$scope.key = body.key;
+				$scope.ts = body.ts;
+				$scope.passExpiresAt = Date.now() + (9 * 60 * 1000);
+			}
+
+			if (helpCode) {
+				setHelpMode(helpCode);
+			}
+
+			if (errCode === 'private_or_unavailable' || (status === 403 && helpCode === 1)) {
+				if (!helpCode) {
+					setHelpMode(1);
+				}
+				$scope.showImportCta = true;
+				$scope.status = errReason
+					? String(errReason)
+					: "Steam inventory is private or unavailable — check privacy settings above or use Import Inventory.";
+				delete window.localStorage.lastUser;
+				return;
+			}
+
+			if (status === 429 || errCode === 'rate_limited') {
+				$scope.showImportCta = true;
+				if ($scope.retries < MAX_AUTO_RETRIES && $scope.hasValidPass() && (!retryAfterSec || retryAfterSec <= 15)) {
+					var attempt = $scope.retries;
+					$scope.retries++;
+					var baseSec = retryAfterSec || Math.pow(2, attempt);
+					var delayMs = Math.min(30000, Math.round(baseSec * 1000 + Math.random() * 400));
+					$scope.status = "Rate limited by Steam — retrying in " + Math.ceil(delayMs / 1000) +
+						"s (" + $scope.retries + "/" + MAX_AUTO_RETRIES + ")... Or click Import Inventory.";
+					retryTimer = $timeout(function() {
+						$scope.fetchItems(user, appid, huge);
+					}, delayMs);
+					return;
+				}
+				$scope.status = "Rate limited by Steam" + (retryAfterSec ? " (retry after " + retryAfterSec + "s)" : "") +
+					" — use Import Inventory below for instant results.";
+				return;
+			}
+
+			if (body && body.retry && $scope.retries < MAX_AUTO_RETRIES &&
+				$scope.hasValidPass() && (!retryAfterSec || retryAfterSec <= 15)) {
+				var transientAttempt = $scope.retries;
+				$scope.retries++;
+				var transientBaseSec = retryAfterSec || Math.pow(2, transientAttempt);
+				var transientDelayMs = Math.min(30000, Math.round(transientBaseSec * 1000 + Math.random() * 400));
+				$scope.status = "Steam temporary error — retrying in " + Math.ceil(transientDelayMs / 1000) +
+					"s (" + $scope.retries + "/" + MAX_AUTO_RETRIES + ")... Or click Import Inventory.";
+				retryTimer = $timeout(function() {
+					$scope.fetchItems(user, appid, huge);
+				}, transientDelayMs);
+				return;
+			}
+
+			$scope.showImportCta = true;
+			$scope.status = errReason
+				? String(errReason)
+				: "Something went wrong... try again later or use Import Inventory.";
+			if (!$scope.hasValidPass()) {
+				resetTurnstileWidget();
+			}
 		});
 	};
 
@@ -396,19 +634,11 @@ angular.module('valueApp', ['ui.bootstrap', 'vcRecaptcha'])
 
 	$scope.visCols = {
 		'753': [0, 1, 2, 3, 5, 6, 7],
-		'440': [0, 1, 4, 6, 7],
 		'730': [0, 1, 5, 6, 7],
+		'440': [0, 1, 4, 6, 7],
 		'570': [0, 1, 4, 5, 6, 7],
-		'583950': [0, 1, 3, 5, 6, 7],
-		'433850': [0, 1, 3, 6, 7],
 		'252490': [0, 1, 6, 7],
-		'218620': [0, 1, 6, 7],
-		'304930': [0, 1, 6, 7],
-		'238460': [0, 1, 6, 7],
-		'321360': [0, 1, 6, 7],
-		'232090': [0, 1, 6, 7],
-		'322330': [0, 1, 3, 5, 6, 7],
-		'578080': [0, 1, 6, 7],
+		'322330': [0, 1, 3, 5, 6, 7]
 	};
 
 	// Create the table
@@ -459,19 +689,14 @@ angular.module('valueApp', ['ui.bootstrap', 'vcRecaptcha'])
 		$scope.UserID = window.localStorage.lastUser;
 	}
 
-	if (window.localStorage.hasOwnProperty("lastAppid")) {
+	if (window.localStorage.hasOwnProperty("lastAppid") && $scope.apps.indexOf(window.localStorage.lastAppid) !== -1) {
 		$scope.appid.model = window.localStorage.lastAppid;
 	}
 
-	// if (window.localStorage !== undefined && !localStorage.feedbackPrompt) {
-	// 	setTimeout(function(){
-	// 		FireEvent("feedback", "show");
-	// 		localStorage.feedbackPrompt = true;
-	// 	}, 100000);
-	// }
-
 	if (window.localStorage.curIndex) $scope.curIndex = window.localStorage.curIndex;
-	if (window.localStorage.appid) $scope.appid.model = window.localStorage.appid;
+	if (window.localStorage.appid && $scope.apps.indexOf(window.localStorage.appid) !== -1) {
+		$scope.appid.model = window.localStorage.appid;
+	}
 	if (window.localStorage.useTable) $scope.useTable = JSON.parse(window.localStorage.useTable);
 	$scope.$watch('appid', function(){window.localStorage.appid = $scope.appid.model;});
 	$scope.$watch('useTable', function(){window.localStorage.useTable = $scope.useTable;});
@@ -511,25 +736,53 @@ angular.module('valueApp', ['ui.bootstrap', 'vcRecaptcha'])
 	}
 }]);
 
+function sanitizeHex6(color, fallback) {
+	if (typeof color === 'string' && /^[0-9A-Fa-f]{3,8}$/.test(color.trim())) {
+		return color.trim();
+	}
+	return fallback || 'D2D2D2';
+}
+
+function escapeValHtml(str) {
+	return (window.STEAMTOOLS_CONFIG && window.STEAMTOOLS_CONFIG.escapeHtml)
+		? window.STEAMTOOLS_CONFIG.escapeHtml(str)
+		: String(str || '').replace(/[&<>"']/g, function(ch) {
+			return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
+		});
+}
+
 // Set class holding all the information about a set
 function Item(data) {
-	var market_link = "https://steamcommunity.com/market/listings/" + data.url;
-	this.name = "<a href='" + market_link + "' target='_blank'><span style='color: #";
-	this.name = this.name +  data.color + "'>" + data.name + "</span></a>";
-	this.game = data.game || null;
-	this.type = data.type || null;
+	var cfg = window.STEAMTOOLS_CONFIG || { STEAM_ECON_BASE: 'https://community.akamai.steamstatic.com/economy' };
+	var safeUrlPath = String(data.url || '').split('/').map(function(seg) {
+		try {
+			return encodeURIComponent(decodeURIComponent(seg));
+		} catch (e) {
+			return encodeURIComponent(seg);
+		}
+	}).join('/');
+	var market_link = "https://steamcommunity.com/market/listings/" + escapeValHtml(safeUrlPath);
+	var safeColor = sanitizeHex6(data.color, 'D2D2D2');
+	var safeName = escapeValHtml(data.name || '');
+	this.name = "<a href='" + market_link + "' target='_blank' rel='noopener noreferrer'><span style='color: #" +
+		safeColor + "'>" + safeName + "</span></a>";
+	this.game = data.game ? escapeValHtml(data.game) : null;
+	this.type = data.type ? escapeValHtml(data.type) : null;
 	this.rarity = [data.rarity, data.rcolor];
 	this.quality = [data.quality, data.qcolor];
 	this.count = data.count;
 	this.price = data.price;
 	this.stack_price = data.price * data.count;
-	var image_url = "https://steamcommunity-a.akamaihd.net/economy/image/" + data.icon + "/360fx360f";
-	this.image = "<i class='icon icon-fullscreen icon-white' src='" + image_url + "'></i>";
+	var safeIcon = String(data.icon || '').replace(/[^A-Za-z0-9_\/.\-]/g, '');
+	var image_url = cfg.STEAM_ECON_BASE + "/image/" + safeIcon + "/360fx360f";
+	this.image = safeIcon
+		? "<i class='icon icon-fullscreen icon-white' src='" + escapeValHtml(image_url) + "'></i>"
+		: "";
 }
 
 function addColor(text, color) {
 	if (text)
-		return "<span style='color: #" + color + "'>" + text + "</span>";
+		return "<span style='color: #" + sanitizeHex6(color, 'D2D2D2') + "'>" + escapeValHtml(text) + "</span>";
 	else
 		return null;
 }

@@ -54,9 +54,10 @@ angular.module('BGApp', ['ui-rangeSlider'])
 })
 .controller('BGCtrl', ['$scope', '$http', '$location',
 function($scope, $http, $location) {
+	var CFG = window.STEAMTOOLS_CONFIG;
 	$scope.BASE_URL = "https://steamcommunity.com/market/listings/";
-	$scope.ECON_URL = "https://steamcommunity-a.akamaihd.net/economy/image/";
-	$scope.SERVERS = ['mosaticon', 'mosaticon2', 'mosaticon3', 'mosaticon4'];
+	$scope.ECON_URL = CFG.STEAM_ECON_BASE + "/image/";
+	$scope.steamLoginUrl = CFG.getLoginUrl();
 	$scope.bg = [];
 	$scope.numLines = 20;
 	$scope.itemsPerLine = 0;
@@ -70,7 +71,7 @@ function($scope, $http, $location) {
 	};
 
 
-	$http.get('https://cdn.steam.tools/data/bg.json').success(function(data){
+	$http.get(CFG.CDN_BASE + '/data/bg.json').success(function(data){
 		var maxPrice = 0;
 		for (var i = 0; i < data.length; i++) {
 			data[i].appid = data[i].url.split('-')[0].substr(4);
@@ -84,22 +85,26 @@ function($scope, $http, $location) {
 		$scope.genDates();
 	});
 
-	$http.get('https://cdn.steam.tools/data/dates.json').success(function(data){
+	$http.get(CFG.CDN_BASE + '/data/dates.json').success(function(data){
 		$scope.dates = data;
 		$scope.genDates();
 	});
 
 	$scope.owned = {};
 	$scope.loggedIn = false;
-	$scope.user_status = "Login to filter owned items";
+	$scope.user_status = "Login or Import Inventory to filter owned items";
 	$scope.userLogin = function(steamid64) {
+		if (!/^\d{17}$/.test(String(steamid64 || '').trim())) {
+			$scope.user_status = "Invalid SteamID64 — please login or use Import Inventory.";
+			return;
+		}
+		var cleanId = String(steamid64).trim();
 		$scope.loggedIn = false;
-		var serverIdx = steamid64.slice(-1).charCodeAt(0);
-		var server = $scope.SERVERS[serverIdx % $scope.SERVERS.length];
-		var url = "https://" + server + ".appspot.com/FetchBackgrounds?id=" + steamid64;
-		$http.get(url).success(function(data){
-			if (!data.success) {
-				$scope.user_status = data.reason;
+		var url = CFG.API_BASE + "/FetchBackgrounds?id=" + encodeURIComponent(cleanId);
+		$http.get(url, {withCredentials: true}).success(function(data){
+			if (!data || !data.success) {
+				$scope.user_status = (data && data.reason ? data.reason : "Unable to load inventory") +
+					" — try Import Inventory.";
 				return;
 			}
 
@@ -110,7 +115,29 @@ function($scope, $http, $location) {
 				$scope.owned[data.items[i]] = true;
 			}
 		}).error(function(){
-			$scope.user_status = "Something went wrong.";
+			$scope.user_status = "Could not fetch inventory — try Import Inventory.";
+		});
+	};
+
+	$scope.openInventoryImporter = function() {
+		if (!window.SteamToolsImport) return;
+		window.SteamToolsImport.openImportDialog({
+			mode: 'cards',
+			appid: '753',
+			contextid: '6',
+			title: 'Import Steam Backgrounds (753/6)',
+			subtitle: 'Filter owned backgrounds locally without backend limits or Steam login.',
+			onImport: function(parsed) {
+				$scope.$applyAsync(function() {
+					var bgList = parsed && Array.isArray(parsed.backgrounds) ? parsed.backgrounds : [];
+					$scope.owned = {};
+					for (var i = 0; i < bgList.length; i++) {
+						$scope.owned[bgList[i]] = true;
+					}
+					$scope.loggedIn = true;
+					$scope.user_status = bgList.length + " items filtered (local import)";
+				});
+			}
 		});
 	};
 
@@ -123,8 +150,8 @@ function($scope, $http, $location) {
 	};
 
 	$scope.userLogout = function() {
-		deleteCookie("oauth_steamid");
-		$scope.user_status = "Login to filter owned items";
+		CFG.performLogout($http);
+		$scope.user_status = "Login or Import Inventory to filter owned items";
 		$scope.loggedIn = false;
 		$scope.owned = {};
 	};
@@ -143,8 +170,8 @@ function($scope, $http, $location) {
 	};
 
 	$scope.getStyle = function(p){
-		var cdn = p[0] > 375 ? "cdn" : "cdn2";
-		var host = "https://" + cdn + ".steam.tools";
+		if (!p || p.length < 3) return {};
+		var host = p[0] > 375 ? CFG.CDN_BASE : CFG.CDN2_BASE;
 		var url = host + "/backgrounds/" + p[0] + ".jpg?v3";
 		var style = {
 			backgroundImage: "url(" + url + ")",
@@ -154,48 +181,69 @@ function($scope, $http, $location) {
 	};
 
 	$scope.load = function(b, e) {
-		if (e.target.tagName !== "DIV")
+		if (e && e.target && e.target.tagName === "A")
 			return;
+		if (!b) return;
 
-		var url = "https://mosaticon3.appspot.com/FetchBackgroundImage?url=" + btoa(b.url);
+		if (b.img) {
+			$scope.open(b.img, b.name);
+			return;
+		}
+
+		var url = CFG.API_BASE + "/FetchBackgroundImage?url=" + encodeURIComponent(btoa(b.url));
 		$http.get(url).success(function(data){
-			$scope.open(data)
+			$scope.open(data, b.name);
 		}).error(function(){
 			console.log('Failed to load image for: ', b);
 		});
 	};
 
-	$scope.open = function(u){
+	$scope.open = function(u, title){
+		var prevFocus = document.activeElement;
+		var dlg = document.createElement("dialog");
+		dlg.className = "st-bg-lightbox";
+		dlg.setAttribute("closedby", "any");
+		dlg.setAttribute("aria-label", title || "Profile Background Preview");
+
+		var closeBtn = document.createElement("button");
+		closeBtn.type = "button";
+		closeBtn.className = "st-import-close";
+		closeBtn.setAttribute("aria-label", "Close background preview");
+		closeBtn.textContent = "×";
+
 		var img = document.createElement("img");
-		img.src = $scope.ECON_URL + u;
-		img.style.position = "fixed";
-		img.style.width = parseInt(window.innerWidth * 0.8, 10) + "px";
-		img.style.left = parseInt(window.innerWidth * 0.1, 10) + "px";
-		img.style.top = "0";
-		img.style.opacity = 0;
-		img.style.z = 0;
-		img.style.zIndex = 999;
+		img.src = $scope.ECON_URL + String(u || "");
+		img.alt = title || "Steam Profile Background";
 
-		var div = document.createElement("div");
-		div.style.position = "fixed";
-		div.style.width = "100%";
-		div.style.height = "100%";
-		div.style.top = "0";
-		div.style.left = "0";
-		div.style.zIndex = 998;
+		dlg.appendChild(closeBtn);
+		dlg.appendChild(img);
+		document.body.appendChild(dlg);
 
-		img.onload = function(){
-			this.style.top = (window.innerHeight - this.height)/2 + "px";
-			img.style.opacity = 1;
-		};
+		closeBtn.addEventListener("click", function() {
+			dlg.close("close");
+		});
+		img.addEventListener("click", function() {
+			dlg.close("close");
+		});
 
-		div.onclick = img.onclick = function(){
-			document.body.removeChild(div);
-			document.body.removeChild(img);
-		};
+		if (!("closedBy" in HTMLDialogElement.prototype)) {
+			dlg.addEventListener("click", function(ev) {
+				var rect = dlg.getBoundingClientRect();
+				if (ev.clientX < rect.left || ev.clientX > rect.right || ev.clientY < rect.top || ev.clientY > rect.bottom) {
+					dlg.close("backdrop");
+				}
+			});
+		}
 
-		document.body.appendChild(div);
-		document.body.appendChild(img);
+		dlg.addEventListener("close", function() {
+			dlg.returnValue = "";
+			if (dlg.parentNode) dlg.parentNode.removeChild(dlg);
+			if (prevFocus && typeof prevFocus.focus === "function") {
+				try { prevFocus.focus(); } catch (e) {}
+			}
+		});
+
+		dlg.showModal();
 	};
 
 	$scope.byHue = function Hue(e){ return e.hls ? e.hls[0] : 0; };
@@ -273,12 +321,13 @@ function($scope, $http, $location) {
 		$scope.$apply();
 	};
 
-	if (getCookie("oauth_steamid") !== null) {
-		const oauth = unescape(getCookie("oauth_steamid"))
-		const steamid64 = oauth.split('/id/')[1].replace('"', '');
-		console.log(oauth, steamid64);
-		$scope.userLogin(steamid64);
-	}
+	CFG.checkAuthSession($http).then(function(auth) {
+		if (auth && auth.authenticated && auth.steamid) {
+			$scope.$applyAsync(function() {
+				$scope.userLogin(auth.steamid);
+			});
+		}
+	});
 
 }]);
 

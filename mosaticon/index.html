@@ -15,12 +15,13 @@
 	<link href="bootstrap-2.1.0.min.css" rel="stylesheet">
 	<link href="hotkeys.min.css" rel="stylesheet">
 	<link rel="stylesheet" href="style.css">
+	<link rel="stylesheet" href="../css/steamtools-import.css">
 </head>
 <body ng-controller="mosaticonCtrl" ng-cloak>
 	<a class="corner topbutton" style="left: 25px;" href="../">&laquo; Hub</a>
 	<div class="corner" style="right: 25px;">
-		<a target="_blank" href="https://twitter.com/SteamTools"><img src="/img/twitter.png" alt="Twitter"></a>
-		<a target="_blank" href="https://steamcommunity.com/groups/steam_tools"><img src="/img/steam.png" alt="Steam Group"></a>
+		<a target="_blank" href="https://twitter.com/SteamTools"><img src="/img/twitter.png" alt="Twitter" width="25" height="25"></a>
+		<a target="_blank" href="https://steamcommunity.com/groups/steam_tools"><img src="/img/steam.png" alt="Steam Group" width="25" height="25"></a>
 		<a class="topbutton" id="feedback"  href="https://steamcommunity.com/groups/steam_tools">Feedback</a>
 		<a class="topbutton" id="donate" href="https://www.paypal.com/donate/?business=HLRYRKCXRYX7C">Donate</a>
 	</div>
@@ -28,38 +29,41 @@
 	<div id="container">
 		<div id="stepbox" style="width: 400px">
 			<div style="margin: 10px"><b>Step one:</b> Load your emoticons</div>
-			<form id="addinput" class="input-prepend input-append form-horizontal">
-				<span class="add-on">SteamID</span>
-				<input class="span2" type="text" ng-model="UserID">
-				<button class="btn btn-inverse" ng-click="loadEmoticons()">Fetch Emoticons</button>
+			<form id="addinput" class="input-prepend input-append form-horizontal" ng-submit="loadEmoticons()">
+				<label for="mos-userid" class="add-on" style="display:inline-block;margin-bottom:0;">SteamID</label>
+				<input id="mos-userid" class="span2" type="text" ng-model="UserID" placeholder="Leave blank to import or :emote:" autocorrect="off" autocapitalize="none" spellcheck="false">
+				<button class="btn btn-inverse" type="submit">Load Emotes</button>
 			</form>
 			<div class="emotebox" ng-right-click="">
-				<span id="error">{{status}}</span>
+				<span id="error" role="status" aria-live="polite" aria-atomic="true">{{status}}</span>
 				<div id="help"></div>
 				<span style="color: white" ng-if="!status">{{emoticons.length}} emoticon(s) loaded<br></span>
 				<div ng-show="emoticons.length > 0 && !status">
 					<span style="color: #999">(left click to select / right click to disable)</span>
 					<br>
-					<form id="addinput" class="input-prepend form-horizontal">
-						<span class="add-on" style="color: black;">Filter</span>
-						<input class="span2" type="text" ng-model="emoteFilter">
+					<form id="filterinput" class="input-prepend form-horizontal">
+						<label for="mos-emote-filter" class="add-on" style="color: black;display:inline-block;margin-bottom:0;">Filter</label>
+						<input id="mos-emote-filter" class="span2" type="text" ng-model="emoteFilter" autocorrect="off" autocapitalize="none" spellcheck="false">
 					</form>
 				</div>
-				<img class="emote" ng-repeat="e in emoticons | filter:{disable: false} | filter:emoteFilter"
-					ng-src="{{CDN}}/{{e.name}}" ng-click="selectEmote($event, e)" ng-right-click="toggleEmote(e)" draggable="false"
+				<img class="emote" alt=":{{e.name}}:" width="18" height="18" loading="lazy" ng-repeat="e in emoticons | filter:{disable: false} | filter:emoteFilter"
+					ng-src="{{EMOTE_IMG_BASE}}/{{e.name}}"
+					ng-click="selectEmote($event, e)" ng-right-click="toggleEmote(e)" draggable="false"
 					ng-class="{select: e.select}" tooltip-popup-delay='200' tooltip-placement="top" tooltip=":{{e.name}}:" />
 			</div>
 			<div class="emotebox" style="background-color: #363; padding: 0 4px;" ng-right-click="">
 				<span ng-if="usedEmotes.length > 0" style="color: white">Used Emotes<br></span>
-				<img class="emote" ng-repeat="e in usedEmotes"
-					ng-src="{{CDN}}/{{e.name}}" ng-click="selectEmote($event, e)" ng-right-click="toggleEmote(e)" draggable="false"
+				<img class="emote" alt=":{{e.name}}:" width="18" height="18" loading="lazy" ng-repeat="e in usedEmotes"
+					ng-src="{{EMOTE_IMG_BASE}}/{{e.name}}"
+					ng-click="selectEmote($event, e)" ng-right-click="toggleEmote(e)" draggable="false"
 					ng-class="{select: e.select}" tooltip-popup-delay='200' tooltip-placement="top" tooltip=":{{e.name}}:" />
 			</div>
 			<div class="emotebox" style="background-color: #633; padding: 0 4px;" ng-right-click="">
 				<span ng-if="(emoticons | filter:{disable: true}).length > 0"
 					style="color: white">Disabled Emotes<br></span>
-				<img class="emote" ng-repeat="e in emoticons | filter:{disable: true}"
-					ng-src="{{CDN}}/{{e.name}}" ng-click="selectEmote($event, e)" ng-right-click="toggleEmote(e)" draggable="false"
+				<img class="emote" alt=":{{e.name}}:" width="18" height="18" loading="lazy" ng-repeat="e in emoticons | filter:{disable: true}"
+					ng-src="{{EMOTE_IMG_BASE}}/{{e.name}}"
+					ng-click="selectEmote($event, e)" ng-right-click="toggleEmote(e)" draggable="false"
 					ng-class="{select: e.select}" tooltip-popup-delay='200' tooltip-placement="top" tooltip=":{{e.name}}:" />
 			</div>
 			<div ng-if="emoticons.length > 0" style="text-align: center">
@@ -144,9 +148,9 @@
 			<div ng-mousemove="mouseMove($event)" ng-mousedown="mouseDown($event)" ng-mouseup="mouseUp()"
 				id="mosaic" ng-show="mosaic" ng-style="{'width': (width.value * 18) + 'px'}">
 				<div ng-repeat="row in mosaic track by $index" style="margin-top: -2px;">
-					<img ng-repeat="e in row track by $index"
+					<img alt=":{{e.name}}:" width="18" height="18" ng-repeat="e in row track by $index"
 						ng-right-click="toggleEmote(e)"
-						ng-src="{{CDN}}/{{e.name}}" draggable="false"
+						ng-src="{{EMOTE_IMG_BASE}}/{{e.name}}" draggable="false"
 						onmousedown="if (event.preventDefault) event.preventDefault()">
 				</div>
 			</div>
@@ -171,29 +175,14 @@
 		</div>
 	</script>
 
-	<script type="text/ng-template" id="inventoryMenu.html">
-		<div class="modal-header" style="text-align: center;">
-			<h3 class="modal-title">Import Inventory</h3>
-		</div>
-		<div style="text-align: center; padding: 10px 40px;">
-			Open <a target=_blank ng-href="https://steamcommunity.com/actions/EmoticonList">this link</a> (make sure you're logged in)
-			and paste the content below:
-
-			<textarea class="form-control" ng-model="data.text" style="width: 400px; height: 300px; margin: 10px"></textarea>
-
-			<div ng-if="data.error" style="color: red">{{data.error}}</div>
-		</div>
-		<div class="modal-footer" style="text-align: center">
-			<button class="btn" ng-click="closeModal()">Cancel</button>
-			<button class="btn btn-success" ng-click="importInventory()">Import</button>
-		</div>
-	</script>
-
 	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.10/angular.min.js"></script>
 	<script src="hotkeys.min.js"></script>
 	<script src="ui-bootstrap-tpls-0.12.0.min.js"></script>
 	<script src="kdTree.min.js"></script>
 	<script src="colors.js"></script>
+	<script src="../js/steamtools-config.js"></script>
+	<script src="../js/import-worker.js"></script>
+	<script src="../js/steamtools-import.js"></script>
 	<script src="main.js"></script>
 
 	<!-- Start of Google Analytics code -->
@@ -214,17 +203,16 @@
 		var sc_project=9905430;
 		var sc_invisible=1;
 		var sc_security="89ce89e8";
-		var scJsHost = (("https:" == document.location.protocol) ?
-		"https://secure." : "http://www.");
+		var scJsHost = "https://secure.";
 		document.write("<sc"+"ript type='text/javascript' src='" +
 		scJsHost+
 		"statcounter.com/counter/counter.js'></"+"script>");
 	</script>
 	<noscript><div class="statcounter"><a title="create counter"
-	href="http://statcounter.com/free-hit-counter/"
-	target="_blank"><img class="statcounter"
-	src="http://c.statcounter.com/9905430/0/89ce89e8/1/"
-	alt="create counter"></a></div></noscript>
+	href="https://statcounter.com/free-hit-counter/"
+	target="_blank" rel="noopener noreferrer"><img class="statcounter"
+	src="https://c.statcounter.com/9905430/0/89ce89e8/1/"
+	alt="create counter" width="1" height="1"></a></div></noscript>
 	<!-- End of StatCounter Code for Default Guide -->
 
 </body>

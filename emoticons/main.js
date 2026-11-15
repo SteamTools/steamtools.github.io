@@ -59,8 +59,10 @@ angular.module('EmoteApp', ['ui-rangeSlider'])
 })
 .controller('EmoteCtrl', ['$scope', '$http', '$location',
 function($scope, $http, $location) {
+	var CFG = window.STEAMTOOLS_CONFIG;
 	$scope.BASE_URL = "https://steamcommunity.com/market/listings/";
-	$scope.SERVERS = ['mosaticon', 'mosaticon2', 'mosaticon3', 'mosaticon4'];
+	$scope.ECON_URL = CFG.STEAM_ECON_BASE + "/image/";
+	$scope.steamLoginUrl = CFG.getLoginUrl();
 	$scope.emotes = [];
 	$scope.numLines = 20;
 	$scope.itemsPerLine = 0;
@@ -73,7 +75,7 @@ function($scope, $http, $location) {
 		maxPrice: 400,
 	};
 
-	$http.get('https://cdn.steam.tools/data/emote.json').success(function(data){
+	$http.get(CFG.CDN_BASE + '/data/emote.json').success(function(data){
 		var maxPrice = 0;
 		for (var i = 0; i < data.length; i++) {
 			data[i].appid = data[i].url.split('-')[0].substr(4);
@@ -87,22 +89,26 @@ function($scope, $http, $location) {
 		$scope.genDates();
 	});
 
-	$http.get('https://cdn.steam.tools/data/dates.json').success(function(data){
+	$http.get(CFG.CDN_BASE + '/data/dates.json').success(function(data){
 		$scope.dates = data;
 		$scope.genDates();
 	});
 
 	$scope.owned = {};
 	$scope.loggedIn = false;
-	$scope.user_status = "Login to filter owned items";
+	$scope.user_status = "Login or Import Inventory to filter owned items";
 	$scope.userLogin = function(steamid64) {
+		if (!/^\d{17}$/.test(String(steamid64 || '').trim())) {
+			$scope.user_status = "Invalid SteamID64 — please login or use Import Inventory.";
+			return;
+		}
+		var cleanId = String(steamid64).trim();
 		$scope.loggedIn = false;
-		var serverIdx = steamid64.slice(-1).charCodeAt(0);
-		var server = $scope.SERVERS[serverIdx % $scope.SERVERS.length];
-		var url = "https://" + server + ".appspot.com/FetchEmotes?id=" + steamid64;
-		$http.get(url).success(function(data){
-			if (!data.success) {
-				$scope.user_status = data.reason;
+		var url = CFG.API_BASE + "/FetchEmotes?id=" + encodeURIComponent(cleanId);
+		$http.get(url, {withCredentials: true}).success(function(data){
+			if (!data || !data.success) {
+				$scope.user_status = (data && data.reason ? data.reason : "Unable to load inventory") +
+					" — try Import Inventory.";
 				return;
 			}
 
@@ -114,7 +120,29 @@ function($scope, $http, $location) {
 				$scope.owned[name] = true;
 			}
 		}).error(function(){
-			$scope.user_status = "Something went wrong.";
+			$scope.user_status = "Could not fetch inventory — try Import Inventory.";
+		});
+	};
+
+	$scope.openInventoryImporter = function() {
+		if (!window.SteamToolsImport) return;
+		window.SteamToolsImport.openImportDialog({
+			mode: 'cards',
+			appid: '753',
+			contextid: '6',
+			title: 'Import Steam Emoticons (753/6)',
+			subtitle: 'Filter owned emoticons locally without backend limits or Steam login.',
+			onImport: function(parsed) {
+				$scope.$applyAsync(function() {
+					var emotesList = parsed && Array.isArray(parsed.emoticons) ? parsed.emoticons : [];
+					$scope.owned = {};
+					for (var i = 0; i < emotesList.length; i++) {
+						$scope.owned[":" + emotesList[i] + ":"] = true;
+					}
+					$scope.loggedIn = true;
+					$scope.user_status = emotesList.length + " items filtered (local import)";
+				});
+			}
 		});
 	};
 
@@ -127,8 +155,8 @@ function($scope, $http, $location) {
 	};
 
 	$scope.userLogout = function() {
-		deleteCookie("oauth_steamid");
-		$scope.user_status = "Login to filter owned items";
+		CFG.performLogout($http);
+		$scope.user_status = "Login or Import Inventory to filter owned items";
 		$scope.loggedIn = false;
 		$scope.owned = {};
 	};
@@ -151,9 +179,18 @@ function($scope, $http, $location) {
 		}
 	};
 
+	$scope.getEmoteImgSrc = function(e) {
+		if (!e) return '';
+		if (e.img) {
+			return CFG.STEAM_ECON_BASE + "/image/" + String(e.img) + ($scope.small ? "/18fx18f" : "/64fx64f");
+		}
+		var rawName = String(e.name || '').replace(/^:+|:+$/g, '');
+		return CFG.STEAM_ECON_BASE + "/emoticon/" + encodeURIComponent(rawName);
+	};
+
 	$scope.getStyle = function(p){
-		var cdn = p[0] > 480 ? "cdn" : "cdn2";
-		var host = "https://" + cdn + ".steam.tools";
+		if (!p || p.length < 3) return {};
+		var host = p[0] > 480 ? CFG.CDN_BASE : CFG.CDN2_BASE;
 		var url = host + "/emoticons/" + p[0];
 		var style;
 		if ($scope.small){
@@ -245,12 +282,13 @@ function($scope, $http, $location) {
 		$scope.$apply();
 	};
 
-	if (getCookie("oauth_steamid") !== null) {
-		const oauth = unescape(getCookie("oauth_steamid"))
-		const steamid64 = oauth.split('/id/')[1].replace('"', '');
-		console.log(oauth, steamid64);
-		$scope.userLogin(steamid64);
-	}
+	CFG.checkAuthSession($http).then(function(auth) {
+		if (auth && auth.authenticated && auth.steamid) {
+			$scope.$applyAsync(function() {
+				$scope.userLogin(auth.steamid);
+			});
+		}
+	});
 }]);
 
 String.prototype.hashCode = function() {

@@ -13,7 +13,6 @@
 	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
 	<script src="jquery.mCustomScrollbar.concat.min.js"></script>
 	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js"></script>
-	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular-resource.min.js"></script>
 	<script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.2/js/bootstrap.min.js"></script>
 
 	<link rel="shortcut icon" href="/favicon.ico">
@@ -24,8 +23,8 @@
 <body ng-controller="SteamCtrl" ng-cloak>
 	<a class="corner topbutton" style="left: 25px;" href="../">&laquo; Hub</a>
 	<div class="corner" style="right: 25px;">
-		<a target="_blank" href="https://twitter.com/SteamTools"><img src="/img/twitter.png" alt="Twitter"></a>
-		<a target="_blank" href="https://steamcommunity.com/groups/steam_tools"><img src="/img/steam.png" alt="Steam Group"></a>
+		<a target="_blank" href="https://twitter.com/SteamTools"><img src="/img/twitter.png" alt="Twitter" width="25" height="25"></a>
+		<a target="_blank" href="https://steamcommunity.com/groups/steam_tools"><img src="/img/steam.png" alt="Steam Group" width="25" height="25"></a>
 		<a class="topbutton" id="feedback"  href="https://steamcommunity.com/groups/steam_tools">Feedback</a>
 		<a class="topbutton" id="donate" href="https://www.paypal.com/donate/?business=HLRYRKCXRYX7C">PayPal</a>
 	</div>
@@ -37,11 +36,12 @@
 			<a href="#" ng-click="deleteUsers()">
 				<i class="left icon-trash icon-white" rel="tooltip" data-placement="left" data-original-title="Remove selected"></i>
 			</a>
-			<form id="addinput" class="input-prepend input-append form-horizontal">
-				<span class="add-on">SteamID</span>
-				<input style="width: 250px;" type="text" ng-model="UserID">
-				<button class="btn" ng-click="addUser()"><i class="icon-user"></i> Add User</button>
+			<form id="addinput" class="input-prepend input-append form-horizontal" ng-submit="addUser()">
+				<label for="games-steamid" class="add-on" style="display:inline-block;margin-bottom:0;">SteamID</label>
+				<input id="games-steamid" style="width: 250px;" type="text" ng-model="UserID" autocorrect="off" autocapitalize="none" spellcheck="false">
+				<button type="submit" class="btn"><i class="icon-user"></i> Add User</button>
 			</form>
+			<div ng-show="userError" role="status" aria-live="polite" style="color:#f88; font-size:12px; margin:4px 0;">[[userError]]</div>
 			<a href="#">
 				<i style="margin-top: -10px" class="right icon-info-sign icon-white" rel="tooltip" data-placement="right"
 				data-original-title="This tool allows you to see the intersection of your and your friends' games, and filter them using flags. Red border means profile is private."></i>
@@ -51,7 +51,7 @@
 					<a href="#friendListModal" role="button" ng-click="showFriends(user.steamid,user.name)" data-toggle="modal"><i class="left icon-list" rel="tooltip" data-placement="top" data-original-title="Friends list"></i></a>
 					<p class="left name">[[user.name]]</p>
 					<a href="#" ng-click="removeUser(user.steamid)"><i class="icon-remove" rel="tooltip" data-placement="top" data-original-title="Remove"></i></a>
-					<img ng-src="[[user.avatar]]" alt="[[user.name]]'s Avatar" draggable="false"><br>
+					<img ng-src="[[user.avatar]]" alt="[[user.name]]'s Avatar" width="64" height="64" draggable="false"><br>
 				</li>
 			</ul>
 			<form id="importbtn" class="form-horizontal">
@@ -90,12 +90,12 @@
 				<div class="game-text" ng:switch-when="true">Add and select at least one user, then import games.</div>
 			</ng:switch>
 			<ng:switch on="!!(gameStatus==2)">
-				<img ng:switch-when="true" src="img/loading2.gif">
+				<img ng:switch-when="true" src="img/loading2.gif" alt="Loading games..." width="220" height="19">
 			</ng:switch>
 			<div id="game-content">
 				<a ng-repeat="game in gameList | orderBy:getGameName" adjust-size
 					ng-href="https://store.steampowered.com/app/[[game]]" target="_blank">
-					<div class="game"  draggable="true" ng-bind-html-unsafe="gameData[game].name" scrollbar></div>
+					<div class="game" draggable="true" ng-bind="gameData[game].name" scrollbar></div>
 				</a>
 			</div>
 				<button ng-show="gameList.length>0" class="btn btn-inverse" ng-click="exportGames()"
@@ -120,7 +120,7 @@
 			<ul>
 				<li class="friend [[friendSelected(friend.steamid)]]" ng-repeat="friend in Friends" fadey="500" draggable="true" ng-click="selectFriend(friend.steamid)">
 					<p class="left name">[[friend.name]]</p>
-					<img ng-src="[[friend.avatar]]" alt="[[friend.name]]'s Avatar" draggable="false">
+					<img ng-src="[[friend.avatar]]" alt="[[friend.name]]'s Avatar" width="64" height="64" draggable="false">
 					<br>
 				</li>
 			</ul>
@@ -131,6 +131,7 @@
 		</div>
 	</div>
 
+	<script type="text/javascript" src="../js/steamtools-config.js"></script>
 	<script type="text/javascript" src="steam.js"></script>
 
 	<!-- Start of Google Analytics code -->
@@ -151,17 +152,16 @@
 		var sc_project=9905430;
 		var sc_invisible=1;
 		var sc_security="89ce89e8";
-		var scJsHost = (("https:" == document.location.protocol) ?
-		"https://secure." : "http://www.");
+		var scJsHost = "https://secure.";
 		document.write("<sc"+"ript type='text/javascript' src='" +
 		scJsHost+
 		"statcounter.com/counter/counter.js'></"+"script>");
 	</script>
 	<noscript><div class="statcounter"><a title="create counter"
-	href="http://statcounter.com/free-hit-counter/"
-	target="_blank"><img class="statcounter"
-	src="http://c.statcounter.com/9905430/0/89ce89e8/1/"
-	alt="create counter"></a></div></noscript>
+	href="https://statcounter.com/free-hit-counter/"
+	target="_blank" rel="noopener noreferrer"><img class="statcounter"
+	src="https://c.statcounter.com/9905430/0/89ce89e8/1/"
+	alt="create counter" width="1" height="1"></a></div></noscript>
 	<!-- End of StatCounter Code for Default Guide -->
 
 </body>

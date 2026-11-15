@@ -1,0 +1,442 @@
+/* Shared styles for native <dialog> Steam Inventory Importer (follows modern-web-guidance) */
+
+.st-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+dialog.st-import-dialog {
+  margin: auto;
+  padding: 0;
+  border: 1px solid #3c454f;
+  border-radius: 8px;
+  background: #1b2026;
+  color: #edf2f7;
+  width: min(740px, calc(100vw - 24px));
+  max-height: calc(100vh - 32px);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+  text-align: left;
+  box-sizing: border-box;
+}
+
+/* Do NOT set display unconditionally on dialog; scope strictly to [open] */
+dialog.st-import-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+dialog.st-import-dialog:modal {
+  overscroll-behavior: contain;
+}
+
+dialog.st-import-dialog::backdrop {
+  background: rgba(10, 14, 18, 0.72);
+  backdrop-filter: blur(2px);
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+
+.st-import-dialog *,
+.st-import-dialog *::before,
+.st-import-dialog *::after {
+  box-sizing: border-box;
+}
+
+.st-import-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid #2e3640;
+  background: #222830;
+  border-radius: 8px 8px 0 0;
+}
+
+.st-import-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.st-import-close {
+  appearance: none;
+  background: transparent;
+  border: 1px solid #495360;
+  color: #e2e8f0;
+  border-radius: 4px;
+  width: 30px;
+  height: 30px;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.st-import-close:hover,
+.st-import-close:focus-visible {
+  background: #313a45;
+  border-color: #6ea8fe;
+  outline: 2px solid #6ea8fe;
+  outline-offset: 1px;
+}
+
+.st-import-body {
+  padding: 16px 18px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.st-import-subtitle {
+  margin: 0;
+  color: #c7d0da;
+  font-size: 13px;
+}
+
+.st-import-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  border-bottom: 1px solid #2e3640;
+  padding-bottom: 10px;
+}
+
+.st-tab-btn {
+  appearance: none;
+  background: #262d36;
+  color: #d4dce6;
+  border: 1px solid #3c4652;
+  border-radius: 5px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.st-tab-btn[aria-selected="true"] {
+  background: #1b6ec2;
+  border-color: #3f91e8;
+  color: #ffffff;
+}
+
+.st-tab-btn:focus-visible {
+  outline: 2px solid #6ea8fe;
+  outline-offset: 2px;
+}
+
+.st-tabpanel[hidden] {
+  display: none;
+}
+
+.st-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.st-field-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.st-label {
+  font-weight: 600;
+  color: #f0f4f8;
+  font-size: 13px;
+  margin: 0;
+}
+
+.st-hint {
+  margin: 0;
+  font-size: 12px;
+  color: #a9b5c2;
+}
+
+.st-input,
+.st-textarea {
+  width: 100%;
+  background: #12161b;
+  color: #f4f7fa;
+  border: 1px solid #44505e;
+  border-radius: 5px;
+  padding: 8px 10px;
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.st-textarea {
+  min-height: 130px;
+  resize: vertical;
+  font-family: Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 12px;
+}
+
+.st-input:focus-visible,
+.st-textarea:focus-visible {
+  border-color: #6ea8fe;
+  outline: 2px solid rgba(110, 168, 254, 0.35);
+  outline-offset: 0;
+}
+
+.st-input:user-invalid,
+.st-textarea:user-invalid,
+.st-input.st-is-invalid,
+.st-textarea.st-is-invalid {
+  border-color: #f16d69;
+  background: #231517;
+}
+
+.st-error-msg {
+  color: #ff9c98;
+  font-size: 12.5px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.st-error-msg[hidden] {
+  display: none;
+}
+
+.st-dropzone {
+  border: 2px dashed #4a5664;
+  border-radius: 7px;
+  padding: 20px 16px;
+  text-align: center;
+  background: #161b21;
+  color: #d8e0e8;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.st-dropzone.is-dragover {
+  border-color: #5ca8ff;
+  background: #182534;
+}
+
+.st-dropzone-label {
+  display: inline-block;
+  padding: 7px 14px;
+  border-radius: 5px;
+  background: #2c3540;
+  border: 1px solid #536171;
+  color: #ffffff;
+  font-weight: 500;
+  font-size: 13px;
+  cursor: pointer;
+  margin: 0;
+}
+
+.st-dropzone-label:hover {
+  background: #374351;
+}
+
+.st-import-dialog input[type="file"]:focus-visible + .st-dropzone-label,
+.st-dropzone:has(input[type="file"]:focus-visible) {
+  outline: 2px solid #6ea8fe;
+  outline-offset: 2px;
+}
+
+.st-wizard-box {
+  background: #1d2733;
+  border: 1px solid #355272;
+  border-radius: 6px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.st-wizard-box[hidden] {
+  display: none;
+}
+
+.st-wizard-status {
+  margin: 0;
+  color: #dbeafe;
+  font-size: 13px;
+}
+
+.st-bookmarklet-box {
+  background: #161b21;
+  border: 1px solid #333c47;
+  border-radius: 6px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.st-bookmarklet-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: #2f7d32;
+  border: 1px solid #4ca650;
+  color: #ffffff !important;
+  font-weight: 600;
+  font-size: 13px;
+  text-decoration: none !important;
+  cursor: grab;
+}
+
+.st-bookmarklet-pill:hover,
+.st-bookmarklet-pill:focus-visible {
+  background: #388e3c;
+  outline: 2px solid #81c784;
+  outline-offset: 2px;
+}
+
+.st-bookmarklet-code {
+  margin: 8px 0 0;
+  padding: 10px;
+  max-height: 160px;
+  overflow: auto;
+  background: #0f1317;
+  border: 1px solid #313942;
+  border-radius: 4px;
+  color: #d6e2ef;
+  font-size: 11.5px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.st-bookmarklet-code:focus-visible {
+  outline: 2px solid #6ea8fe;
+}
+
+.st-status-banner {
+  border-radius: 5px;
+  padding: 8px 12px;
+  font-size: 13px;
+  border: 1px solid #35404d;
+  background: #222933;
+  color: #e2e8f0;
+  margin: 0;
+}
+
+.st-status-banner[hidden] {
+  display: none;
+}
+
+.st-status-banner.is-success {
+  border-color: #367b45;
+  background: #172a1c;
+  color: #c5f2cd;
+}
+
+.st-status-banner.is-warning {
+  border-color: #9c7427;
+  background: #2d2412;
+  color: #fde6a8;
+}
+
+.st-status-banner.is-error {
+  border-color: #9b3b38;
+  background: #2e1717;
+  color: #ffc2bf;
+}
+
+.st-btn {
+  appearance: none;
+  border-radius: 5px;
+  padding: 7px 13px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid #495462;
+  background: #2a333e;
+  color: #f4f7fa;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.st-btn:hover {
+  background: #36414f;
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.st-btn:focus-visible {
+  outline: 2px solid #6ea8fe;
+  outline-offset: 2px;
+}
+
+.st-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.st-btn-primary {
+  background: #1b6ec2;
+  border-color: #3f91e8;
+  color: #ffffff;
+}
+
+.st-btn-primary:hover:not(:disabled) {
+  background: #175ea6;
+}
+
+.st-btn-danger {
+  background: #5b2626;
+  border-color: #8f4040;
+  color: #ffdede;
+}
+
+.st-btn-danger:hover:not(:disabled) {
+  background: #733030;
+}
+
+.st-import-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 18px;
+  border-top: 1px solid #2e3640;
+  background: #222830;
+  border-radius: 0 0 8px 8px;
+}
+
+.st-footer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.st-url-link {
+  color: #7cc0ff !important;
+  text-decoration: underline;
+  word-break: break-all;
+}
+
+.st-url-link:hover {
+  color: #a6d5ff !important;
+}

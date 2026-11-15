@@ -66,9 +66,11 @@ angular.module('cardApp', ['ui.bootstrap', 'normalizeForSearch'])
 })
 .controller('CardCtrl', ['$scope', '$http', '$filter', '$compile', '$modal',
 function($scope, $http, $filter, $compile, $modal){
+	var CFG = window.STEAMTOOLS_CONFIG;
 	$scope.CDATA = CURRENCY_DATA;
+	$scope.steamLoginUrl = CFG.getLoginUrl();
 
-	$http.get('https://cdn.steam.tools/data/currency.json').success(function(data){
+	$http.get(CFG.CDN_BASE + '/data/currency.json').success(function(data){
 		var count = 0;
 		for (var i = 0; i < $scope.CDATA.length; i++) {
 			var code = $scope.CDATA[i].name;
@@ -131,18 +133,16 @@ function($scope, $http, $filter, $compile, $modal){
 		$scope.userData = {'games': 2, 'cards': 2, 'badges': 2};
 		$scope.user_status = "";
 
-		const serverIndex = steamid.slice(-1).charCodeAt(0) % 2;
-		const server = ['stc-price', 'stc-price2'][serverIndex]
-		var url = "https://" + server + ".appspot.com/UserInfo?id=" + steamid;
+		var url = CFG.API_BASE + "/UserInfo?id=" + encodeURIComponent(steamid.trim());
 
-		$http.get(url).success(function(data){
-			if (!data.success){
-				$scope.user_status = data.reason;
+		$http.get(url, {withCredentials: true}).success(function(data){
+			if (!data || !data.success){
+				$scope.user_status = (data && data.reason) ? data.reason : "Unable to load profile.";
 				$scope.userData = {'games': 1, 'cards': 1, 'badges': 1};
 				return;
 			}
 
-			document.location.hash = '/' + $scope.UserID;
+			document.location.hash = '/' + encodeURIComponent($scope.UserID || data.steamid64 || '');
 			window.localStorage.lastUser = $scope.UserID;
 			$scope.user = data;
 			$scope.userGames = {};
@@ -160,12 +160,12 @@ function($scope, $http, $filter, $compile, $modal){
 			$scope.userData.badges = (data.badges !== null) ? 3 : 0;
 
 			if (data.cards === null) {
-				$scope.user_status = "Private inventory?";
+				$scope.user_status = "Inventory unavailable/private — use Import Inventory (753/6) below.";
 			}
 
 			$scope.importUserData();
 		}).error(function(){
-			$scope.user_status = "Something went wrong.";
+			$scope.user_status = "Could not load Steam profile — use Import Inventory (753/6) below.";
 			$scope.userData = {'games': 0, 'cards': 0, 'badges': 0};
 		});
 	};
@@ -176,14 +176,59 @@ function($scope, $http, $filter, $compile, $modal){
 			$scope.userGames[games[i]] = true;
 		}
 
-		$scope.userCards = {};
-		$scope.userBadges = {};
+		if (!$scope.userCards) $scope.userCards = {};
+		if (!$scope.userBadges) $scope.userBadges = {};
 		$scope.userData.games = 3;
-		$scope.userData.cards = 0;
-		$scope.userData.badges = 0;
-		$scope.user = {games: games};
+		if (!$scope.user || $scope.user.cards === null || $scope.user.cards === undefined) {
+			$scope.userData.cards = 0;
+		}
+		if (!$scope.user || $scope.user.badges === null || $scope.user.badges === undefined) {
+			$scope.userData.badges = 0;
+		}
+		$scope.user = Object.assign({}, $scope.user || {}, {games: games});
 
 		$scope.importUserData();
+	};
+
+	$scope.openInventoryImporter = function() {
+		if (!window.SteamToolsImport) return;
+		var idHint = /^\d{17}$/.test(String($scope.UserID || '').trim()) ? String($scope.UserID).trim() : '';
+		window.SteamToolsImport.openImportDialog({
+			mode: 'cards',
+			appid: '753',
+			contextid: '6',
+			steamId: idHint,
+			title: 'Import Steam Inventory (753/6)',
+			subtitle: 'Computes card sets, foil cards, emotes, and backgrounds locally without backend calls.',
+			onImport: function(parsed) {
+				$scope.$applyAsync(function() {
+					var prevUser = $scope.user && typeof $scope.user === 'object' ? $scope.user : {};
+					var cardsMap = parsed && parsed.cards ? parsed.cards : {};
+					var steamIdVal = (/^\d{17}$/.test(String(prevUser.steamid64 || '')))
+						? prevUser.steamid64
+						: (/^\d{17}$/.test(String($scope.UserID || '').trim()) ? String($scope.UserID).trim() : '');
+
+					$scope.user = {
+						steamid64: steamIdVal,
+						games: prevUser.games || null,
+						badges: prevUser.badges || null,
+						cards: cardsMap,
+						emote_count: parsed.emote_count || 0,
+						bg_count: parsed.bg_count || 0
+					};
+					if (!$scope.userGames) $scope.userGames = {};
+					if (!$scope.userBadges) $scope.userBadges = {};
+					$scope.userCards = cardsMap;
+					$scope.userData.cards = 3;
+					if (!prevUser.games) $scope.userData.games = 0;
+					if (!prevUser.badges) $scope.userData.badges = 0;
+					$scope.user_status = "Local inventory: " + Object.keys(cardsMap).length +
+						" card set(s), " + $scope.user.emote_count + " emote(s), " + $scope.user.bg_count + " bg(s).";
+					$scope.importUserData();
+					$scope.userLoaded = true;
+				});
+			}
+		});
 	};
 
 	// Load user data into rows
@@ -264,7 +309,8 @@ function($scope, $http, $filter, $compile, $modal){
 	$scope.userLogout = function() {
 		if (!$scope.dataLoaded) return;
 
-		deleteCookie("oauth_steamid");
+		CFG.performLogout($http);
+		$scope.user_status = "";
 
 		var row;
 		for (var i = 0; i < $scope.rows.length; i++) {
@@ -560,16 +606,20 @@ function($scope, $http, $filter, $compile, $modal){
 
 	var hash = document.location.hash.slice(1).replace('/', '');
 	if (hash && hash.trim().length > 0) {
-		$scope.UserID = hash;
+		$scope.UserID = decodeURIComponent(hash);
 		$scope.userLogin($scope.UserID);
-	} else if (getCookie("oauth_steamid") !== null) {
-		const oauth = unescape(getCookie("oauth_steamid"))
-		$scope.UserID = oauth.split('/id/')[1].replace('"', '');
-		console.log(oauth, $scope.UserID);
-		$scope.userLogin($scope.UserID);
-	} else if (window.localStorage.hasOwnProperty("lastUser") && window.localStorage.lastUser !== "undefined") {
-		$scope.UserID = window.localStorage.lastUser;
-		$scope.userLogin($scope.UserID);
+	} else {
+		CFG.checkAuthSession($http).then(function(auth) {
+			$scope.$applyAsync(function() {
+				if (auth && auth.authenticated && auth.steamid) {
+					$scope.UserID = auth.steamid;
+					$scope.userLogin($scope.UserID);
+				} else if (window.localStorage.hasOwnProperty("lastUser") && window.localStorage.lastUser !== "undefined") {
+					$scope.UserID = window.localStorage.lastUser;
+					$scope.userLogin($scope.UserID);
+				}
+			});
+		});
 	}
 
 }]);
@@ -615,7 +665,7 @@ function Set(data, isFoil) {
 // Generates the links for a set
 function generateLinks(game, appid, isFoil, steamid) {
 	game = encodeURIComponent(game).replace(/'/g, "%27");
-	var profile = !!steamid ? "profiles/" + steamid : "my";
+	var profile = (steamid && /^\d{17}$/.test(String(steamid))) ? "profiles/" + encodeURIComponent(steamid) : "my";
 	var market_link = generateMarketLink(appid, isFoil);
 	var badge_link = "https://steamcommunity.com/" + profile + "/gamecards/" + appid;
 	var store_link = "https://store.steampowered.com/app/" + appid;
