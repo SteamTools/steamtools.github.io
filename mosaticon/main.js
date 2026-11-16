@@ -204,7 +204,7 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 
 	$scope.emoticons = [];
 	$scope.usedEmotes = [];
-	$scope.emoteTree = new kdTree([], dist, Array.range(3));
+	$scope.emoteTree = new kdTree([], dist, rangeArray(3));
 	$scope.toProcess = 0;
 
 	$scope.loadEmoticons = function(){
@@ -219,7 +219,7 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 			}
 			var activeGen = loadGeneration;
 			$scope.toProcess += 1;
-			var emote = {'name': cleanName};
+			var emote = {'name': cleanName, 'index': $scope.emoticons.length};
 			emote.nsize = emote.name.length;
 			emote.disable = false;
 			emote.used = false;
@@ -287,7 +287,7 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 		$scope.emoticons = [];
 		$scope.usedEmotes = [];
 		$scope.selectedEmote = undefined;
-		$scope.emoteTree = new kdTree([], dist, Array.range(3));
+		$scope.emoteTree = new kdTree([], dist, rangeArray(3));
 		$scope.toProcess = cleanEmotes.length;
 
 		if (cleanEmotes.length === 0) {
@@ -313,12 +313,12 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 		for (var i = 0; i < emotesList.length; i++) {
 			var em = emotesList[i];
 			if (em && em.rgb1) {
-				var pt = em.rgb1.toObject();
+				var pt = arrayToObject(em.rgb1);
 				pt.emote = em;
 				points.push(pt);
 			}
 		}
-		return new kdTree(points, dist, Array.range(3));
+		return new kdTree(points, dist, rangeArray(3));
 	}
 
 	function commitEmoteVectors(e, vecs, gen) {
@@ -420,9 +420,9 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 				$scope.processedEmotes = $scope.emoticons.length > 0;
 				$scope.status = $scope.emoticons.length > 0 ? "" : "Could not load emoticon images.";
 				if ($scope.emoticons.length > 0) {
-					if (!$scope.imageLoaded) {
+					if (!$scope.imageLoaded && !$scope.blankLoaded) {
 						$timeout($scope.displayEmoticons, 0);
-					} else {
+					} else if ($scope.imageLoaded) {
 						$timeout($scope.generateMosaic, 0);
 					}
 				}
@@ -502,7 +502,7 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 		if ($scope.emoticons.length === 0 || !$scope.imageLoaded) return;
 
 		var q = $scope.q;
-		var dims = Array.range(q * q * 3);
+		var dims = rangeArray(q * q * 3);
 		var points = [];
 
 		var emote, obj;
@@ -510,7 +510,7 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 			emote = $scope.emoticons[j];
 			emote.used = false;
 			if (!emote.disable) {
-				obj = emote[$scope.compareMode + q].toObject();
+				obj = arrayToObject(emote[$scope.compareMode + q]);
 				obj.emote = emote;
 				points.push(obj);
 			}
@@ -625,7 +625,7 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 		var sy = y1 < y2 ? 1 : -1;
 
 		if ($scope.tool !== "pen") {
-			$scope.mosaic = $scope.mosaicCopy.copy();
+			$scope.mosaic = copyMatrix($scope.mosaicCopy);
 		}
 
 		if ($scope.tool === "pen") {
@@ -685,11 +685,13 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 			var cy = y2 * 18 + 9;
 			if (e.altKey) {
 				cx = Math.round((x1 + x2) / 2) * 18 + 9;
-				cy = Math.round((x1 + x2) / 2) * 18 + 9;
+				cy = Math.round((y1 + y2) / 2) * 18 + 9;
 			}
 			var rx = Math.pow(x - cx, 2);
 			var ry = Math.pow(y - cy, 2);
 			if (e.shiftKey) rx = ry = Math.max(rx, ry);
+			rx = Math.max(0.5, rx);
+			ry = Math.max(0.5, ry);
 			for (j = 0; j < $scope.mosaic.length; j++) {
 				for (i = 0; i < $scope.mosaic[j].length; i++) {
 					var d = Math.pow(i * 18 + 9 - cx, 2) / rx;
@@ -718,7 +720,7 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 	$scope.startY = 0;
 	$scope.mouseDown = function(e) {
 		$scope.clicking = true;
-		$scope.mosaicCopy = $scope.mosaic.copy();
+		$scope.mosaicCopy = copyMatrix($scope.mosaic);
 
 		var container = document.getElementById("container");
 		var mdiv = document.getElementById("mosaic");
@@ -729,10 +731,20 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 	};
 
 	$scope.mouseUp = function() {
+		if (!$scope.clicking) return;
 		$scope.clicking = false;
 		$scope.undoHistory.push($scope.mosaicCopy);
 		$scope.updateUsed();
 	};
+
+	function onWindowMouseUp() {
+		if (!$scope.clicking) return;
+		$scope.$applyAsync($scope.mouseUp);
+	}
+	window.addEventListener('mouseup', onWindowMouseUp);
+	$scope.$on('$destroy', function() {
+		window.removeEventListener('mouseup', onWindowMouseUp);
+	});
 
 	$scope.usedEmotes = [];
 	$scope.updateUsed = function() {
@@ -833,12 +845,14 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 		for (var i = 0; i < $scope.emoticons.length; i++) {
 			$scope.emoticons[i].disable = true;
 		}
+		if ($scope.imageLoaded) $scope.generateMosaic();
 	};
 
 	$scope.enableAll = function() {
 		for (var i = 0; i < $scope.emoticons.length; i++) {
 			$scope.emoticons[i].disable = false;
 		}
+		if ($scope.imageLoaded) $scope.generateMosaic();
 	};
 
 	$scope.sortByHue = function() {
@@ -863,12 +877,18 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 	};
 
 	$scope.horizontalFlip = function() {
-		$scope.mosaic.forEach((e) => e.reverse());
-	}
+		if ($scope.mosaic && $scope.mosaic.length > 0) {
+			$scope.undoHistory.push(copyMatrix($scope.mosaic));
+		}
+		$scope.mosaic.forEach(function(e) { e.reverse(); });
+	};
 
 	$scope.verticalFlip = function() {
+		if ($scope.mosaic && $scope.mosaic.length > 0) {
+			$scope.undoHistory.push(copyMatrix($scope.mosaic));
+		}
 		$scope.mosaic.reverse();
-	}
+	};
 
 	// Hotkeys
 	hotkeys.add('ctrl+z', 'Undo', $scope.undo);
@@ -896,14 +916,17 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 		if ($scope.mosaic === undefined || $scope.mosaic.length === 0) {
 			return;
 		}
-		if (!$scope.wSliderActive || !$scope.imageLoaded) {
+		if ($scope.blankLoaded || !$scope.imageLoaded) {
 			$scope.resizeBlank();
-		} else if ($scope.width.value < $scope.mosaic[0].length) {
-			for (var i = 0; i < $scope.mosaic.length; i++) {
-				$scope.mosaic[i].splice($scope.width.value);
+		} else if ($scope.wSliderActive) {
+			if ($scope.width.value < $scope.mosaic[0].length) {
+				for (var i = 0; i < $scope.mosaic.length; i++) {
+					$scope.mosaic[i].splice($scope.width.value);
+				}
 			}
+		} else {
+			$scope.updateUpscale();
 		}
-
 	});
 	$scope.$watch('height.value', function() {
 		if (!$scope.hSliderActive || !$scope.imageLoaded) {
@@ -931,58 +954,45 @@ function Size(v) {
 	});
 
 	this.__defineSetter__("value", function (val) {
-		value = parseInt(val, 10);
-		value = Math.max(1, Math.min(50, value));
+		var parsed = parseInt(val, 10);
+		if (!Number.isFinite(parsed)) return;
+		value = Math.max(1, Math.min(50, parsed));
 	});
 }
 
-Array.prototype.remove = function(obj) {
-	this.splice(this.indexOf(obj), 1);
-};
-
-Array.prototype.copy = function() {
+function copyMatrix(matrix) {
+	if (!Array.isArray(matrix)) return [];
 	var copy = [];
-	var row;
-	for (var i = 0; i < this.length; i++) {
-		row = [];
-		for (var j = 0; j < this[i].length; j++) {
-			row.push(this[i][j]);
+	for (var i = 0; i < matrix.length; i++) {
+		var row = [];
+		for (var j = 0; j < matrix[i].length; j++) {
+			row.push(matrix[i][j]);
 		}
 		copy.push(row);
 	}
 	return copy;
-};
+}
 
-Array.prototype.toObject = function(){
+function arrayToObject(arr) {
 	var obj = {};
-	for (var i = 0; i < this.length; i++) {
-		obj[i] = this[i];
+	for (var i = 0; i < arr.length; i++) {
+		obj[i] = arr[i];
 	}
-	obj.length = this.length;
+	obj.length = arr.length;
 	return obj;
-};
+}
 
-Array.prototype.max = function(){
-	return Math.max.apply(null, this);
-};
-
-Array.prototype.min = function(){
-	return Math.min.apply(null, this);
-};
-
-Array.range = function(start, end) {
+function rangeArray(start, end) {
 	var total = [];
-	if (!end) {
+	if (end === undefined) {
 		end = start;
 		start = 0;
 	}
-
 	for (var i = start; i < end; i += 1) {
 		total.push(i);
 	}
-
 	return total;
-};
+}
 
 function dist(a, b){
 	var total = 0;
@@ -1023,12 +1033,15 @@ var ImportMenuCtrl = function($scope, $modalInstance) {
 			emoteDict[ms.emoticons[i].name] = ms.emoticons[i];
 		}
 
+		if (ms.mosaic && ms.mosaic.length > 0) {
+			ms.undoHistory.push(copyMatrix(ms.mosaic));
+		}
 		ms.mosaic = [];
 		for (i = 0; i < rows.length; i++) {
 			var row = rows[i].trim();
 			if (row === "") continue;
-			var sep = row.indexOf(":") < 0 ? "ːː" : "::" ;
-			var emotes = row.replace(' ', '').slice(1,-1).split(sep);
+			var sep = row.indexOf(":") < 0 ? "ːː" : "::";
+			var emotes = row.replace(/\s+/g, '').slice(1, -1).split(sep);
 			var emoteRow = [];
 			for (j = 0; j < emotes.length; j++) {
 				if (emoteDict.hasOwnProperty(emotes[j]))
@@ -1041,15 +1054,20 @@ var ImportMenuCtrl = function($scope, $modalInstance) {
 		}
 
 		for (i = 0; i < ms.mosaic.length; i++) {
-			for (j = 0; j < ms.mosaic[i].length - width; j++) {
+			while (ms.mosaic[i].length < width) {
 				ms.mosaic[i].push(ms.selectedEmote);
 			}
 		}
 
+		if (ms.mosaic.length === 0 || width <= 0) {
+			$modalInstance.dismiss('close');
+			return;
+		}
+		ms.imageLoaded = false;
+		ms.blankLoaded = true;
 		ms.width.value = width;
 		ms.height.value = ms.mosaic.length;
 		ms.updateUsed();
-		ms.blankLoaded = true;
 		$modalInstance.dismiss('close');
 	};
 };

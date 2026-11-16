@@ -31,8 +31,9 @@
 			<div style="margin: 10px"><b>Step one:</b> Load your emoticons</div>
 			<form id="addinput" class="input-prepend input-append form-horizontal" ng-submit="loadEmoticons()">
 				<label for="mos-userid" class="add-on" style="display:inline-block;margin-bottom:0;">SteamID</label>
-				<input id="mos-userid" style="width: 215px" type="text" ng-model="UserID" placeholder="SteamID, URL, :emote:, or blank" autocorrect="off" autocapitalize="none" spellcheck="false">
+				<input id="mos-userid" style="width: 155px" type="text" ng-model="UserID" placeholder="SteamID, URL, :emote:, or blank" autocorrect="off" autocapitalize="none" spellcheck="false">
 				<button class="btn btn-inverse" type="submit">Load Emotes</button>
+				<button class="btn" type="button" ng-click="loadInventory()" title="Instant Local Import (works for private/large inventories & saves API quota)">Import…</button>
 			</form>
 			<div class="emotebox" ng-right-click="">
 				<span id="error" role="status" aria-live="polite" aria-atomic="true">{{status}}</span>
@@ -93,11 +94,11 @@
 			</div>
 
 			<div ng-show="imageLoaded || blankLoaded">
-				<span>Width: </span> <input type="number" min="1" max="50" ng-model="width.value">
+				<span>Width: </span> <input type="number" min="1" max="50" ng-model="width.value" ng-change="imageLoaded ? updateUpscale() : resizeBlank()">
 				<input type="range" min="1" max="50" step="1" ng-model="width.value"
 					ng-mousedown="wSliderActive=1" ng-mouseup="wSliderActive=0; updateUpscale()">
 				<br>
-				<span>Height: </span> <input type="number" min="1" max="50" ng-model="height.value">
+				<span>Height: </span> <input type="number" min="1" max="50" ng-model="height.value" ng-disabled="!blankLoaded" ng-change="resizeBlank()">
 				<input type="range" min="1" max="50" step="1" ng-model="height.value" ng-disabled="!blankLoaded"
 					ng-mousedown="hSliderActive=1" ng-mouseup="hSliderActive=0; updateUpscale()">
 			</div>
