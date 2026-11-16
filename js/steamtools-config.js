@@ -252,7 +252,7 @@
 
   function isTurnstileConfigured() {
     var key = String(config.TURNSTILE_SITEKEY || '').trim();
-    return key.length > 0 && key !== DEFAULTS.TURNSTILE_SITEKEY;
+    return key.length > 0 && !/PLACEHOLDER/i.test(key);
   }
 
   function escapeHtml(str) {
