@@ -31,6 +31,48 @@
     { appid: '322330', name: "Don't Starve Together", contextid: '1' }
   ];
 
+  var CURRENCY_DATA = [
+    { name: 'USD', symbolFormat: '$',     right: false, ratio: 1.0 },
+    { name: 'AED', symbolFormat: ' AED',  right: true,  ratio: 3.6772 },
+    { name: 'ARS', symbolFormat: 'ARS$',  right: false, ratio: 97.6575 },
+    { name: 'AUD', symbolFormat: 'A$ ',   right: false, ratio: 1.3799 },
+    { name: 'BRL', symbolFormat: 'R$ ',   right: false, ratio: 5.244 },
+    { name: 'CAD', symbolFormat: 'CDN$ ', right: false, ratio: 1.2635 },
+    { name: 'CHF', symbolFormat: 'CHF ',  right: false, ratio: 0.9190 },
+    { name: 'CLP', symbolFormat: 'CLP$ ', right: false, ratio: 785.5814 },
+    { name: 'CNY', symbolFormat: '¥ ',    right: false, ratio: 6.4934 },
+    { name: 'COP', symbolFormat: 'COL$ ', right: false, ratio: 3875.5106 },
+    { name: 'CRC', symbolFormat: '₡',     right: false, ratio: 624.9128 },
+    { name: 'EUR', symbolFormat: '€',     right: true,  ratio: 0.851 },
+    { name: 'GBP', symbolFormat: '£',     right: false, ratio: 0.7293 },
+    { name: 'HKD', symbolFormat: 'HK$ ',  right: false, ratio: 7.7957 },
+    { name: 'IDR', symbolFormat: 'Rp ',   right: false, ratio: 14434.151 },
+    { name: 'ILS', symbolFormat: '₪',     right: false, ratio: 3.2308 },
+    { name: 'INR', symbolFormat: '₹ ',    right: false, ratio: 74.2201 },
+    { name: 'JPY', symbolFormat: '¥ ',    right: false, ratio: 110.2601 },
+    { name: 'KRW', symbolFormat: '₩ ',    right: false, ratio: 1171.6164 },
+    { name: 'KWD', symbolFormat: ' KD',   right: true,  ratio: 0.3017 },
+    { name: 'KZT', symbolFormat: '₸',     right: false, ratio: 427.1962 },
+    { name: 'MXN', symbolFormat: 'Mex$ ', right: false, ratio: 20.3632 },
+    { name: 'MYR', symbolFormat: 'RM',    right: false, ratio: 4.2012 },
+    { name: 'NOK', symbolFormat: ' kr',   right: true,  ratio: 8.8252 },
+    { name: 'NZD', symbolFormat: 'NZ$ ',  right: false, ratio: 1.4374 },
+    { name: 'PEN', symbolFormat: 'S/.',   right: false, ratio: 4.1061 },
+    { name: 'PHP', symbolFormat: 'P',     right: false, ratio: 50.0509 },
+    { name: 'PLN', symbolFormat: 'zł',    right: true,  ratio: 3.8976 },
+    { name: 'QAR', symbolFormat: ' QR',   right: true,  ratio: 3.6456 },
+    { name: 'RUB', symbolFormat: ' pуб.', right: true,  ratio: 74.4343 },
+    { name: 'SAR', symbolFormat: ' SR',   right: true,  ratio: 3.7543 },
+    { name: 'SGD', symbolFormat: 'S$',    right: false, ratio: 1.3551 },
+    { name: 'THB', symbolFormat: '฿',     right: false, ratio: 32.8027 },
+    { name: 'TRY', symbolFormat: ' TL',   right: true,  ratio: 8.4025 },
+    { name: 'TWD', symbolFormat: 'NT$ ',  right: false, ratio: 27.9719 },
+    { name: 'UAH', symbolFormat: '₴',     right: true,  ratio: 26.8975 },
+    { name: 'UYU', symbolFormat: '$U',    right: false, ratio: 42.8828 },
+    { name: 'VND', symbolFormat: '₫',     right: false, ratio: 22810.1732 },
+    { name: 'ZAR', symbolFormat: 'R ',    right: false, ratio: 14.9625 }
+  ];
+
   var CONTEXT_MAP = {
     '753': '6',
     '730': '2',
@@ -264,6 +306,297 @@
       .replace(/'/g, '&#39;');
   }
 
+  var _currencyPromise = null;
+
+  function applyCurrencyRatesMap(data) {
+    if (!data || typeof data !== 'object') return 0;
+    var count = 0;
+    for (var i = 0; i < CURRENCY_DATA.length; i++) {
+      var code = CURRENCY_DATA[i].name;
+      if (Object.prototype.hasOwnProperty.call(data, code) && typeof data[code] === 'number' && Number.isFinite(data[code]) && data[code] > 0) {
+        CURRENCY_DATA[i].ratio = data[code];
+        count++;
+      }
+    }
+    return count;
+  }
+
+  function loadCurrencyRates($http) {
+    if (_currencyPromise) return _currencyPromise;
+    var CACHE_KEY = 'st_currency_rates_v1';
+    try {
+      if (root && root.sessionStorage) {
+        var raw = root.sessionStorage.getItem(CACHE_KEY);
+        if (raw) {
+          var cached = JSON.parse(raw);
+          if (cached && cached.ts && (Date.now() - cached.ts) < 600000 && cached.data) {
+            var c = applyCurrencyRatesMap(cached.data);
+            return Promise.resolve({ updated: c, total: CURRENCY_DATA.length, cached: true });
+          }
+        }
+      }
+    } catch (e) {}
+
+    var url = trimTrailingSlashes(config.CDN_BASE) + '/data/currency.json';
+    var handleData = function (data) {
+      var count = applyCurrencyRatesMap(data);
+      if (count > 0) {
+        try {
+          if (root && root.sessionStorage) {
+            root.sessionStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: data }));
+          }
+        } catch (e) {}
+      }
+      return { updated: count, total: CURRENCY_DATA.length, cached: false };
+    };
+
+    if ($http && typeof $http.get === 'function') {
+      _currencyPromise = new Promise(function (resolve) {
+        var req = $http.get(url);
+        var ok = function (resp) {
+          var d = resp && resp.data !== undefined ? resp.data : resp;
+          resolve(handleData(d));
+        };
+        var fail = function () {
+          resolve({ updated: 0, total: CURRENCY_DATA.length, error: true });
+        };
+        if (typeof req.then === 'function') {
+          req.then(ok, fail);
+        } else if (typeof req.success === 'function') {
+          req.success(function (d) { ok({ data: d }); }).error(fail);
+        } else {
+          fail();
+        }
+      });
+      return _currencyPromise;
+    }
+
+    if (root && typeof root.fetch === 'function') {
+      _currencyPromise = root.fetch(url)
+        .then(function (r) { return r && r.ok ? r.json() : null; })
+        .then(handleData)
+        .catch(function () { return { updated: 0, total: CURRENCY_DATA.length, error: true }; });
+      return _currencyPromise;
+    }
+
+    return Promise.resolve({ updated: 0, total: CURRENCY_DATA.length });
+  }
+
+  function getSavedCurIndex() {
+    var raw = safeLocalStorageGet('curIndex');
+    if (raw === null) return 0;
+    var parsed = parseInt(raw, 10);
+    if (Number.isInteger(parsed) && parsed >= 0 && parsed < CURRENCY_DATA.length) {
+      return parsed;
+    }
+    return 0;
+  }
+
+  function formatNumberCommas(val, decimals) {
+    var fixed = Number(val).toFixed(decimals === undefined ? 2 : decimals);
+    var parts = fixed.split('.');
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return parts.join('.');
+  }
+
+  function formatPriceUsd(usdValue, curIndex, opts) {
+    var options = opts || {};
+    var num = Number(usdValue);
+    if (usdValue === null || usdValue === undefined || usdValue === '' || isNaN(num) || !Number.isFinite(num)) {
+      return 'N/A';
+    }
+    var idx = Number.isInteger(curIndex) && CURRENCY_DATA[curIndex] ? curIndex : 0;
+    var cur = CURRENCY_DATA[idx];
+    var converted = num * cur.ratio;
+    var formatted = typeof options.formatNumber === 'function'
+      ? options.formatNumber(converted, 2)
+      : formatNumberCommas(converted, 2);
+    if (options.noCurrency) return formatted;
+    var base = cur.right ? (formatted + cur.symbolFormat) : (cur.symbolFormat + formatted);
+    if (idx > 0 && !options.noApprox) {
+      return '≈ ' + base;
+    }
+    return base;
+  }
+
+  function openTextExportDialog(options) {
+    if (!root || !root.document) return null;
+    var doc = root.document;
+    var opts = options || {};
+    var prevFocus = doc.activeElement;
+    var dlg = doc.createElement('dialog');
+    dlg.className = 'st-import-dialog st-export-dialog';
+    dlg.setAttribute('closedby', 'any');
+    dlg.setAttribute('aria-labelledby', 'st-export-title');
+
+    var header = doc.createElement('div');
+    header.className = 'st-import-header';
+    var h2 = doc.createElement('h2');
+    h2.className = 'st-import-title';
+    h2.id = 'st-export-title';
+    h2.textContent = opts.title || 'Export Data';
+    var closeTop = doc.createElement('button');
+    closeTop.type = 'button';
+    closeTop.className = 'st-import-close';
+    closeTop.setAttribute('aria-label', 'Close export dialog');
+    closeTop.textContent = '×';
+    header.appendChild(h2);
+    header.appendChild(closeTop);
+
+    var body = doc.createElement('div');
+    body.className = 'st-import-body';
+    if (opts.subtitle) {
+      var sub = doc.createElement('p');
+      sub.className = 'st-import-subtitle';
+      sub.textContent = opts.subtitle;
+      body.appendChild(sub);
+    }
+
+    var textId = 'st-export-textarea-' + Math.floor(Math.random() * 1e6);
+    var label = doc.createElement('label');
+    label.className = 'st-label';
+    label.setAttribute('for', textId);
+    label.textContent = opts.label || 'Export output';
+
+    var ta = doc.createElement('textarea');
+    ta.id = textId;
+    ta.className = 'st-textarea';
+    ta.readOnly = true;
+    ta.rows = 12;
+    ta.value = String(opts.text || '');
+
+    var row = doc.createElement('div');
+    row.className = 'st-field-row';
+    var copyWrap = doc.createElement('span');
+    copyWrap.className = 'st-copy-wrap';
+    var copyBtn = doc.createElement('button');
+    copyBtn.type = 'button';
+    copyBtn.className = 'st-btn st-btn-primary';
+    copyBtn.textContent = opts.copyLabel || 'Copy to Clipboard';
+    var bubble = doc.createElement('span');
+    bubble.className = 'st-copy-status';
+    bubble.setAttribute('role', 'status');
+    bubble.setAttribute('aria-live', 'polite');
+    copyWrap.appendChild(copyBtn);
+    copyWrap.appendChild(bubble);
+    row.appendChild(copyWrap);
+
+    if (opts.filename) {
+      var dlBtn = doc.createElement('button');
+      dlBtn.type = 'button';
+      dlBtn.className = 'st-btn';
+      dlBtn.textContent = 'Download ' + opts.filename;
+      dlBtn.addEventListener('click', function () {
+        var blob = new root.Blob([ta.value], { type: opts.mimeType || 'text/plain;charset=utf-8' });
+        var blobUrl = root.URL.createObjectURL(blob);
+        var a = doc.createElement('a');
+        a.href = blobUrl;
+        a.download = opts.filename;
+        doc.body.appendChild(a);
+        a.click();
+        doc.body.removeChild(a);
+        root.setTimeout(function () { root.URL.revokeObjectURL(blobUrl); }, 1000);
+      });
+      row.appendChild(dlBtn);
+    }
+
+    var closeFooterBtn = doc.createElement('button');
+    closeFooterBtn.type = 'button';
+    closeFooterBtn.className = 'st-btn';
+    closeFooterBtn.textContent = 'Close';
+    row.appendChild(closeFooterBtn);
+
+    body.appendChild(label);
+    body.appendChild(ta);
+    body.appendChild(row);
+    dlg.appendChild(header);
+    dlg.appendChild(body);
+    doc.body.appendChild(dlg);
+
+    var copyTimer = null;
+    var lastStatusMsg = '';
+    function reportCopy(ok) {
+      if (copyTimer) root.clearTimeout(copyTimer);
+      copyBtn.removeAttribute('data-copied');
+      copyBtn.removeAttribute('data-failed');
+      var msg = ok ? 'Copied' : 'Copy failed';
+      if (msg === lastStatusMsg) msg += '\u00A0';
+      lastStatusMsg = msg;
+      bubble.textContent = '';
+      bubble.classList.remove('is-visible');
+      copyBtn.setAttribute(ok ? 'data-copied' : 'data-failed', '');
+      var show = function () {
+        bubble.textContent = msg;
+        bubble.classList.add('is-visible');
+      };
+      if (typeof root.requestAnimationFrame === 'function') {
+        root.requestAnimationFrame(show);
+      } else {
+        show();
+      }
+      copyTimer = root.setTimeout(function () {
+        copyBtn.removeAttribute('data-copied');
+        copyBtn.removeAttribute('data-failed');
+        bubble.classList.remove('is-visible');
+        bubble.textContent = '';
+      }, 2200);
+    }
+
+    function legacyCopyFromTextarea() {
+      ta.focus();
+      ta.select();
+      try {
+        return typeof doc.execCommand === 'function' && doc.execCommand('copy');
+      } catch (e) {
+        return false;
+      }
+    }
+
+    copyBtn.addEventListener('click', function () {
+      var txt = ta.value;
+      if (root.navigator && root.navigator.clipboard && typeof root.navigator.clipboard.writeText === 'function') {
+        root.navigator.clipboard.writeText(txt).then(function () {
+          reportCopy(true);
+        }).catch(function () {
+          reportCopy(legacyCopyFromTextarea());
+        });
+      } else {
+        reportCopy(legacyCopyFromTextarea());
+      }
+    });
+
+    closeTop.addEventListener('click', function () { dlg.close('close'); });
+    closeFooterBtn.addEventListener('click', function () { dlg.close('close'); });
+
+    if (!root.HTMLDialogElement || !('closedBy' in root.HTMLDialogElement.prototype)) {
+      var downOutside = false;
+      var isOutside = function (ev) {
+        var r = dlg.getBoundingClientRect();
+        return ev.clientX < r.left || ev.clientX > r.right || ev.clientY < r.top || ev.clientY > r.bottom;
+      };
+      dlg.addEventListener('pointerdown', function (ev) { downOutside = isOutside(ev); });
+      dlg.addEventListener('pointerup', function (ev) {
+        if (!downOutside) return;
+        downOutside = false;
+        if (isOutside(ev)) dlg.close('backdrop');
+      });
+    }
+
+    dlg.addEventListener('close', function () {
+      if (copyTimer) root.clearTimeout(copyTimer);
+      dlg.returnValue = '';
+      if (dlg.parentNode) dlg.parentNode.removeChild(dlg);
+      if (prevFocus && typeof prevFocus.focus === 'function') {
+        try { prevFocus.focus(); } catch (e) {}
+      }
+    });
+
+    dlg.showModal();
+    ta.focus();
+    ta.select();
+    return dlg;
+  }
+
   function normalizeSteamAssetUrl(url) {
     if (typeof url !== 'string') return '';
     return url
@@ -343,6 +676,7 @@
   var config = {
     DEFAULTS: DEFAULTS,
     TOP_6_APPS: TOP_6_APPS,
+    CURRENCY_DATA: CURRENCY_DATA,
     CDN_BASE: DEFAULTS.CDN_BASE,
     CDN2_BASE: DEFAULTS.CDN2_BASE,
     STEAM_ECON_BASE: DEFAULTS.STEAM_ECON_BASE,
@@ -355,6 +689,10 @@
     isTrustedOriginUrl: isTrustedOriginUrl,
     isTurnstileConfigured: isTurnstileConfigured,
     getContextId: getContextId,
+    loadCurrencyRates: loadCurrencyRates,
+    getSavedCurIndex: getSavedCurIndex,
+    formatPriceUsd: formatPriceUsd,
+    openTextExportDialog: openTextExportDialog,
     parseValidatedOauthCookie: parseValidatedOauthCookie,
     checkAuthSession: checkAuthSession,
     getLoginUrl: getLoginUrl,

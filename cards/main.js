@@ -2,84 +2,33 @@
 /* global angular */
 /* global $ */
 
-var CURRENCY_DATA = [
-	{name: "USD", symbolFormat: "$",     right: false, ratio: 1.0},
-	{name: "AED", symbolFormat: " AED",  right: true,  ratio: 3.6772},
-	{name: "ARS", symbolFormat: "ARS$",  right: false, ratio: 97.6575},
-	{name: "AUD", symbolFormat: "A$ ",   right: false, ratio: 1.3799},
-	{name: "BRL", symbolFormat: "R$ ",   right: false, ratio: 5.244},
-	{name: "CAD", symbolFormat: "CDN$ ", right: false, ratio: 1.2635},
-	{name: "CHF", symbolFormat: "CHF ",  right: false, ratio: 0.9190},
-	{name: "CLP", symbolFormat: "CLP$ ", right: false, ratio: 785.5814},
-	{name: "CNY", symbolFormat: "¥ ",    right: false, ratio: 6.4934},
-	{name: "COP", symbolFormat: "COL$ ", right: false, ratio: 3875.5106},
-	{name: "CRC", symbolFormat: "₡",     right: false, ratio: 624.9128},
-	{name: "EUR", symbolFormat: "€",     right: true,  ratio: 0.851},
-	{name: "GBP", symbolFormat: "£",     right: false, ratio: 0.7293},
-	{name: "HKD", symbolFormat: "HK$ ",  right: false, ratio: 7.7957},
-	{name: "IDR", symbolFormat: "Rp ",   right: false, ratio: 14434.151},
-	{name: "ILS", symbolFormat: "₪",     right: false, ratio: 3.2308},
-	{name: "INR", symbolFormat: "₹ ",    right: false, ratio: 74.2201},
-	{name: "JPY", symbolFormat: "¥ ",    right: false, ratio: 110.2601},
-	{name: "KRW", symbolFormat: "₩ ",    right: false, ratio: 1171.6164},
-	{name: "KWD", symbolFormat: " KD",   right: true,  ratio: 0.3017},
-	{name: "KZT", symbolFormat: "₸",     right: false, ratio: 427.1962},
-	{name: "MXN", symbolFormat: "Mex$ ", right: false, ratio: 20.3632},
-	{name: "MYR", symbolFormat: "RM",    right: false, ratio: 4.2012},
-	{name: "NOK", symbolFormat: " kr",   right: true,  ratio: 8.8252},
-	{name: "NZD", symbolFormat: "NZ$ ",  right: false, ratio: 1.4374},
-	{name: "PEN", symbolFormat: "S/.",   right: false, ratio: 4.1061},
-	{name: "PHP", symbolFormat: "P",     right: false, ratio: 50.0509},
-	{name: "PLN", symbolFormat: "zł",    right: true,  ratio: 3.8976},
-	{name: "QAR", symbolFormat: " QR",   right: true,  ratio: 3.6456},
-	{name: "RUB", symbolFormat: " pуб.", right: true,  ratio: 74.4343},
-	{name: "SAR", symbolFormat: " SR",   right: true,  ratio: 3.7543},
-	{name: "SGD", symbolFormat: "S$",    right: false, ratio: 1.3551},
-	{name: "THB", symbolFormat: "฿",     right: false, ratio: 32.8027},
-	{name: "TRY", symbolFormat: " TL",   right: true,  ratio: 8.4025},
-	{name: "TWD", symbolFormat: "NT$ ",  right: false, ratio: 27.9719},
-	{name: "UAH", symbolFormat: "₴",     right: true,  ratio: 26.8975},
-	{name: "UYU", symbolFormat: "$U",    right: false, ratio: 42.8828},
-	{name: "VND", symbolFormat: "₫",     right: false, ratio: 22810.1732},
-	{name: "ZAR", symbolFormat: "R ",    right: false, ratio: 14.9625},
-];
-
 angular.module('cardApp', ['ui.bootstrap', 'normalizeForSearch'])
 .filter('currency', function($filter){
 	return function(input, ind, noCurrency) {
+		var CFG = window.STEAMTOOLS_CONFIG;
+		if (CFG && typeof CFG.formatPriceUsd === 'function') {
+			return CFG.formatPriceUsd(input, ind, {
+				noCurrency: Boolean(noCurrency),
+				formatNumber: function(v, d) { return $filter('number')(v, d); }
+			});
+		}
 		if (isNaN(input)) return "N/A";
-
-		// Get symbol and decide if it comes before or after
-		var symbol = CURRENCY_DATA[ind].symbolFormat;
-		var after = CURRENCY_DATA[ind].right;
-		var ratio = CURRENCY_DATA[ind].ratio;
-
-		// Make sure input was valid, then convert and format it
-		var out = $filter('number')(input * ratio, 2);
-
-		if (noCurrency) return out;
-
-		// Add symbol in the right place
-		if (after) return out + symbol;
-		else return symbol + out;
+		return noCurrency ? $filter('number')(input, 2) : ('$' + $filter('number')(input, 2));
 	};
 })
 .controller('CardCtrl', ['$scope', '$http', '$filter', '$compile', '$modal', '$timeout',
 function($scope, $http, $filter, $compile, $modal, $timeout){
 	var CFG = window.STEAMTOOLS_CONFIG;
-	$scope.CDATA = CURRENCY_DATA;
+	$scope.CDATA = CFG.CURRENCY_DATA;
 	$scope.steamLoginUrl = CFG.getLoginUrl();
+	$scope.userStale = false;
 
-	$http.get(CFG.CDN_BASE + '/data/currency.json').success(function(data){
-		var count = 0;
-		for (var i = 0; i < $scope.CDATA.length; i++) {
-			var code = $scope.CDATA[i].name;
-			if (data.hasOwnProperty(code)) {
-				$scope.CDATA[i].ratio = data[code];
-				count++;
+	CFG.loadCurrencyRates($http).then(function(){
+		$timeout(function() {
+			if ($scope.table) {
+				$scope.table.rows().invalidate().draw(false);
 			}
-		}
-		console.log('Updated ' + count + '/' + $scope.CDATA.length + ' currencies');
+		}, 0);
 	});
 
 	// Formats and converts the prices to selected currency
@@ -118,6 +67,17 @@ function($scope, $http, $filter, $compile, $modal, $timeout){
 		return moment(time * 1000).fromNow();
 	};
 
+	$scope.formatAge = function(seconds) {
+		var secs = Math.max(0, Number(seconds) || 0);
+		if (secs >= 3600) {
+			var hrs = Math.floor(secs / 3600);
+			var mins = Math.round((secs % 3600) / 60);
+			return hrs + 'h' + (mins > 0 ? ' ' + mins + 'm' : '');
+		}
+		if (secs >= 60) return Math.round(secs / 60) + 'm';
+		return secs + 's';
+	};
+
 	$scope.userData = {'games': 1, 'cards': 1, 'badges': 1};
 	$scope.labelType = [
 		'label-danger',
@@ -149,6 +109,7 @@ function($scope, $http, $filter, $compile, $modal, $timeout){
 			document.location.hash = '/' + encodeURIComponent($scope.UserID || data.steamid64 || '');
 			window.localStorage.lastUser = $scope.UserID;
 			$scope.user = data;
+			$scope.userStale = Boolean(data.stale);
 			$scope.userGames = {};
 			if (data.games !== null) {
 				for (var i = 0; i < data.games.length; i++) {
@@ -359,6 +320,7 @@ function($scope, $http, $filter, $compile, $modal, $timeout){
 		$scope.availableCol[7] = false;
 
 		$scope.userLoaded = false;
+		$scope.userStale = false;
 		$scope.UserID = "";
 
 		delete window.localStorage.lastUser;
@@ -580,7 +542,7 @@ function($scope, $http, $filter, $compile, $modal, $timeout){
 
 	// Get and load set data from the server
 	$scope.dataLoaded = false;
-	var url = "https://cdn.steam.tools/data/set_data.json";
+	var url = CFG.CDN_BASE + "/data/set_data.json";
 	$http.get(url).success(function(data){
 		$scope.dataLoaded = true;
 		$scope.data = data;

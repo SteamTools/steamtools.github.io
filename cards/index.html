@@ -121,6 +121,7 @@
 		<div ng-if="dataLoaded">
 		<h4>Global Stats</h4>
 		<span style="font-style: italic">Generated {{localizeTime(data.time)}}</span>
+		<div ng-if="data.data_median_age" style="font-size: 11px; color: #666;">Median price age: {{formatAge(data.data_median_age)}}</div>
 		<ul class="stats">
 			<li>{{data.game_count}} STC games</li>
 			<li>{{data.card_count}} trading cards</li>
@@ -131,6 +132,7 @@
 
 		<div ng-if="userLoaded">
 		<h4>User Stats</h4>
+		<div ng-if="userStale" class="label label-warning" style="display:block; margin: 2px 0 6px; white-space: normal;">Cached profile snapshot (Steam rate-limited)</div>
 		<ul class="stats">
 			<li ng-if="userData.badges>2">Level {{user.level}} ({{user.xp}} XP)</li>
 			<li ng-if="userData.games>2">{{user.game_count}} STC games<br>

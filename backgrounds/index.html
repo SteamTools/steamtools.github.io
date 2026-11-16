@@ -239,7 +239,7 @@
 		ng-style="b.pos ? getStyle(b.pos) : null" title="{{b.name}}" ng-click="load(b, $event)" ng-keydown="onTileKeydown(b, $event)" ng-keyup="onTileKeyup(b, $event)">
 			<img ng-if="!b.pos && b.img" class="bg-thumb" ng-src="{{ECON_URL + b.img + '/256fx160f'}}" width="256" height="160" loading="lazy" alt="{{b.name}}">
 			<div class="name">{{b.name}}</div>
-			<a target="_blank" rel="noopener noreferrer" ng-href="{{BASE_URL + b.url}}" class="market">{{b.price | currency}}</a>
+			<a target="_blank" rel="noopener noreferrer" ng-href="{{BASE_URL + b.url}}" class="market">{{formatPrice(b.price)}}</a>
 		</div>
 	</div>
 	<div id="scroll-sentinel" aria-hidden="true" style="height: 1px;"></div>

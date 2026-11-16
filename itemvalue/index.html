@@ -78,15 +78,19 @@
 
 		<div ng-show="items.length">
 			<hr>
-			<button class="btn btn-mini" style="float: right" ng-hide="useTable" ng-click="useTable=true">
+			<button type="button" class="btn btn-mini" style="float: right" ng-hide="useTable" ng-click="useTable=true">
 				Table Mode
 			</button>
-			<button class="btn btn-mini" style="float: right" ng-show="useTable" ng-click="useTable=false">
+			<button type="button" class="btn btn-mini" style="float: right" ng-show="useTable" ng-click="useTable=false">
 				Grid Mode
+			</button>
+			<button type="button" class="btn btn-mini" style="float: right; margin-right: 4px;" ng-click="exportCsv()">
+				Export CSV
 			</button>
 
 			<span><b>Total:</b> {{(items | filter:dupesFilter | filter:typeFilter | filter:filterText | sumByKey:'price':'count':flags.fee) | currency:curIndex:false}}
 				({{items | filter:dupesFilter | filter:typeFilter | filter:filterText | sumByKey:'count'}} items)</span>
+			<span ng-show="isStaleData" class="label label-warning" style="margin-left: 6px;">Cached inventory (Steam throttled)</span>
 
 			<div style="margin: 0 8px" class="btn-group">
 				<span class="input-prepend" style="margin-bottom:0">

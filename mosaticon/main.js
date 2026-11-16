@@ -585,12 +585,13 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 			}
 			result += "\n";
 		}
-		var exportWin = window.open("", "ExportWindow");
-		if (exportWin && exportWin.document) {
-			exportWin.document.body.textContent = "";
-			var pre = exportWin.document.createElement("pre");
-			pre.textContent = result;
-			exportWin.document.body.appendChild(pre);
+		if (window.STEAMTOOLS_CONFIG && typeof window.STEAMTOOLS_CONFIG.openTextExportDialog === 'function') {
+			window.STEAMTOOLS_CONFIG.openTextExportDialog({
+				title: 'Export Emoticon Mosaic',
+				label: 'Copy and paste into a Steam profile showcase or comment',
+				text: result,
+				filename: 'mosaticon.txt'
+			});
 		}
 	};
 

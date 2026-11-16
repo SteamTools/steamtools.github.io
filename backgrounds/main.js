@@ -9,6 +9,21 @@ function($scope, $http, $location, $filter) {
 	$scope.filteredItems = [];
 	$scope.numLines = 20;
 	$scope.itemsPerLine = 4;
+	$scope.curIndex = typeof CFG.getSavedCurIndex === 'function' ? CFG.getSavedCurIndex() : 0;
+
+	$scope.formatPrice = function(p) {
+		if (p === Infinity || p === null || p === undefined || isNaN(p)) return 'N/A';
+		if (typeof CFG.formatPriceUsd === 'function') {
+			return CFG.formatPriceUsd(p, $scope.curIndex);
+		}
+		return '$' + $filter('number')(p, 2);
+	};
+
+	if (typeof CFG.loadCurrencyRates === 'function') {
+		CFG.loadCurrencyRates($http).then(function() {
+			$scope.$applyAsync(applyFilterAndSort);
+		});
+	}
 
 	$scope.limits = {
 		min: 0,
@@ -46,8 +61,13 @@ function($scope, $http, $location, $filter) {
 
 			var minLabel, maxLabel;
 			if (type === "Price") {
-				minLabel = '$' + $filter('number')(newMin, 2);
-				maxLabel = '$' + $filter('number')(newMax, 2) + (limits.max >= 100 ? '+' : '');
+				if (typeof CFG.formatPriceUsd === 'function') {
+					minLabel = CFG.formatPriceUsd(newMin, $scope.curIndex, { noApprox: true });
+					maxLabel = CFG.formatPriceUsd(newMax, $scope.curIndex) + (limits.max >= 100 ? '+' : '');
+				} else {
+					minLabel = '$' + $filter('number')(newMin, 2);
+					maxLabel = '$' + $filter('number')(newMax, 2) + (limits.max >= 100 ? '+' : '');
+				}
 			} else if (type === "Date") {
 				var minDate = (newMin + 1368590400) * 1000;
 				var maxDate = (newMax + 1368590400) * 1000;
@@ -159,7 +179,7 @@ function($scope, $http, $location, $filter) {
 			var bgKeys = (Array.isArray(data.urls) && data.urls.length) ? data.urls : bgNames;
 			$scope.owned = {};
 			$scope.loggedIn = true;
-			$scope.user_status = bgNames.length + " items filtered";
+			$scope.user_status = bgNames.length + " items filtered" + (data.stale ? " (cached)" : "");
 			for (var i = 0; i < bgKeys.length; i++) {
 				$scope.owned[bgKeys[i]] = true;
 			}

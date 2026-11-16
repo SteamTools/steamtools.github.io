@@ -181,6 +181,24 @@ dialog.st-import-dialog::backdrop {
   font-size: 12px;
 }
 
+.st-copy-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.st-copy-status {
+  font-size: 12px;
+  color: #a7f3d0;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.st-copy-status.is-visible {
+  opacity: 1;
+}
+
 .st-tab-btn:focus-visible {
   outline: 2px solid #6ea8fe;
   outline-offset: 2px;

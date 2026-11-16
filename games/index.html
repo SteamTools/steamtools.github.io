@@ -35,6 +35,10 @@
 
 	<div id="container">
 		<div id="user-selection">
+			<div style="margin-bottom: 8px; display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap;">
+				<a ng-href="[[steamLoginUrl]]" ng-show="!loggedIn"><img src="/img/steam_openid.png" alt="Sign in through Steam" width="114" height="43"></a>
+				<button type="button" class="btn btn-mini" ng-show="loggedIn" ng-click="userLogout()">Logout</button>
+			</div>
 			<button type="button" class="st-icon-btn left" ng-click="deleteUsers()" aria-label="Remove selected users">
 				<i class="icon-trash icon-white" aria-hidden="true" rel="tooltip" data-placement="left" data-original-title="Remove selected"></i>
 			</button>
@@ -78,9 +82,21 @@
 			<button type="button" ng-click="f.mac = 1 - (f.mac || 0)" ng-class="{'label-success': f.mac == 1}" aria-pressed="[[f.mac == 1]]" class="label"><i ng-class="f.mac == 1 && 'icon-check' || 'icon-plus-sign'" aria-hidden="true"></i> Mac</button>
 
 			<button type="button" ng-click="f.linux = 1 - (f.linux || 0)" ng-class="{'label-success': f.linux == 1}" aria-pressed="[[f.linux == 1]]" class="label"><i ng-class="f.linux == 1 && 'icon-check' || 'icon-plus-sign'" aria-hidden="true"></i> Linux</button>
+
+			<button type="button" ng-click="f.stc = 1 - (f.stc || 0)" ng-class="{'label-success': f.stc == 1}" aria-pressed="[[f.stc == 1]]" class="label"><i ng-class="f.stc == 1 && 'icon-check' || 'icon-plus-sign'" aria-hidden="true"></i> Trading Cards</button>
+
+			<button type="button" ng-click="f.achievements = 1 - (f.achievements || 0)" ng-class="{'label-success': f.achievements == 1}" aria-pressed="[[f.achievements == 1]]" class="label"><i ng-class="f.achievements == 1 && 'icon-check' || 'icon-plus-sign'" aria-hidden="true"></i> Achievements</button>
+
+			<button type="button" ng-click="f.workshop = 1 - (f.workshop || 0)" ng-class="{'label-success': f.workshop == 1}" aria-pressed="[[f.workshop == 1]]" class="label"><i ng-class="f.workshop == 1 && 'icon-check' || 'icon-plus-sign'" aria-hidden="true"></i> Workshop</button>
+
+			<button type="button" ng-click="f.free2play = 1 - (f.free2play || 0)" ng-class="{'label-success': f.free2play == 1}" aria-pressed="[[f.free2play == 1]]" class="label"><i ng-class="f.free2play == 1 && 'icon-check' || 'icon-plus-sign'" aria-hidden="true"></i> Free to Play</button>
 		</div>
 		<div id="game-list">
-			<div id="game-title">Filtered Games</div>
+			<div id="game-title">Filtered Games ([[gameList.length]])</div>
+			<div style="margin: 6px 0;" ng-show="fullGameList.length > 0">
+				<label for="games-search" class="st-visually-hidden">Search filtered games</label>
+				<input id="games-search" type="text" ng-model="gameSearch" placeholder="Search title..." style="width: 100%; box-sizing: border-box;" autocorrect="off" autocapitalize="none" spellcheck="false">
+			</div>
 			<ng:switch on="!!(gameStatus==1)">
 				<div class="game-text" ng:switch-when="true">Add and select at least one user, then import games.</div>
 			</ng:switch>

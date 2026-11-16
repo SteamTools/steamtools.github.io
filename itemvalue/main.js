@@ -1,48 +1,6 @@
 /* global angular */
 /* global $ */
 
-var CURRENCY_DATA = [
-	{name: "USD", symbolFormat: "$",     right: false, ratio: 1.0},
-	{name: "AED", symbolFormat: " AED",  right: true,  ratio: 3.6772},
-	{name: "ARS", symbolFormat: "ARS$",  right: false, ratio: 97.6575},
-	{name: "AUD", symbolFormat: "A$ ",   right: false, ratio: 1.3799},
-	{name: "BRL", symbolFormat: "R$ ",   right: false, ratio: 5.244},
-	{name: "CAD", symbolFormat: "CDN$ ", right: false, ratio: 1.2635},
-	{name: "CHF", symbolFormat: "CHF ",  right: false, ratio: 0.9190},
-	{name: "CLP", symbolFormat: "CLP$ ", right: false, ratio: 785.5814},
-	{name: "CNY", symbolFormat: "¥ ",    right: false, ratio: 6.4934},
-	{name: "COP", symbolFormat: "COL$ ", right: false, ratio: 3875.5106},
-	{name: "CRC", symbolFormat: "₡",     right: false, ratio: 624.9128},
-	{name: "EUR", symbolFormat: "€",     right: true,  ratio: 0.851},
-	{name: "GBP", symbolFormat: "£",     right: false, ratio: 0.7293},
-	{name: "HKD", symbolFormat: "HK$ ",  right: false, ratio: 7.7957},
-	{name: "IDR", symbolFormat: "Rp ",   right: false, ratio: 14434.151},
-	{name: "ILS", symbolFormat: "₪",     right: false, ratio: 3.2308},
-	{name: "INR", symbolFormat: "₹ ",    right: false, ratio: 74.2201},
-	{name: "JPY", symbolFormat: "¥ ",    right: false, ratio: 110.2601},
-	{name: "KRW", symbolFormat: "₩ ",    right: false, ratio: 1171.6164},
-	{name: "KWD", symbolFormat: " KD",   right: true,  ratio: 0.3017},
-	{name: "KZT", symbolFormat: "₸",     right: false, ratio: 427.1962},
-	{name: "MXN", symbolFormat: "Mex$ ", right: false, ratio: 20.3632},
-	{name: "MYR", symbolFormat: "RM",    right: false, ratio: 4.2012},
-	{name: "NOK", symbolFormat: " kr",   right: true,  ratio: 8.8252},
-	{name: "NZD", symbolFormat: "NZ$ ",  right: false, ratio: 1.4374},
-	{name: "PEN", symbolFormat: "S/.",   right: false, ratio: 4.1061},
-	{name: "PHP", symbolFormat: "P",     right: false, ratio: 50.0509},
-	{name: "PLN", symbolFormat: "zł",    right: true,  ratio: 3.8976},
-	{name: "QAR", symbolFormat: " QR",   right: true,  ratio: 3.6456},
-	{name: "RUB", symbolFormat: " pуб.", right: true,  ratio: 74.4343},
-	{name: "SAR", symbolFormat: " SR",   right: true,  ratio: 3.7543},
-	{name: "SGD", symbolFormat: "S$",    right: false, ratio: 1.3551},
-	{name: "THB", symbolFormat: "฿",     right: false, ratio: 32.8027},
-	{name: "TRY", symbolFormat: " TL",   right: true,  ratio: 8.4025},
-	{name: "TWD", symbolFormat: "NT$ ",  right: false, ratio: 27.9719},
-	{name: "UAH", symbolFormat: "₴",     right: true,  ratio: 26.8975},
-	{name: "UYU", symbolFormat: "$U",    right: false, ratio: 42.8828},
-	{name: "VND", symbolFormat: "₫",     right: false, ratio: 22810.1732},
-	{name: "ZAR", symbolFormat: "R ",    right: false, ratio: 14.9625},
-];
-
 angular.module('valueApp', ['ui.bootstrap'])
 .config(['$tooltipProvider', function($tooltipProvider){
 	$tooltipProvider.setTriggers({
@@ -101,24 +59,17 @@ angular.module('InvApp', ['ui.bootstrap'])
 .filter('currency', function($filter){
 	return function(input, ind, fee) {
 		if (input === null || input === undefined || isNaN(input)) return "N/A";
-
-		// Get symbol and decide if it comes before or after
-		var cur = CURRENCY_DATA[ind] || CURRENCY_DATA[0];
-		var symbol = cur.symbolFormat;
-		var after = cur.right;
-		var ratio = cur.ratio;
-
 		var num = Number(input);
 		if (fee) {
 			num = netPriceAfterFee(num);
 		}
-
-		// Make sure input was valid, then convert and format it
-		var out = $filter('number')(num * ratio, 2);
-
-		// Add symbol in the right place
-		if (after) return out + symbol;
-		else return symbol + out;
+		var CFG = window.STEAMTOOLS_CONFIG;
+		if (CFG && typeof CFG.formatPriceUsd === 'function') {
+			return CFG.formatPriceUsd(num, ind, {
+				formatNumber: function(v, d) { return $filter('number')(v, d); }
+			});
+		}
+		return '$' + $filter('number')(num, 2);
 	};
 }).controller('InvCtrl',
 	['$scope', '$http', '$filter', '$timeout',
@@ -127,7 +78,7 @@ angular.module('InvApp', ['ui.bootstrap'])
 	var MAX_AUTO_RETRIES = 2;
 	var retryTimer = null;
 
-	$scope.CDATA = CURRENCY_DATA;
+	$scope.CDATA = CFG.CURRENCY_DATA;
 	$scope.ECONOMY = CFG.STEAM_ECON_BASE + "/image/";
 	$scope.LISTING = "https://steamcommunity.com/market/listings/";
 	$scope.status = "Import your profile or use Import Inventory";
@@ -144,21 +95,16 @@ angular.module('InvApp', ['ui.bootstrap'])
 	$scope.iconLimit = 54;
 	$scope.useTable = true;
 	$scope.isLoading = false;
+	$scope.isStaleData = false;
 	$scope.showImportCta = false;
 	$scope.turnstileConfigured = CFG.isTurnstileConfigured();
 
-	$http.get(CFG.CDN_BASE + '/data/currency.json').then(function(resp) {
-		var data = resp && resp.data;
-		if (!data) return;
-		var count = 0;
-		for (var i = 0; i < $scope.CDATA.length; i++) {
-			var code = $scope.CDATA[i].name;
-			if (Object.prototype.hasOwnProperty.call(data, code)) {
-				$scope.CDATA[i].ratio = data[code];
-				count++;
+	CFG.loadCurrencyRates($http).then(function() {
+		$scope.$applyAsync(function() {
+			if ($scope.table) {
+				$scope.table.rows().invalidate().draw(false);
 			}
-		}
-		console.log('Updated ' + count + '/' + $scope.CDATA.length + ' currencies');
+		});
 	});
 
 	$scope.apps = [
@@ -219,6 +165,7 @@ angular.module('InvApp', ['ui.bootstrap'])
 				sitekey: CFG.TURNSTILE_SITEKEY,
 				action: 'item_value',
 				theme: 'dark',
+				appearance: 'interaction-only',
 				callback: function(token) {
 					$scope.$applyAsync(function() {
 						$scope.turnstileToken = token || false;
@@ -317,6 +264,7 @@ angular.module('InvApp', ['ui.bootstrap'])
 		var opts = options || {};
 		$scope.type = "0";
 		$scope.appidLoaded = String(appid);
+		$scope.isStaleData = Boolean(opts.stale);
 		$scope.items = Array.isArray(items) ? items : [];
 		$scope.rows = [];
 
@@ -518,7 +466,8 @@ angular.module('InvApp', ['ui.bootstrap'])
 			}
 			renderValuedItems(data.items, appid, {
 				statusMessage: "",
-				profileName: data.name
+				profileName: data.name,
+				stale: Boolean(data.stale)
 			});
 		}, function(response) {
 			$scope.isLoading = false;
@@ -780,6 +729,55 @@ angular.module('InvApp', ['ui.bootstrap'])
 			$scope.table.search(v);
 			$scope.table.draw();
 	});
+
+	function escapeCsvCell(val) {
+		var s = String(val === null || val === undefined ? '' : val);
+		if (/^[=+\-@\t\r]/.test(s)) {
+			s = "'" + s;
+		}
+		if (/[",\n\r]/.test(s)) {
+			return '"' + s.replace(/"/g, '""') + '"';
+		}
+		return s;
+	}
+
+	$scope.exportCsv = function() {
+		var list = ($scope.items || []).filter(function(item) {
+			if ($scope.flags.dupes && (!item.count || item.count <= 1)) return false;
+			if ($scope.appidLoaded === '753' && $scope.type !== '0') {
+				var targetType = $scope.TYPES[parseInt($scope.type, 10)];
+				if (targetType && item.type !== targetType) return false;
+			}
+			var q = String($scope.filterText || '').trim().toLowerCase();
+			if (q) {
+				var hay = (String(item.name || '') + ' ' + String(item.type || '')).toLowerCase();
+				if (hay.indexOf(q) === -1) return false;
+			}
+			return true;
+		});
+		var lines = [['Name', 'Type', 'Count', 'Unit USD', 'Stack USD'].join(',')];
+		for (var i = 0; i < list.length; i++) {
+			var it = list[i];
+			var unit = $scope.flags.fee ? netPriceAfterFee(it.price) : (parseFloat(it.price) || 0);
+			var cnt = Number(it.count) || 0;
+			lines.push([
+				escapeCsvCell(it.name || ''),
+				escapeCsvCell(it.type || ''),
+				cnt,
+				unit.toFixed(2),
+				(unit * cnt).toFixed(2)
+			].join(','));
+		}
+		if (typeof CFG.openTextExportDialog === 'function') {
+			CFG.openTextExportDialog({
+				title: 'Export Inventory CSV (' + list.length + ' items)',
+				label: 'CSV data (formula-safe)',
+				text: lines.join('\n'),
+				filename: 'steam-inventory-' + ($scope.appidLoaded || '753') + '.csv',
+				mimeType: 'text/csv;charset=utf-8'
+			});
+		}
+	};
 
 	if (!$scope.CDATA.hasOwnProperty($scope.curIndex))
 		$scope.curIndex = 0;

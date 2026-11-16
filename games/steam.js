@@ -97,6 +97,9 @@ function updateLS(){
 function SteamCtrl($scope, $http){
 	var CFG = window.STEAMTOOLS_CONFIG;
 	var GAMES_INFO_URL = CFG.GAMES_API_BASE + '/info';
+	$scope.steamLoginUrl = CFG.getLoginUrl();
+	$scope.loggedIn = false;
+	$scope.gameSearch = '';
 
 	for (var u = 0; u < users.length; u++) {
 		if (users[u] && users[u].avatar) {
@@ -153,10 +156,15 @@ function SteamCtrl($scope, $http){
 		"multiplayer":      0,
 		"controller":       0,
 		"mac":              0,
-		"linux":            0
+		"linux":            0,
+		"stc":              0,
+		"achievements":     0,
+		"workshop":         0,
+		"free2play":        0
 	};
 
 	$scope.$watch('f', applyFlags, true);
+	$scope.$watch('gameSearch', function() { applyFlags($scope.f, [], $scope); });
 
 	function applyFlags(f,o,s){
 		if (!s.fullGameList || s.fullGameList.length === 0) {
@@ -168,7 +176,8 @@ function SteamCtrl($scope, $http){
 			if (f.hasOwnProperty(k) && f[k] === 1)
 				flags.push(k);
 
-		if (flags.length === 0) {
+		var q = String(s.gameSearch || '').trim().toLowerCase();
+		if (flags.length === 0 && !q) {
 			s.gameList = s.fullGameList.slice();
 			return;
 		}
@@ -181,13 +190,25 @@ function SteamCtrl($scope, $http){
 		for (var i = 0; i < s.fullGameList.length; i++){
 			var appid = s.fullGameList[i];
 			if (s.gameData.hasOwnProperty(appid)){
-				var res = subtract(flags, s.gameData[appid].flags || []);
-				if (res.length === 0)
-					newList.push(appid);
+				var entry = s.gameData[appid];
+				if (q) {
+					var gname = String((entry && entry.name) || appid).toLowerCase();
+					if (gname.indexOf(q) === -1) continue;
+				}
+				if (flags.length > 0) {
+					var res = subtract(flags, (entry && entry.flags) || []);
+					if (res.length !== 0) continue;
+				}
+				newList.push(appid);
 			}
 		}
 		s.gameList = newList;
 	}
+
+	$scope.userLogout = function() {
+		CFG.performLogout($http);
+		$scope.loggedIn = false;
+	};
 
 	$scope.addUser = function(){
 		if (!$scope.UserID || $scope.UserID.trim() === "")
@@ -349,11 +370,13 @@ function SteamCtrl($scope, $http){
 		}
 		results.sort();
 
-		var newPage = window.open("about:blank", "_blank");
-		if (newPage && newPage.document) {
-			var pre = newPage.document.createElement("pre");
-			pre.textContent = results.join("\n");
-			newPage.document.body.appendChild(pre);
+		if (typeof CFG.openTextExportDialog === 'function') {
+			CFG.openTextExportDialog({
+				title: 'Export Filtered Games (' + results.length + ')',
+				label: 'Matching Steam games (one per line)',
+				text: results.join("\n"),
+				filename: 'steam-games.txt'
+			});
 		}
 	};
 
@@ -479,6 +502,26 @@ function SteamCtrl($scope, $http){
 			return !set2.has(n);
 		});
 	}
+
+	CFG.checkAuthSession($http).then(function(auth) {
+		if (!auth || !auth.authenticated || !auth.steamid) return;
+		var applyAuth = function() {
+			$scope.loggedIn = true;
+			if (ids.indexOf(auth.steamid) === -1) {
+				fetchGamesInfo({ user: auth.steamid }).then(function(data) {
+					appendUsers(data);
+					if ($scope.selectedUsers.indexOf(auth.steamid) === -1 && ids.indexOf(auth.steamid) !== -1) {
+						$scope.selectedUsers.push(auth.steamid);
+					}
+				});
+			}
+		};
+		if (!$scope.$$phase) {
+			$scope.$apply(applyAuth);
+		} else {
+			applyAuth();
+		}
+	});
 }
 
 $(document).ready(function () {
