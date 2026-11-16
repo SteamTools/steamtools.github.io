@@ -113,28 +113,136 @@ function SteamCtrl($scope, $http){
 	$scope.Users = users.slice();
 	$scope.userError = "";
 
-	CFG.getDatasetJson($http, 'data/game_data.json').then(function(data){
-		var run = function() {
-			if (data && typeof data === 'object') {
-				var keys = Object.keys(data);
-				for (var k = 0; k < keys.length; k++) {
-					var entry = data[keys[k]];
-					if (entry && typeof entry.name === 'string') {
-						entry.name = entry.name.replace(/http:\/\//gi, 'https://');
-					}
+	$scope.gameData = {};
+	var _gameBucketPromises = Object.create(null);
+	var _loadedGameBuckets = Object.create(null);
+	var _monolithGameDataPromise = null;
+
+	function normalizeGameName(name) {
+		return typeof name === 'string' ? name.replace(/http:\/\//gi, 'https://') : '';
+	}
+
+	function mergeGameDataMonolith(data) {
+		if (!data || typeof data !== 'object') return;
+		var keys = Object.keys(data);
+		for (var k = 0; k < keys.length; k++) {
+			var aid = keys[k];
+			var entry = data[aid];
+			if (entry && typeof entry === 'object') {
+				$scope.gameData[aid] = {
+					name: normalizeGameName(entry.name),
+					flags: Array.isArray(entry.flags) ? entry.flags : []
+				};
+			}
+		}
+	}
+
+	function decodeGameDataShard(shardDoc) {
+		if (!shardDoc || shardDoc.v !== 2 || !Array.isArray(shardDoc.flags) || !shardDoc.apps || typeof shardDoc.apps !== 'object') {
+			return false;
+		}
+		var flagTable = shardDoc.flags;
+		var apps = shardDoc.apps;
+		var appKeys = Object.keys(apps);
+		for (var i = 0; i < appKeys.length; i++) {
+			var aid = appKeys[i];
+			var rec = apps[aid];
+			if (!Array.isArray(rec)) continue;
+			var mask = Number(rec[1]) || 0;
+			var flags = [];
+			for (var bit = 0; bit < flagTable.length; bit++) {
+				if ((mask & (1 << bit)) !== 0) {
+					flags.push(flagTable[bit]);
 				}
 			}
-			$scope.gameData = data;
-			if ($scope.fullGameList.length > 0) {
-				applyFlags($scope.f, [], $scope);
+			if (Array.isArray(rec[2])) {
+				for (var ex = 0; ex < rec[2].length; ex++) {
+					flags.push(String(rec[2][ex]));
+				}
 			}
-		};
-		if (!$scope.$$phase) {
-			$scope.$apply(run);
-		} else {
-			run();
+			$scope.gameData[aid] = {
+				name: normalizeGameName(rec[0]),
+				flags: flags
+			};
 		}
-	}, function(){});
+		return true;
+	}
+
+	function loadGameDataMonolith() {
+		if (_monolithGameDataPromise) return _monolithGameDataPromise;
+		_monolithGameDataPromise = CFG.getDatasetJson($http, 'data/game_data.json').then(function(data) {
+			safeApply(function() {
+				mergeGameDataMonolith(data);
+				if ($scope.fullGameList.length > 0) {
+					applyFlags($scope.f, [], $scope);
+				}
+			});
+		}, function() {});
+		return _monolithGameDataPromise;
+	}
+
+	function gameDataShardHex(appid) {
+		var n = parseInt(String(appid || '').trim(), 10);
+		if (isNaN(n)) return '00';
+		var b = (n & 0x3F).toString(16);
+		return b.length < 2 ? ('0' + b) : b;
+	}
+
+	function ensureGameDataForAppids(appids) {
+		if (!Array.isArray(appids) || appids.length === 0) return Promise.resolve();
+		if (_monolithGameDataPromise) return _monolithGameDataPromise;
+
+		var missingBuckets = [];
+		var seenBucket = Object.create(null);
+		for (var i = 0; i < appids.length; i++) {
+			var aid = String(appids[i]);
+			if ($scope.gameData.hasOwnProperty(aid)) continue;
+			var hex2 = gameDataShardHex(aid);
+			if (!_loadedGameBuckets[hex2] && !seenBucket[hex2]) {
+				seenBucket[hex2] = true;
+				missingBuckets.push(hex2);
+			}
+		}
+		if (missingBuckets.length === 0) return Promise.resolve();
+		if (missingBuckets.length > 24) {
+			return loadGameDataMonolith();
+		}
+
+		var idx = 0;
+		var cap = Math.min(8, missingBuckets.length);
+		var shardFailed = false;
+		function worker() {
+			if (idx >= missingBuckets.length) return Promise.resolve();
+			var hex2 = missingBuckets[idx++];
+			if (!_gameBucketPromises[hex2]) {
+				_gameBucketPromises[hex2] = CFG.getDatasetJson($http, 'data/game_data/' + hex2 + '.json')
+					.then(function(doc) {
+						if (!decodeGameDataShard(doc)) {
+							shardFailed = true;
+							return;
+						}
+						_loadedGameBuckets[hex2] = true;
+					}, function() {
+						shardFailed = true;
+					});
+			}
+			return _gameBucketPromises[hex2].then(worker);
+		}
+		var workers = [];
+		for (var w = 0; w < cap; w++) {
+			workers.push(worker());
+		}
+		return Promise.all(workers).then(function() {
+			if (shardFailed) {
+				return loadGameDataMonolith();
+			}
+			safeApply(function() {
+				if ($scope.fullGameList.length > 0) {
+					applyFlags($scope.f, [], $scope);
+				}
+			});
+		});
+	}
 
 	function addPrivate(steamid) {
 		if (steamid && privates.indexOf(steamid) === -1) {
@@ -435,6 +543,7 @@ function SteamCtrl($scope, $http){
 			}
 			$scope.fullGameList = list;
 			applyFlags($scope.f,[],$scope);
+			ensureGameDataForAppids(list);
 		}
 	}
 

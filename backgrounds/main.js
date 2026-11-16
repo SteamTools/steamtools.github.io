@@ -131,7 +131,19 @@ function($scope, $http, $location, $filter) {
 	}
 	$scope.recomputeFiltered = applyFilterAndSort;
 
-	CFG.getDatasetJson($http, 'data/bg.json').then(function(data){
+	var loadBgGallery = function() {
+		return CFG.getDatasetJson($http, 'data/bg_v2.json').then(function(doc) {
+			if (doc && doc.v === 2 && Array.isArray(doc.items) && typeof CFG.unpackGalleryV2 === 'function') {
+				return CFG.unpackGalleryV2(doc);
+			}
+			if (Array.isArray(doc)) return doc;
+			return CFG.getDatasetJson($http, 'data/bg.json');
+		}, function() {
+			return CFG.getDatasetJson($http, 'data/bg.json');
+		});
+	};
+
+	loadBgGallery().then(function(data){
 		$scope.$applyAsync(function() {
 			if (!Array.isArray(data)) return;
 			var maxPrice = 0;

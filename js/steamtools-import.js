@@ -333,7 +333,7 @@
       for (var i = 0; i < list.length; i++) {
         var it = list[i];
         var hasPrice = priceMap && Object.prototype.hasOwnProperty.call(priceMap, it.quoted_key);
-        if (appStr === '730' && hasPriceMap && !hasPrice && it.marketable === false) {
+        if ((opts.requirePriceMatch || (appStr === '730' && it.marketable === false)) && hasPriceMap && !hasPrice) {
           continue;
         }
         var cents = hasPrice ? priceMap[it.quoted_key] : undefined;
@@ -403,6 +403,24 @@
       }
       throw err;
     });
+  }
+
+  function priceServerItemValuePayload(items, appid, options) {
+    var list = Array.isArray(items) ? items : [];
+    var normalized = new Array(list.length);
+    for (var i = 0; i < list.length; i++) {
+      var it = list[i] || {};
+      var qk = it.quoted_key || workerMod.quoteSteamKey(it.market_hash_name || it.name || '');
+      var bucket = it.bucket || (String(appid || '753') === '753' && qk ? workerMod.fnv1a32Hex2(qk) : undefined);
+      normalized[i] = bucket
+        ? Object.assign({}, it, { quoted_key: qk, bucket: bucket })
+        : Object.assign({}, it, { quoted_key: qk });
+    }
+    return valueInventoryClientSide(
+      normalized,
+      appid,
+      Object.assign({}, options || {}, { requirePriceMatch: true })
+    );
   }
 
   // ---- Worker + Synchronous Fallback Parser ----
@@ -1328,6 +1346,7 @@
     parseInventoryPayload: workerMod.parseInventoryPayload,
     parseInWorkerOrSync: parseInWorkerOrSync,
     valueInventoryClientSide: valueInventoryClientSide,
+    priceServerItemValuePayload: priceServerItemValuePayload,
     clearPriceCache: clearPriceCache,
     parseSteamInput: parseSteamInput,
     resolveToSteamId64: resolveToSteamId64,

@@ -375,8 +375,9 @@ angular.module('InvApp', ['ui.bootstrap'])
 	};
 
 	$scope.retries = 0;
-	$scope.fetchItems = function(user, appid, huge){
+	$scope.fetchItems = function(user, appid, huge, skipClientPrice){
 		huge = Boolean(huge);
+		skipClientPrice = Boolean(skipClientPrice);
 		$scope.iconLimit = 54;
 		$scope.isLoading = true;
 		$scope.status = "Loading...";
@@ -386,6 +387,14 @@ angular.module('InvApp', ['ui.bootstrap'])
 			'&app=' + encodeURIComponent(appid);
 		if (huge) {
 			path += '&huge=1';
+		}
+		var canClientPrice = Boolean(
+			!skipClientPrice &&
+			window.SteamToolsImport &&
+			typeof window.SteamToolsImport.priceServerItemValuePayload === 'function'
+		);
+		if (canClientPrice) {
+			path += '&client_price=1';
 		}
 
 		var usedTurnstile = false;
@@ -469,6 +478,32 @@ angular.module('InvApp', ['ui.bootstrap'])
 
 			if (data.name) {
 				document.location.hash = '/' + encodeURIComponent(String(data.name)) + "-" + $scope.appid.model;
+			}
+			if (data.unpriced && window.SteamToolsImport && typeof window.SteamToolsImport.priceServerItemValuePayload === 'function') {
+				$scope.isLoading = true;
+				$scope.status = "Pricing " + (Array.isArray(data.items) ? data.items.length : 0) + " item(s) from SteamTools CDN...";
+				window.SteamToolsImport.priceServerItemValuePayload(data.items, appid, { config: CFG })
+					.then(function(valued) {
+						$scope.$applyAsync(function() {
+							$scope.isLoading = false;
+							renderValuedItems(valued.items, appid, {
+								statusMessage: "",
+								profileName: data.name,
+								stale: Boolean(data.stale)
+							});
+						});
+					}, function() {
+						$scope.$applyAsync(function() {
+							if (!skipClientPrice && $scope.hasValidPass()) {
+								$scope.fetchItems(user, appid, huge, true);
+								return;
+							}
+							$scope.isLoading = false;
+							$scope.showImportCta = true;
+							$scope.status = "Failed to load prices from CDN — try Import Inventory.";
+						});
+					});
+				return;
 			}
 			renderValuedItems(data.items, appid, {
 				statusMessage: "",

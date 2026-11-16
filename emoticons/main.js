@@ -121,7 +121,19 @@ function($scope, $http, $location, $filter) {
 	}
 	$scope.recomputeFiltered = applyFilterAndSort;
 
-	CFG.getDatasetJson($http, 'data/emote.json').then(function(data){
+	var loadEmoteGallery = function() {
+		return CFG.getDatasetJson($http, 'data/emote_v2.json').then(function(doc) {
+			if (doc && doc.v === 2 && Array.isArray(doc.items) && typeof CFG.unpackGalleryV2 === 'function') {
+				return CFG.unpackGalleryV2(doc);
+			}
+			if (Array.isArray(doc)) return doc;
+			return CFG.getDatasetJson($http, 'data/emote.json');
+		}, function() {
+			return CFG.getDatasetJson($http, 'data/emote.json');
+		});
+	};
+
+	loadEmoteGallery().then(function(data){
 		$scope.$applyAsync(function() {
 			if (!Array.isArray(data)) return;
 			var maxPrice = 0;

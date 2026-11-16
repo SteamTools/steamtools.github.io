@@ -334,6 +334,40 @@
       .replace(/'/g, '&#39;');
   }
 
+  function unpackGalleryV2(doc) {
+    if (Array.isArray(doc)) {
+      return doc;
+    }
+    if (!doc || doc.v !== 2 || !Array.isArray(doc.items)) {
+      return [];
+    }
+    var games = Array.isArray(doc.games) ? doc.games : [];
+    var rows = doc.items;
+    var out = new Array(rows.length);
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      var gIdx = r[2];
+      var gameName = (typeof gIdx === 'number' && gIdx >= 0 && gIdx < games.length) ? String(games[gIdx] || '') : '';
+      var rawUrl = String(r[3] || '');
+      var fullUrl = (rawUrl && rawUrl.indexOf('/') === -1) ? ('753/' + rawUrl) : rawUrl;
+      var item = {
+        name: r[0],
+        price: r[1],
+        game: gameName,
+        url: fullUrl,
+        hls: Array.isArray(r[5]) ? r[5] : [0, 0, 0]
+      };
+      if (Array.isArray(r[4])) {
+        item.pos = r[4];
+      }
+      if (r.length > 6 && r[6]) {
+        item.img = r[6];
+      }
+      out[i] = item;
+    }
+    return out;
+  }
+
   var _currencyPromise = null;
   var _manifestCache = Object.create(null);
   var _manifestPromises = Object.create(null);
@@ -1076,6 +1110,7 @@
     clearLegacyOauthCookie: clearLegacyOauthCookie,
     escapeCsvFormula: escapeCsvFormula,
     escapeHtml: escapeHtml,
+    unpackGalleryV2: unpackGalleryV2,
     normalizeSteamAssetUrl: normalizeSteamAssetUrl,
     isInAppWebview: isInAppWebview,
     mountWebviewNotice: mountWebviewNotice,
