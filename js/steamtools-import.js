@@ -185,7 +185,7 @@
 
   /**
    * Build self-contained inspectable Bookmarklet JS source (< 2 KB).
-   * Strictly checks opener presence and posts ONLY to baked opener origin (never '*').
+   * Posts to window.opener when available, or offers one-click Copy/Download JSON in standalone tabs.
    */
   function buildBookmarkletCode(options) {
     var opts = options || {};
@@ -193,31 +193,25 @@
     var origin = getAllowedOpenerOrigin(opts.origin);
     var appid = String(opts.appid || '753').replace(/[^\d]/g, '') || '753';
     var contextid = String(opts.contextid || cfg.getContextId(appid)).replace(/[^\d]/g, '') || '6';
-    var lockApp = opts.lockApp === false ? '0' : '1';
+    var unlockCode = opts.lockApp === false
+      ? "if(+p[3])A=p[3],C=p[4]||2;else{let h=L.hash.slice(1).split('_');+h[0]&&(A=h[0],C=h[1]||(A==753?6:A==322330?1:2));}"
+      : "";
     var qOrigin = "'" + origin + "'";
     var qApp = "'" + appid + "'";
     var qCtx = "'" + contextid + "'";
 
     return (
-      "(function(){" +
-      "var O=" + qOrigin + ",A=" + qApp + ",C=" + qCtx + ",S=window,D=S.opener,P=[],T='',M=1,N=0,R=0;" +
-      "if(location.origin!=='https://steamcommunity.com')return alert('Open https://steamcommunity.com first.');" +
-      "if(!D||D.closed)return alert('Launch from SteamTools Import first.');" +
-      "if(!" + lockApp + "){var h=location.hash.match(/(\\d+)(?:_(\\d+))?/);if(h){A=h[1];C=h[2]||(A==='753'?'6':A==='322330'?'1':'2');}}" +
-      "var I=(/\\/profiles\\/(\\d{17})/.exec(location.pathname)||[])[1]||(S.g_rgProfileData&&S.g_rgProfileData.steamid)||S.g_steamID||'';" +
-      "function post(p,i,e){D.postMessage({type:'STEAMTOOLS_INVENTORY_IMPORT',appid:A,contextid:C,steamid:i,pages:p,partial:!!e,error:e||''},O);}" +
-      "function go(i){" +
-      "if(!/^\\d{17}$/.test(i))return alert('Sign into Steam first.');" +
-      "(function step(){" +
-      "if(!M||N++>=25){post(P,i,'');return alert('Sent '+P.length+' page(s) to SteamTools.');}" +
-      "fetch('https://steamcommunity.com/inventory/'+i+'/'+A+'/'+C+'?l=english&count=2000'+(T?'&start_assetid='+encodeURIComponent(T):''),{credentials:'include'})" +
-      ".then(function(r){if(r.status===429&&!R){R=1;return new Promise(function(ok){setTimeout(function(){ok('RETRY');},2500);});}R=0;if(!r.ok)throw Error('HTTP '+r.status);return r.json();})" +
-      ".then(function(d){if(d==='RETRY')return step();if(!d||d.success===0)throw Error((d&&d.error)||'Unavailable');P.push(d);M=d.more_items&&d.last_assetid;T=M||'';if(M)setTimeout(step,600);else step();})" +
-      ".catch(function(e){if(P.length){post(P,i,e.message);alert('Partial import ('+P.length+' page(s)): '+e.message);}else alert('SteamTools error: '+e.message);});" +
-      "})();}" +
-      "if(I)go(I);else fetch('https://steamcommunity.com/my/?xml=1',{credentials:'include'}).then(function(r){return r.text();}).then(function(t){" +
-      "var m=/<steamID64>(\\d{17})<\\/steamID64>/.exec(t);go(m?m[1]:'');}).catch(function(){alert('Cannot detect SteamID64.');});" +
-      "})();"
+      "(async()=>{let O=" + qOrigin + ",A=" + qApp + ",C=" + qCtx + ",S=window,d=document,D=S.opener,P=[],T='',M=1,N=0,L=S.location,X=u=>fetch(u,{credentials:'include'}),E=t=>d.createElement(t),b=S._st||(S._st=E('div')),z='textContent',U=t=>b[z]='SteamTools:'+t,W=m=>new Promise(r=>setTimeout(r,m)),Q=/^\\d{17}$/,g=S.g_rgProfileData;" +
+      "if(L.origin!=='https://steamcommunity.com')return alert('Open Steam first');" +
+      "let p=L.pathname.split('/');" +
+      unlockCode +
+      "let I=(Q.test(p[2])?p[2]:'')||(g&&g.steamid)||S.g_steamID||'';" +
+      "b.style='position:fixed;top:8px;right:8px;z-index:9999;background:#111;color:#fff;padding:8px';(d.body||d.documentElement).append(b);" +
+      "try{if(!I)I=((await(await X('/my/?xml=1')).text()).split('<steamID64>')[1]||'').slice(0,17);if(!Q.test(I))return U('Sign in first');let R=0,e='';" +
+      "try{while(M&&N<25){U('p'+(P.length+1));let r=await X('/inventory/'+I+'/'+A+'/'+C+'?l=english&count=2000'+(T?'&start_assetid='+encodeURIComponent(T):''));if(r.status===429&&!R){R=1;await W(2500);continue;}R=0;if(!r.ok)throw Error(r.status);let j=await r.json();if(!j||j.success<1)throw Error(j&&j.error||'Private');N++;P.push(j);M=j.more_items&&j.last_assetid;T=M||'';M&&await W(600);}}catch(x){if(!P.length)return U(x.message);e=x.message;}" +
+      "if(e)e+=' ';if(D&&!D.closed)try{D.postMessage({type:'STEAMTOOLS_INVENTORY_IMPORT',appid:A,contextid:C,steamid:I,pages:P,partial:!!e,error:e},O);U(e+'Sent '+P.length+'p');return setTimeout(()=>b.remove(),4e3);}catch(x){}" +
+      "let J=JSON.stringify(P[1]?P:P[0]),c=E('button'),a=E('a');U(e+P.length+'p ');c[z]='Copy';c.onclick=()=>navigator.clipboard.writeText(J).then(()=>c[z]='Copied');a[z]=' Save .json';a.style='color:#7cf';a.href=URL.createObjectURL(new Blob([J]));a.download='inv-'+A+'.json';b.append(c,a);" +
+      "}catch(x){U(x.message);}})();"
     );
   }
 
@@ -617,7 +611,7 @@
       '  <div class="st-field-group">',
       '    <label class="st-label" for="st-import-steamid">SteamID64, Custom URL, or Profile Link (optional)</label>',
       '    <div class="st-field-row">',
-      '      <input type="text" id="st-import-steamid" class="st-input" style="max-width:300px" placeholder="7656119..., custom URL, or profile link" autocorrect="off" autocapitalize="none" spellcheck="false" aria-invalid="false" aria-describedby="st-import-steamid-hint" data-error="st-import-steamid-err">',
+      '      <input type="text" id="st-import-steamid" class="st-input" maxlength="256" style="max-width:300px" placeholder="7656119..., custom URL, or profile link" autocorrect="off" autocapitalize="none" spellcheck="false" aria-invalid="false" aria-describedby="st-import-steamid-hint" data-error="st-import-steamid-err">',
       '      <a id="st-open-steam-inv-link" class="st-btn" href="https://steamcommunity.com/my/inventory/" target="_blank" rel="noopener noreferrer">Open My Steam Inventory</a>',
       '    </div>',
       '    <p class="st-hint" id="st-import-steamid-hint">' + DEFAULT_STEAMID_HINT + '</p>',
@@ -650,10 +644,10 @@
       '  </div>',
       '  <div class="st-tabpanel" role="tabpanel" id="st-panel-bookmarklet" aria-labelledby="st-tab-bookmarklet" hidden>',
       '    <div class="st-bookmarklet-box">',
-      '      <p class="st-hint" id="st-bm-steps">1. Drag the pill below to your bookmarks bar once. 2. Click Open Steam Popup. 3. Click the bookmarklet on Steam to stream all pages automatically back here.</p>',
+      '      <p class="st-hint" id="st-bm-steps">1. Drag the green pill to your bookmarks bar once. 2. Click Open Steam Tab (or open Steam Community in any tab). 3. Click the bookmarklet on Steam &mdash; it auto-syncs back here when launched from SteamTools, or lets you copy/save the JSON from any tab.</p>',
       '      <div class="st-field-row">',
       '        <a id="st-bookmarklet-anchor" class="st-bookmarklet-pill" href="javascript:void(0)">SteamTools Sync Bookmarklet</a>',
-      '        <button type="button" class="st-btn st-btn-primary" id="st-open-popup-btn">Open Steam Popup</button>',
+      '        <button type="button" class="st-btn st-btn-primary" id="st-open-popup-btn">Open Steam Tab</button>',
       '        <button type="button" class="st-btn" id="st-copy-bm-btn">Copy Bookmarklet URL</button>',
       '      </div>',
       '      <details>',
@@ -727,6 +721,7 @@
       popupRef: null,
       lastFocused: null,
       liveTimer: null,
+      inputResolveTimer: null,
       downOutside: false,
       resolvedSteamId: '',
       resolveSeq: 0
@@ -968,39 +963,13 @@
       els.bmSize.textContent = String(href.length);
     }
 
-    function decodeIncomingPage(item) {
-      if (typeof item !== 'string') return item;
-      var trimmed = item.trim();
-      if (trimmed && trimmed.charCodeAt(0) === 0xFEFF) {
-        trimmed = trimmed.slice(1).trim();
-      }
-      if (!trimmed) return item;
-      if (trimmed.charAt(0) === '{' || trimmed.charAt(0) === '[') {
-        return JSON.parse(trimmed);
-      }
-      return item;
-    }
-
     function processIncomingInputs(newInputs, appendToSession, parseOpts) {
       setBanner(null, '');
       setFieldError(els.jsonInput, els.jsonErr, 'st-import-json-hint', '');
       var isRestored = Boolean(parseOpts && parseOpts.restored);
-
-      var decodedNew = [];
-      try {
-        for (var p = 0; p < newInputs.length; p++) {
-          decodedNew.push(decodeIncomingPage(newInputs[p]));
-        }
-      } catch (jsonErr) {
-        var jsonMsg = 'Invalid JSON input: ' + (jsonErr && jsonErr.message ? jsonErr.message : 'parse error');
-        setFieldError(els.jsonInput, els.jsonErr, 'st-import-json-hint', jsonMsg);
-        setBanner('error', jsonMsg);
-        announce(jsonMsg);
-        return Promise.resolve(null);
-      }
-
-      var payloadList = appendToSession ? state.rawPages.concat(newInputs) : newInputs;
-      var parsedList = appendToSession ? state.parsedPages.concat(decodedNew) : decodedNew;
+      var list = Array.isArray(newInputs) ? newInputs.slice() : [newInputs];
+      var payloadList = appendToSession ? state.rawPages.concat(list) : list;
+      var parsedList = appendToSession ? state.parsedPages.concat(list) : list;
       var opts = state.options || {};
 
       return parseInWorkerOrSync(parsedList, {
@@ -1033,6 +1002,8 @@
               result.asset_count + ' item(s)).',
             { showClear: true }
           );
+        } else if (parseOpts && parseOpts.bannerOverride) {
+          setBanner('success', parseOpts.bannerOverride);
         } else if (!result.isEmoticonList) {
           setBanner('success', 'Parsed ' + result.asset_count + ' asset(s) across ' + result.page_count + ' page(s).');
         } else {
@@ -1134,17 +1105,182 @@
       });
     }
 
+    function writePendingTabStatus(tab, vanityName) {
+      if (!tab || tab.closed) return;
+      try {
+        tab.document.title = 'Resolving Steam profile...';
+        tab.document.body.style.cssText = 'background:#1b2026;color:#edf2f7;font:14px sans-serif;padding:24px;margin:0;';
+        tab.document.body.textContent = 'Resolving Steam custom URL "' + vanityName + '"...';
+      } catch (e) {
+        // Ignore cross-origin or popup restrictions
+      }
+    }
+
+    function openSteamTarget(kind, ev) {
+      var opts = state.options || {};
+      var appid = String(opts.appid || '753');
+      var ctx = String(opts.contextid || getConfig().getContextId(appid));
+      var parsed = parseSteamInput(els.steamIdInput.value);
+      var sid = /^\d{17}$/.test(state.resolvedSteamId) ? state.resolvedSteamId : parsed.steamid64;
+      var startAsset = (kind === 'next' && state.parsedResult && state.parsedResult.last_assetid)
+        ? state.parsedResult.last_assetid
+        : null;
+
+      function buildTargetUrl(resolvedSid) {
+        if (kind === 'tab') {
+          return resolvedSid
+            ? ('https://steamcommunity.com/profiles/' + encodeURIComponent(resolvedSid) + '/inventory/#' + encodeURIComponent(appid))
+            : ('https://steamcommunity.com/my/inventory/#' + encodeURIComponent(appid));
+        }
+        if (resolvedSid) {
+          return buildSteamInventoryUrl(resolvedSid, appid, ctx, startAsset);
+        }
+        return 'https://steamcommunity.com/my/inventory/#' + encodeURIComponent(appid);
+      }
+
+      if (parsed.invalid) {
+        if (ev) ev.preventDefault();
+        resolveInputNow(true);
+        els.steamIdInput.focus();
+        return;
+      }
+
+      if (ev) ev.preventDefault();
+
+      if (sid || !parsed.vanity) {
+        var directUrl = buildTargetUrl(sid);
+        // Open normal tab WITHOUT window features (keeps Bookmarks Bar visible) and WITHOUT noopener (keeps window.opener intact).
+        state.popupRef = root.open(directUrl, '_blank');
+        if (!state.popupRef) {
+          setBanner('error', 'Popup blocked by browser. Allow popups for this site and try again.');
+          return;
+        }
+        if (kind === 'tab') {
+          setBanner('success', 'Opened Steam Community tab. Click your SteamTools Sync bookmarklet in that tab.');
+        } else if (!sid && kind === 'json') {
+          setBanner('warning', 'Opened your Steam Inventory page (logged-in account). Enter a SteamID64 or custom URL above for the direct raw JSON URL.');
+        }
+        return;
+      }
+
+      // First-click unresolved vanity name (e.g. "ehsankia"): open tab synchronously under user gesture, resolve ID, then navigate it to JSON URL.
+      var pendingTab = root.open('about:blank', '_blank');
+      state.popupRef = pendingTab;
+      if (!pendingTab) {
+        setBanner('error', 'Popup blocked by browser. Allow popups for this site and try again.');
+        resolveInputNow(true);
+        return;
+      }
+      if (state.inputResolveTimer) {
+        clearTimeout(state.inputResolveTimer);
+        state.inputResolveTimer = null;
+      }
+      writePendingTabStatus(pendingTab, parsed.vanity);
+      resolveInputNow(true).then(function (res) {
+        if (res && res.ok && res.steamid64) {
+          var finalUrl = buildTargetUrl(res.steamid64);
+          try {
+            if (!pendingTab.closed) {
+              pendingTab.location.href = finalUrl;
+            }
+          } catch (navErr) {}
+          if (kind === 'tab') {
+            setBanner('success', 'Opened Steam Community tab. Click your SteamTools Sync bookmarklet in that tab.');
+          }
+          return;
+        }
+        try {
+          if (!pendingTab.closed) pendingTab.close();
+        } catch (closeErr) {}
+        els.steamIdInput.focus();
+      });
+    }
+
     els.steamIdInput.addEventListener('blur', function () {
+      if (state.inputResolveTimer) {
+        clearTimeout(state.inputResolveTimer);
+        state.inputResolveTimer = null;
+      }
       resolveInputNow(true);
     });
 
     els.steamIdInput.addEventListener('input', function () {
       state.resolveSeq++;
+      if (state.inputResolveTimer) {
+        clearTimeout(state.inputResolveTimer);
+        state.inputResolveTimer = null;
+      }
       var parsed = parseSteamInput(els.steamIdInput.value);
       state.resolvedSteamId = parsed.steamid64 || '';
       els.steamIdHint.textContent = DEFAULT_STEAMID_HINT;
       setFieldError(els.steamIdInput, els.steamIdErr, 'st-import-steamid-hint', '');
       updateSteamLinks();
+      if (parsed.vanity && !parsed.steamid64 && !parsed.invalid) {
+        state.inputResolveTimer = setTimeout(function () {
+          state.inputResolveTimer = null;
+          resolveInputNow(false);
+        }, 300);
+      }
+    });
+
+    var cfgApi = getConfig();
+    var attachGuard = typeof cfgApi.attachSteamIdPasteGuard === 'function'
+      ? cfgApi.attachSteamIdPasteGuard
+      : null;
+    if (attachGuard) {
+      attachGuard(els.steamIdInput, {
+        onJsonPaste: function (text) {
+          selectTab(0, false);
+          if (text.length <= 120000) {
+            els.jsonInput.value = text;
+          } else {
+            els.jsonInput.value = '';
+          }
+          var canAppend = !state.restoredSession && state.rawPages.length > 0 && state.parsedResult && state.parsedResult.more_items;
+          processIncomingInputs([text], Boolean(canAppend), {
+            bannerOverride: 'Detected inventory JSON pasted into the SteamID field — staged items automatically!'
+          });
+        },
+        onOversizedPaste: function () {
+          setFieldError(
+            els.steamIdInput,
+            els.steamIdErr,
+            'st-import-steamid-hint',
+            'Pasted text is too long for a SteamID. Paste inventory JSON in the box below.'
+          );
+          announce('Pasted text is too long for a SteamID.');
+        }
+      });
+    }
+
+    els.jsonInput.addEventListener('paste', function (ev) {
+      var clip = (ev && ev.clipboardData) || (root && root.clipboardData);
+      if (!clip || typeof clip.getData !== 'function') return;
+      var text = '';
+      try {
+        text = clip.getData('text/plain') || clip.getData('text') || '';
+      } catch (e) {
+        return;
+      }
+      if (text.length > 200000) {
+        ev.preventDefault();
+        els.jsonInput.value = '';
+        setBanner('warning', 'Staging large JSON (' + Math.round(text.length / 1024) + ' KB) in background worker...');
+        var canAppend = !state.restoredSession && state.rawPages.length > 0 && state.parsedResult && state.parsedResult.more_items;
+        processIncomingInputs([text], Boolean(canAppend));
+      }
+    });
+
+    els.openSteamInvLink.addEventListener('click', function (ev) {
+      if (ev.button === 0) {
+        openSteamTarget('json', ev);
+      }
+    });
+
+    els.wizardNextLink.addEventListener('click', function (ev) {
+      if (ev.button === 0) {
+        openSteamTarget('next', ev);
+      }
     });
 
     els.jsonInput.addEventListener('input', function () {
@@ -1224,21 +1360,8 @@
       }
     });
 
-    els.openPopupBtn.addEventListener('click', function () {
-      var parsed = parseSteamInput(els.steamIdInput.value);
-      var sid = /^\d{17}$/.test(state.resolvedSteamId) ? state.resolvedSteamId : parsed.steamid64;
-      var url = sid
-        ? 'https://steamcommunity.com/profiles/' + encodeURIComponent(sid) + '/inventory/'
-        : (parsed.vanity
-            ? 'https://steamcommunity.com/id/' + encodeURIComponent(parsed.vanity) + '/inventory/'
-            : 'https://steamcommunity.com/my/inventory/');
-      // Open WITHOUT noopener so window.opener remains intact for same-session postMessage.
-      state.popupRef = root.open(url, 'SteamToolsImportPopup', 'width=980,height=740,resizable=yes,scrollbars=yes');
-      if (!state.popupRef) {
-        setBanner('error', 'Popup blocked by browser. Allow popups for this site and try again.');
-      } else {
-        setBanner('success', 'Opened Steam Community popup. Click your SteamTools Sync bookmarklet in that popup window.');
-      }
+    els.openPopupBtn.addEventListener('click', function (ev) {
+      openSteamTarget('tab', ev);
     });
 
     els.copyBmBtn.addEventListener('click', function () {
@@ -1254,10 +1377,11 @@
       }
     });
 
-    // Strict verified postMessage listener from Steam Community popup ONLY
+    // Verified postMessage listener from Steam Community tab (strictly requires https://steamcommunity.com origin)
     root.addEventListener('message', function (ev) {
       if (ev.origin !== 'https://steamcommunity.com') return;
-      if (!state.popupRef || ev.source !== state.popupRef) return;
+      var fromOpenedTab = state.popupRef && ev.source === state.popupRef;
+      if (!fromOpenedTab && !dlg.open) return;
       var msg = ev.data;
       if (!msg || typeof msg !== 'object' || msg.type !== 'STEAMTOOLS_INVENTORY_IMPORT') return;
       if (!Array.isArray(msg.pages) || msg.pages.length === 0) return;
@@ -1287,6 +1411,10 @@
         state.parsedResult = null;
         state.restoredSession = false;
         state.lastFocused = doc.activeElement;
+        if (state.inputResolveTimer) {
+          clearTimeout(state.inputResolveTimer);
+          state.inputResolveTimer = null;
+        }
 
         els.title.textContent = state.options.title || 'Import Steam Inventory';
         els.subtitle.textContent = state.options.subtitle ||
@@ -1311,6 +1439,17 @@
 
         if (els.steamIdInput.value) {
           resolveInputNow(false);
+        }
+
+        if (state.options.initialJson) {
+          var initStr = String(state.options.initialJson);
+          if (initStr.length <= 120000) {
+            els.jsonInput.value = initStr;
+          }
+          processIncomingInputs([initStr], false, {
+            bannerOverride: 'Detected inventory JSON pasted into the SteamID field — staged items automatically!'
+          });
+          return;
         }
 
         loadImportSession(getScopeKey()).then(function (saved) {

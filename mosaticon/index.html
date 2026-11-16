@@ -15,8 +15,8 @@
 	<link rel="shortcut icon" href="/favicon.ico">
 	<link href="bootstrap-2.1.0.min.css" rel="stylesheet">
 	<link href="hotkeys.min.css" rel="stylesheet">
-	<link rel="stylesheet" href="style.css?v=20261116f">
-	<link rel="stylesheet" href="../css/steamtools-import.css?v=20261116f">
+	<link rel="stylesheet" href="style.css?v=20261116g">
+	<link rel="stylesheet" href="../css/steamtools-import.css?v=20261116g">
 </head>
 <body ng-controller="mosaticonCtrl" ng-cloak>
 	<a class="corner topbutton" style="left: 25px;" href="../">&laquo; Hub</a>
@@ -28,12 +28,14 @@
 	</div>
 
 	<div id="container">
-		<div id="stepbox" style="width: min(400px, 100%)">
+		<div id="stepbox">
 			<div style="margin: 10px"><b>Step one:</b> Load your emoticons</div>
-			<form id="addinput" class="input-prepend input-append form-horizontal" ng-submit="loadEmoticons()">
-				<label for="mos-userid" class="add-on" style="display:inline-block;margin-bottom:0;">SteamID</label>
-				<input id="mos-userid" style="width: 155px" type="text" ng-model="UserID" placeholder="SteamID, URL, :emote:, or blank" autocorrect="off" autocapitalize="none" spellcheck="false">
-				<button class="btn btn-inverse" type="submit">Load Emotes</button>
+			<form id="addinput" class="mos-form-row form-horizontal" ng-submit="loadEmoticons()">
+				<div class="input-prepend input-append" style="margin-bottom:0;">
+					<label for="mos-userid" class="add-on" style="display:inline-block;margin-bottom:0;">SteamID</label>
+					<input id="mos-userid" style="width: 155px" maxlength="256" type="text" ng-model="UserID" placeholder="SteamID, URL, :emote:, or blank" autocorrect="off" autocapitalize="none" spellcheck="false">
+					<button class="btn btn-inverse" type="submit">Load Emotes</button>
+				</div>
 				<button class="btn" type="button" ng-click="loadInventory()" title="Instant Local Import (works for private/large inventories & saves API quota)">Import…</button>
 			</form>
 			<div class="emotebox" ng-right-click="">
@@ -68,40 +70,45 @@
 					ng-click="selectEmote($event, e)" ng-right-click="toggleEmote(e)" draggable="false"
 					ng-class="{select: e.select}" tooltip-popup-delay='200' tooltip-placement="top" tooltip=":{{e.name}}:" />
 			</div>
-			<div ng-if="emoticons.length > 0" style="text-align: center">
-				<div class="btn-group" style="display: inline-block">
-					<button style="display: inline-block" class="btn" ng-click="disableAll()">Disable All</button>
-					<button style="display: inline-block" class="btn" ng-click="enableAll()">Enable All</button>
+			<div ng-if="emoticons.length > 0" style="text-align: center; margin-top: 6px;">
+				<div class="btn-group" style="display: inline-block; vertical-align: middle; margin: 4px 2px;">
+					<button class="btn" ng-click="disableAll()">Disable All</button>
+					<button class="btn" ng-click="enableAll()">Enable All</button>
 				</div>
-				<div class="btn-group" style="display: inline-block">
-					<span class="input-prepend" style="margin-bottom:0; margin-left: 4px">
-						<span class="add-on" style="width: 40px">Sort</span>
-					</span>
-					<button type="button" class="btn" ng-model="sortMode" ng-click="sortByHue()" btn-radio="'hue'">Hue</button>
-					<button type="button" class="btn" ng-model="sortMode" ng-click="sortByLength()" btn-radio="'char'">Chars</button>
-					<button type="button" class="btn" ng-model="sortMode" ng-click="sortByGame()" btn-radio="'game'">Game</button>
+				<div class="mos-ctrl-group">
+					<span class="mos-addon" style="width: 44px">Sort</span>
+					<div class="btn-group">
+						<button type="button" class="btn" ng-model="sortMode" ng-click="sortByHue()" btn-radio="'hue'">Hue</button>
+						<button type="button" class="btn" ng-model="sortMode" ng-click="sortByLength()" btn-radio="'char'">Chars</button>
+						<button type="button" class="btn" ng-model="sortMode" ng-click="sortByGame()" btn-radio="'game'">Game</button>
+					</div>
 				</div>
 			</div>
-			<br><br>
 
 			<div ng-show="processedEmotes && emoticons.length > 0">
-				<div style="margin-top: 20px;"><b>Step two:</b> Load Image or Blank Canvas</div>
-				<span class="btn btn-default btn-file" style="margin: 10px;">
-					<input type="file" id="imageLoader">
-				</span>
-				<button style="display: inline-block" class="btn" ng-click="blankCanvas()">Blank Canvas</button>
-				<br><br>
-				<canvas id="imageCanvas" width="200" ng-show="imageLoaded"></canvas>
+				<div style="margin-top: 16px;"><b>Step two:</b> Load Image or Blank Canvas</div>
+				<div class="mos-form-row" style="margin-top: 8px;">
+					<span class="btn btn-default btn-file">
+						<input type="file" id="imageLoader">
+					</span>
+					<button type="button" class="btn" ng-click="blankCanvas()">Blank Canvas</button>
+				</div>
+				<canvas id="imageCanvas" width="200" ng-show="imageLoaded" style="margin-top: 6px;"></canvas>
 			</div>
 
-			<div ng-show="imageLoaded || blankLoaded">
-				<span>Width: </span> <input type="number" min="1" max="50" ng-model="width.value" ng-change="imageLoaded ? updateUpscale() : resizeBlank()">
-				<input type="range" min="1" max="50" step="1" ng-model="width.value"
-					ng-mousedown="wSliderActive=1" ng-mouseup="wSliderActive=0; updateUpscale()">
-				<br>
-				<span>Height: </span> <input type="number" min="1" max="50" ng-model="height.value" ng-disabled="!blankLoaded" ng-change="resizeBlank()">
-				<input type="range" min="1" max="50" step="1" ng-model="height.value" ng-disabled="!blankLoaded"
-					ng-mousedown="hSliderActive=1" ng-mouseup="hSliderActive=0; updateUpscale()">
+			<div ng-show="imageLoaded || blankLoaded" style="margin-top: 8px;">
+				<div class="mos-dim-row">
+					<span class="mos-dim-label">Width:</span>
+					<input type="number" min="1" max="50" ng-model="width.value" ng-change="imageLoaded ? updateUpscale() : resizeBlank()">
+					<input type="range" min="1" max="50" step="1" ng-model="width.value"
+						ng-mousedown="wSliderActive=1" ng-mouseup="wSliderActive=0; updateUpscale()">
+				</div>
+				<div class="mos-dim-row">
+					<span class="mos-dim-label">Height:</span>
+					<input type="number" min="1" max="50" ng-model="height.value" ng-disabled="!blankLoaded" ng-change="resizeBlank()">
+					<input type="range" min="1" max="50" step="1" ng-model="height.value" ng-disabled="!blankLoaded"
+						ng-mousedown="hSliderActive=1" ng-mouseup="hSliderActive=0; updateUpscale()">
+				</div>
 			</div>
 		</div>
 		<div id="preview" ng-show="processedEmotes && emoticons.length > 0">
@@ -109,56 +116,60 @@
 				<button class="btn btn-inverse action-btn" ng-click="importMenu()">Import</button>
 				<button class="btn btn-inverse action-btn" ng-click="exportMosaic()">Export</button>
 			</div>
-			<div class="btn-group" style="display: inline-block" ng-show="imageLoaded">
-				<span class="input-prepend" style="margin-bottom:0;">
-					<span class="add-on" style="width: 100px">Compare Mode</span>
-				</span>
-				<button type="button" class="btn" ng-model="compareMode" btn-radio="'rgb'">RGB</button>
-				<button type="button" class="btn" ng-model="compareMode" btn-radio="'lab'">Lab</button>
-				<button type="button" class="btn" ng-model="compareMode" btn-radio="'hsl'">HSL</button>
-			</div>
-			<div style="margin: 10px; display: inline-block" class="btn-group" ng-show="imageLoaded">
-				<span class="input-prepend" style="margin-bottom:0;">
-					<span class="add-on" style="width: 60px">Quality</span>
-				</span>
-				<button type="button" class="btn" ng-model="quality" btn-radio="'1'">1</button>
-				<button type="button" class="btn" ng-model="quality" btn-radio="'2'">2</button>
-				<button type="button" class="btn" ng-model="quality" btn-radio="'3'">3</button>
-			</div>
-			<br>
-			<button style="margin-top: 8px" type="button" class="btn tool-btn" ng-model="tool" ng-click="undo()" ng-disabled="undoHistory.length == 0" ng-show="imageLoaded || blankLoaded" aria-label="Undo" title="Undo">
-				<i class="icon-unshare" aria-hidden="true"></i>
-			</button>
-			<div class="btn-group" style="margin: 8px; margin-bottom: 0; display: inline-block" ng-show="imageLoaded || blankLoaded">
-				<span class="input-prepend" style="margin-bottom:0">
-					<span class="add-on" style="width: 50px; height: 30px; line-height: 30px;">Tool</span>
-				</span>
-				<button type="button" class="btn tool-btn" ng-model="tool" btn-radio="'pen'" aria-label="Pen tool" aria-pressed="{{tool === 'pen'}}" title="Pen tool"><i class="icon-pencil" aria-hidden="true"></i></button>
-				<button type="button" class="btn tool-btn" ng-model="tool" btn-radio="'line'" aria-label="Line tool" aria-pressed="{{tool === 'line'}}" title="Line tool"><i class="icon-vector-path-line" aria-hidden="true"></i></button>
-				<button type="button" class="btn tool-btn" ng-model="tool" btn-radio="'rect'" aria-label="Rectangle tool" aria-pressed="{{tool === 'rect'}}" title="Rectangle tool"><i class="icon-vector-path-square" aria-hidden="true"></i></button>
-				<button type="button" class="btn tool-btn" ng-model="tool" btn-radio="'circ'" aria-label="Circle tool" aria-pressed="{{tool === 'circ'}}" title="Circle tool"><i class="icon-vector-path-circle" aria-hidden="true"></i></button>
-				<button type="button" class="btn tool-btn" ng-model="tool" btn-radio="'move'" aria-label="Move tool" aria-pressed="{{tool === 'move'}}" title="Move tool"><i class="icon-move" aria-hidden="true"></i></button>
-				<button type="button" class="btn tool-btn" ng-model="tool" btn-radio="'fill'" aria-label="Fill bucket tool" aria-pressed="{{tool === 'fill'}}" title="Fill bucket tool"><i class="icon-tint" aria-hidden="true"></i></button>
-			</div>
-			<div class="btn-group" style="margin: 8px; margin-bottom: 0; display: inline-block" ng-show="imageLoaded || blankLoaded">
-				<button type="button" class="btn tool-btn" ng-click="horizontalFlip()" aria-label="Flip mosaic horizontally" title="Flip horizontally"><i class="icon-text-width" aria-hidden="true"></i></button>
-				<button type="button" class="btn tool-btn" ng-click="verticalFlip()" aria-label="Flip mosaic vertically" title="Flip vertically"><i class="icon-text-height" aria-hidden="true"></i></button>
-			</div>
-			<br>
-			<div style="margin-bottom: -12px; font-size: 10px;">Press <b>?</b> for keyboard shortcuts</div>
-			<br>
-			<div ng-mousemove="mouseMove($event)" ng-mousedown="mouseDown($event)" ng-mouseup="mouseUp()"
-				id="mosaic" ng-show="mosaic" ng-style="{'width': (width.value * 18) + 'px'}">
-				<div ng-repeat="row in mosaic track by $index" style="margin-top: -2px;">
-					<img alt=":{{e.name}}:" width="18" height="18" ng-repeat="e in row track by $index"
-						ng-right-click="toggleEmote(e)"
-						ng-src="{{EMOTE_IMG_BASE}}/{{e.name}}" draggable="false"
-						onmousedown="if (event.preventDefault) event.preventDefault()">
+			<div ng-show="imageLoaded" style="margin-top: 4px;">
+				<div class="mos-ctrl-group">
+					<span class="mos-addon" style="width: 100px">Compare Mode</span>
+					<div class="btn-group">
+						<button type="button" class="btn" ng-model="compareMode" btn-radio="'rgb'">RGB</button>
+						<button type="button" class="btn" ng-model="compareMode" btn-radio="'lab'">Lab</button>
+						<button type="button" class="btn" ng-model="compareMode" btn-radio="'hsl'">HSL</button>
+					</div>
+				</div>
+				<div class="mos-ctrl-group">
+					<span class="mos-addon" style="width: 60px">Quality</span>
+					<div class="btn-group">
+						<button type="button" class="btn" ng-model="quality" btn-radio="'1'">1</button>
+						<button type="button" class="btn" ng-model="quality" btn-radio="'2'">2</button>
+						<button type="button" class="btn" ng-model="quality" btn-radio="'3'">3</button>
+					</div>
 				</div>
 			</div>
-			<br>
-			<span><b>Character count:</b> {{mosaic | charSum}}</span>
-			<div style="margin-bottom: -12px; font-size: 10px;"><b>Limits: </b>Showcase = 8000, Comment = 800</div>
+			<div class="mos-tool-bar" ng-show="imageLoaded || blankLoaded">
+				<button type="button" class="btn tool-btn" ng-model="tool" ng-click="undo()" ng-disabled="undoHistory.length == 0" aria-label="Undo" title="Undo">
+					<i class="icon-unshare" aria-hidden="true"></i>
+				</button>
+				<div class="mos-ctrl-group mos-tool-group" style="margin:0;">
+					<span class="mos-addon">Tool</span>
+					<div class="btn-group">
+						<button type="button" class="btn tool-btn" ng-model="tool" btn-radio="'pen'" aria-label="Pen tool" aria-pressed="{{tool === 'pen'}}" title="Pen tool"><i class="icon-pencil" aria-hidden="true"></i></button>
+						<button type="button" class="btn tool-btn" ng-model="tool" btn-radio="'line'" aria-label="Line tool" aria-pressed="{{tool === 'line'}}" title="Line tool"><i class="icon-vector-path-line" aria-hidden="true"></i></button>
+						<button type="button" class="btn tool-btn" ng-model="tool" btn-radio="'rect'" aria-label="Rectangle tool" aria-pressed="{{tool === 'rect'}}" title="Rectangle tool"><i class="icon-vector-path-square" aria-hidden="true"></i></button>
+						<button type="button" class="btn tool-btn" ng-model="tool" btn-radio="'circ'" aria-label="Circle tool" aria-pressed="{{tool === 'circ'}}" title="Circle tool"><i class="icon-vector-path-circle" aria-hidden="true"></i></button>
+						<button type="button" class="btn tool-btn" ng-model="tool" btn-radio="'move'" aria-label="Move tool" aria-pressed="{{tool === 'move'}}" title="Move tool"><i class="icon-move" aria-hidden="true"></i></button>
+						<button type="button" class="btn tool-btn" ng-model="tool" btn-radio="'fill'" aria-label="Fill bucket tool" aria-pressed="{{tool === 'fill'}}" title="Fill bucket tool"><i class="icon-tint" aria-hidden="true"></i></button>
+					</div>
+				</div>
+				<div class="btn-group" style="margin:0; display:inline-flex;">
+					<button type="button" class="btn tool-btn" ng-click="horizontalFlip()" aria-label="Flip mosaic horizontally" title="Flip horizontally"><i class="icon-text-width" aria-hidden="true"></i></button>
+					<button type="button" class="btn tool-btn" ng-click="verticalFlip()" aria-label="Flip mosaic vertically" title="Flip vertically"><i class="icon-text-height" aria-hidden="true"></i></button>
+				</div>
+			</div>
+			<div style="font-size: 10px; margin-top: 2px;" ng-show="imageLoaded || blankLoaded">Press <b>?</b> for keyboard shortcuts</div>
+			<div class="mosaic-scroll-wrap" role="region" aria-label="Emoticon mosaic canvas" tabindex="0">
+				<div ng-mousemove="mouseMove($event)" ng-mousedown="mouseDown($event)" ng-mouseup="mouseUp()"
+					id="mosaic" ng-show="mosaic" ng-style="{'width': ((mosaic[0] ? mosaic[0].length : width.value) * 18) + 'px'}">
+					<div class="mosaic-row" ng-repeat="row in mosaic track by $index">
+						<img alt=":{{e.name}}:" width="18" height="18" ng-repeat="e in row track by $index"
+							ng-right-click="toggleEmote(e)"
+							ng-src="{{EMOTE_IMG_BASE}}/{{e.name}}" draggable="false"
+							onmousedown="if (event.preventDefault) event.preventDefault()">
+					</div>
+				</div>
+			</div>
+			<div style="margin-top: 8px;">
+				<span><b>Character count:</b> {{mosaic | charSum}}</span>
+				<div style="font-size: 10px;"><b>Limits: </b>Showcase = 8000, Comment = 800</div>
+			</div>
 		</div>
 	</div>
 	<div id="nn_skinl" class="adswitch_skin"></div>
@@ -181,11 +192,11 @@
 	<script src="hotkeys.min.js"></script>
 	<script src="ui-bootstrap-tpls-0.12.0.min.js"></script>
 	<script src="kdTree.min.js"></script>
-	<script src="colors.js?v=20261116f"></script>
-	<script src="../js/steamtools-config.js?v=20261116f"></script>
-	<script src="../js/import-worker.js?v=20261116f"></script>
-	<script src="../js/steamtools-import.js?v=20261116f"></script>
-	<script src="main.js?v=20261116f"></script>
+	<script src="colors.js?v=20261116g"></script>
+	<script src="../js/steamtools-config.js?v=20261116g"></script>
+	<script src="../js/import-worker.js?v=20261116g"></script>
+	<script src="../js/steamtools-import.js?v=20261116g"></script>
+	<script src="main.js?v=20261116g"></script>
 
 	<!-- Start of StatCounter Code for Default Guide -->
 	<script>

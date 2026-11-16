@@ -216,3 +216,64 @@ test('Angular ng-app and ng-controller match main JS modules across all apps', (
     assert.ok(ctrlDeclared, `${jsRel} missing controller ${ctrlMatch[2]}`);
   }
 });
+
+test('bookmarklet stays under 2 KB and supports standalone tabs and /inventory/ paths', () => {
+  const { IMP } = createMockEnv();
+  const code = IMP.buildBookmarkletCode({ appid: '753', contextid: '6' });
+  const href = IMP.buildBookmarkletHref({ appid: '753', contextid: '6' });
+  assert.ok(href.startsWith('javascript:'), 'bookmarklet href must start with javascript:');
+  assert.ok(href.length < 2048, `Expected bookmarklet href < 2048 bytes, got ${href.length}`);
+  assert.ok(!code.includes('Launch from SteamTools Import first.'), 'bookmarklet should work in standalone tabs');
+  assert.ok(code.includes('navigator.clipboard.writeText') && code.includes('Blob('), 'standalone fallback must offer copy + save');
+  assert.ok(code.includes('pathname.split'), 'bookmarklet should extract SteamID64 from /profiles/ or /inventory/ paths');
+  new Function(code);
+});
+
+test('classifySteamIdPaste and attachSteamIdPasteGuard block JSON/oversized pastes without mutating input', () => {
+  const { CFG } = createMockEnv();
+  assert.deepStrictEqual(CFG.classifySteamIdPaste('76561197976086060'), { block: false, isJson: false });
+  assert.deepStrictEqual(CFG.classifySteamIdPaste('ehsankia'), { block: false, isJson: false });
+  assert.deepStrictEqual(CFG.classifySteamIdPaste('https://steamcommunity.com/id/ehsankia/'), { block: false, isJson: false });
+  assert.deepStrictEqual(CFG.classifySteamIdPaste('  {"assets":[],"descriptions":[]}'), { block: true, isJson: true });
+  assert.deepStrictEqual(CFG.classifySteamIdPaste('\uFEFF[{"name":"steamhappy"}]'), { block: true, isJson: true });
+  assert.deepStrictEqual(CFG.classifySteamIdPaste('x'.repeat(600)), { block: true, isJson: false });
+
+  const attrs = {};
+  const listeners = {};
+  const fakeInput = {
+    getAttribute: (k) => attrs[k] || null,
+    setAttribute: (k, v) => { attrs[k] = String(v); },
+    addEventListener: (ev, fn) => { listeners[ev] = fn; }
+  };
+  let pastedJson = '';
+  let oversizedCount = 0;
+  CFG.attachSteamIdPasteGuard(fakeInput, {
+    onJsonPaste: (t) => { pastedJson = t; },
+    onOversizedPaste: () => { oversizedCount++; }
+  });
+  assert.strictEqual(attrs.maxlength, '256');
+  assert.strictEqual(typeof listeners.paste, 'function');
+
+  let preventedJson = false;
+  listeners.paste({
+    clipboardData: { getData: () => '{"assets":[1]}' },
+    preventDefault: () => { preventedJson = true; }
+  });
+  assert.strictEqual(preventedJson, true);
+  assert.strictEqual(pastedJson, '{"assets":[1]}');
+
+  let preventedShort = false;
+  listeners.paste({
+    clipboardData: { getData: () => 'ehsankia' },
+    preventDefault: () => { preventedShort = true; }
+  });
+  assert.strictEqual(preventedShort, false);
+
+  let preventedLong = false;
+  listeners.paste({
+    clipboardData: { getData: () => 'a'.repeat(700) },
+    preventDefault: () => { preventedLong = true; }
+  });
+  assert.strictEqual(preventedLong, true);
+  assert.strictEqual(oversizedCount, 1);
+});

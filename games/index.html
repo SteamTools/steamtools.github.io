@@ -19,8 +19,8 @@
 	<link rel="shortcut icon" href="/favicon.ico">
 	<link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" integrity="sha384-4FeI0trTH/PCsLWrGCD1mScoFu9Jf2NdknFdFoJhXZFwsvzZ3Bo5sAh7+zL8Xgnd" crossorigin="anonymous" rel="stylesheet">
 	<link rel="stylesheet" type="text/css" href="jquery.mCustomScrollbar.css" media="all">
-	<link rel="stylesheet" type="text/css" href="../css/steamtools-import.css?v=20261116f" media="all">
-	<link rel="stylesheet" type="text/css" href="style.css?v=20261116f" media="all">
+	<link rel="stylesheet" type="text/css" href="../css/steamtools-import.css?v=20261116g" media="all">
+	<link rel="stylesheet" type="text/css" href="style.css?v=20261116g" media="all">
 </head>
 <body ng-controller="SteamCtrl" ng-cloak>
 	<a class="corner topbutton" style="left: 25px;" href="../">&laquo; Hub</a>
@@ -39,25 +39,32 @@
 				<a ng-href="[[steamLoginUrl]]" ng-show="!loggedIn"><img src="/img/steam_openid.png" alt="Sign in through Steam" width="114" height="43"></a>
 				<button type="button" class="btn btn-mini" ng-show="loggedIn" ng-click="userLogout()">Logout</button>
 			</div>
-			<button type="button" class="st-icon-btn left" ng-click="deleteUsers()" aria-label="Remove selected users">
-				<i class="icon-trash icon-white" aria-hidden="true" rel="tooltip" data-placement="left" data-original-title="Remove selected"></i>
-			</button>
-			<form id="addinput" class="input-prepend input-append form-horizontal" ng-submit="addUser()">
-				<label for="games-steamid" class="add-on" style="display:inline-block;margin-bottom:0;">SteamID</label>
-				<input id="games-steamid" style="width: min(250px, 100%);" type="text" ng-model="UserID" autocorrect="off" autocapitalize="none" spellcheck="false">
-				<button type="submit" class="btn"><i class="icon-user" aria-hidden="true"></i> Add User</button>
-			</form>
-			<div ng-show="userError" role="status" aria-live="polite" style="color:#f88; font-size:12px; margin:4px 0;">[[userError]]</div>
-			<span class="right" title="This tool allows you to see the intersection of your and your friends' games, and filter them using flags. Red border means profile is private.">
-				<i style="margin-top: -10px" class="icon-info-sign icon-white" rel="tooltip" data-placement="right"
-				data-original-title="This tool allows you to see the intersection of your and your friends' games, and filter them using flags. Red border means profile is private." aria-hidden="true"></i>
-			</span>
-			<ul>
+			<div class="games-toolbar">
+				<button type="button" class="st-icon-btn" ng-click="deleteUsers()" aria-label="Remove selected users">
+					<i class="icon-trash icon-white" aria-hidden="true" rel="tooltip" data-placement="left" data-original-title="Remove selected"></i>
+				</button>
+				<form id="addinput" class="input-prepend input-append form-horizontal" ng-submit="addUser()">
+					<label for="games-steamid" class="add-on" style="display:inline-flex;align-items:center;margin-bottom:0;">SteamID</label>
+					<input id="games-steamid" style="width: min(240px, 100%);" maxlength="256" type="text" ng-model="UserID" autocorrect="off" autocapitalize="none" spellcheck="false">
+					<button type="submit" class="btn"><i class="icon-user" aria-hidden="true"></i> Add User</button>
+				</form>
+				<span class="games-info-icon" title="This tool allows you to see the intersection of your and your friends' games, and filter them using flags. Red border means profile is private.">
+					<i class="icon-info-sign icon-white" rel="tooltip" data-placement="right"
+					data-original-title="This tool allows you to see the intersection of your and your friends' games, and filter them using flags. Red border means profile is private." aria-hidden="true"></i>
+				</span>
+			</div>
+			<div ng-show="userError" role="status" aria-live="polite" style="color:#f88; font-size:12px; margin:4px 0; text-align:center;">[[userError]]</div>
+			<ul class="user-grid">
 				<li class="user [[userSelected(user.steamid)]] [[isPrivate(user.steamid)]]" ng-repeat="user in Users" fadey="500" draggable="true" ng-click="selectUser(user.steamid)">
-					<button type="button" class="st-icon-btn left" ng-click="$event.stopPropagation(); showFriends(user.steamid,user.name)" aria-label="Friends list for [[user.name]]"><i class="icon-list" aria-hidden="true" rel="tooltip" data-placement="top" data-original-title="Friends list"></i></button>
-					<p class="left name">[[user.name]]</p>
-					<button type="button" class="st-icon-btn right" ng-click="$event.stopPropagation(); removeUser(user.steamid)" aria-label="Remove [[user.name]]"><i class="icon-remove" aria-hidden="true" rel="tooltip" data-placement="top" data-original-title="Remove"></i></button>
-					<img ng-src="[[user.avatar]]" alt="[[user.name]]'s Avatar" width="64" height="64" draggable="false"><br>
+					<div class="user-card-head" ng-hide="user.loading">
+						<button type="button" class="st-icon-btn" ng-click="$event.stopPropagation(); showFriends(user.steamid,user.name)" aria-label="Friends list for [[user.name]]"><i class="icon-list" aria-hidden="true" rel="tooltip" data-placement="top" data-original-title="Friends list"></i></button>
+						<span class="name" title="[[user.name]]">[[user.name]]</span>
+						<button type="button" class="st-icon-btn" ng-click="$event.stopPropagation(); removeUser(user.steamid)" aria-label="Remove [[user.name]]"><i class="icon-remove" aria-hidden="true" rel="tooltip" data-placement="top" data-original-title="Remove"></i></button>
+					</div>
+					<div class="user-card-head" ng-show="user.loading" style="justify-content: center;">
+						<span class="name">Loading...</span>
+					</div>
+					<img class="user-avatar" ng-class="{'is-loading-spinner': user.loading}" ng-src="[[user.avatar]]" alt="[[user.name]]'s Avatar" width="64" height="64" draggable="false">
 				</li>
 			</ul>
 			<form id="importbtn" class="form-horizontal">
@@ -110,7 +117,7 @@
 				</a>
 			</div>
 				<button ng-show="gameList.length>0" class="btn btn-inverse" ng-click="exportGames()"
-					style="margin: 5px 0 -5px 68px;">Export List</button>
+					style="display: block; margin: 8px auto 0;">Export List</button>
 		</div>
 	</div>
 	<dialog id="friendListModal" class="st-friends-dialog" closedby="any" aria-labelledby="myModalLabel">
@@ -128,11 +135,10 @@
 			<ng:switch on="!!(friendStatus==3)">
 				<div ng:switch-when="true"> Profile is private. </div>
 			</ng:switch>
-			<ul>
+			<ul class="friend-grid">
 				<li class="friend [[friendSelected(friend.steamid)]]" ng-repeat="friend in Friends" fadey="500" draggable="true" ng-click="selectFriend(friend.steamid)">
-					<p class="left name">[[friend.name]]</p>
-					<img ng-src="[[friend.avatar]]" alt="[[friend.name]]'s Avatar" width="64" height="64" draggable="false">
-					<br>
+					<span class="name" title="[[friend.name]]">[[friend.name]]</span>
+					<img class="user-avatar" ng-src="[[friend.avatar]]" alt="[[friend.name]]'s Avatar" width="64" height="64" draggable="false">
 				</li>
 			</ul>
 		</div>
@@ -142,8 +148,8 @@
 		</div>
 	</dialog>
 
-	<script type="text/javascript" src="../js/steamtools-config.js?v=20261116f"></script>
-	<script type="text/javascript" src="steam.js?v=20261116f"></script>
+	<script type="text/javascript" src="../js/steamtools-config.js?v=20261116g"></script>
+	<script type="text/javascript" src="steam.js?v=20261116g"></script>
 
 	<!-- Start of StatCounter Code for Default Guide -->
 	<script>

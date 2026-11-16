@@ -299,7 +299,7 @@ angular.module('valueApp', ['ui.bootstrap'])
 		}
 	}
 
-	$scope.openImportModal = function() {
+	$scope.openImportModal = function(initialJson) {
 		if (!window.SteamToolsImport) return;
 		cancelPendingRetry();
 		var idHint = String($scope.UserID || '').trim();
@@ -307,6 +307,7 @@ angular.module('valueApp', ['ui.bootstrap'])
 			mode: 'itemvalue',
 			appid: $scope.appid.model,
 			steamId: idHint,
+			initialJson: typeof initialJson === 'string' ? initialJson : undefined,
 			title: 'Import Inventory for ' + ($scope.typeMap[$scope.appid.model] || 'Steam'),
 			subtitle: 'Zero captcha & zero server rate limits — prices come directly from SteamTools CDN.',
 			onImport: function(parsed) {
@@ -343,6 +344,22 @@ angular.module('valueApp', ['ui.bootstrap'])
 			}
 		});
 	};
+
+	if (typeof CFG.attachSteamIdPasteGuard === 'function') {
+		CFG.attachSteamIdPasteGuard(document.getElementById('iv-steamid'), {
+			onJsonPaste: function(text) {
+				$scope.$applyAsync(function() {
+					$scope.openImportModal(text);
+				});
+			},
+			onOversizedPaste: function() {
+				$scope.$applyAsync(function() {
+					$scope.status = "Pasted text is too long for a SteamID — click Import Inventory to paste JSON.";
+					$scope.showImportCta = true;
+				});
+			}
+		});
+	}
 
 	$scope.loadItems = function(){
 		if (!$scope.UserID || $scope.UserID.trim() === "") {

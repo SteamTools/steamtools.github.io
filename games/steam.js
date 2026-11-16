@@ -114,6 +114,20 @@ function SteamCtrl($scope, $http){
 	$scope.userError = "";
 
 	$scope.gameData = {};
+	if (typeof CFG.attachSteamIdPasteGuard === 'function') {
+		CFG.attachSteamIdPasteGuard(document.getElementById('games-steamid'), {
+			onJsonPaste: function() {
+				safeApply(function() {
+					$scope.userError = "That looks like JSON — enter a SteamID64, custom URL, or profile link.";
+				});
+			},
+			onOversizedPaste: function() {
+				safeApply(function() {
+					$scope.userError = "Pasted text is too long for a SteamID — enter a SteamID64 or profile URL.";
+				});
+			}
+		});
+	}
 	var _knownAppNames = Object.create(null);
 	if (Array.isArray(CFG.TOP_6_APPS)) {
 		for (var ti = 0; ti < CFG.TOP_6_APPS.length; ti++) {
@@ -353,7 +367,7 @@ function SteamCtrl($scope, $http){
 		var query = $scope.UserID.trim();
 		$scope.UserID = "";
 		$scope.userError = "";
-		$scope.Users.push( {"name": "Loading","avatar":"img/loading.gif"} );
+		$scope.Users.push({ "name": "Loading...", "avatar": "img/loading.gif", "loading": true });
 		fetchGamesInfo({ user: query }).then(function(data) {
 			safeApply(function() {
 				appendUsers(data);

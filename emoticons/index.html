@@ -13,8 +13,8 @@
 	<title>Emoticon Gallery</title>
 	<link rel="shortcut icon" href="/favicon.ico">
 	<link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.no-icons.min.css" integrity="sha384-nITPVmSN/64KqhfcWtEJQwuzHIHqSgbSPmp74MISiB8zab+d6ThLyqTpw8bYMBqY" crossorigin="anonymous" rel="stylesheet">
-	<link href="angular.rangeSlider.css?v=20261116f" rel="stylesheet">
-	<link href="../css/steamtools-import.css?v=20261116f" rel="stylesheet">
+	<link href="angular.rangeSlider.css?v=20261116g" rel="stylesheet">
+	<link href="../css/steamtools-import.css?v=20261116g" rel="stylesheet">
 
 	<style>
 		body{
@@ -49,7 +49,7 @@
 		}
 
 		#help {
-			width: min(675px, calc(100vw - 16px));
+			width: min(675px, 100%);
 			max-width: 100%;
 			box-sizing: border-box;
 			padding: 8px;
@@ -73,16 +73,19 @@
 			background-color: #222;
 			border-radius: 5px;
 			margin: auto;
-			max-width: calc(100vw - 16px);
+			max-width: 100%;
 			box-sizing: border-box;
 			padding: 5px 0;
 			margin-top: 10px;
 		}
 		.corner {
 			position: absolute;
-			opacity: 0.8;
+			opacity: 0.85;
 			z-index: 10;
 			top: 10px;
+			display: inline-flex;
+			align-items: center;
+			gap: 4px;
 		}
 		.topbutton {
 			display: inline-block;
@@ -97,20 +100,112 @@
 			width: 75px;
 			text-align: center;
 			margin: 0 3px;
+			box-sizing: content-box;
+		}
+		.gallery-top-bar {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			justify-content: center;
+			gap: 12px;
+			margin: 10px auto;
+			padding: 0 8px;
+		}
+		.gallery-auth-actions {
+			display: inline-flex;
+			flex-wrap: wrap;
+			align-items: center;
+			justify-content: center;
+			gap: 8px;
+		}
+		.st-bar-group {
+			display: inline-flex;
+			flex-wrap: wrap;
+			align-items: stretch;
+			justify-content: center;
+			vertical-align: middle;
+			margin: 5px;
+		}
+		.st-bar-group > .add-on {
+			height: 30px;
+			box-sizing: border-box;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			margin: 0;
+			border-radius: 4px 0 0 4px;
+		}
+		.st-bar-group > input {
+			height: 30px;
+			box-sizing: border-box;
+			margin: 0;
+			border-radius: 0 4px 4px 0;
+		}
+		.st-bar-group > .btn {
+			float: none;
+			height: 30px;
+			box-sizing: border-box;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			border-radius: 0;
+			margin-left: -1px;
+		}
+		.st-bar-group > .btn:last-child {
+			border-radius: 0 4px 4px 0;
+		}
+		.range-row {
+			width: min(820px, 100%);
+			box-sizing: border-box;
+			padding: 0 4px;
+			margin: 8px auto 14px;
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			justify-content: center;
+			gap: 10px;
+		}
+		.range-title {
+			min-width: 115px;
+			text-align: right;
+			font-weight: bold;
+			font-size: 14pt;
 		}
 		.slider {
 			display: inline-block;
-			width: min(500px, 85vw);
-			margin-bottom: -7px;
+			width: min(460px, 100%);
+		}
+		.slider.ngrs-range-slider {
+			margin: 4px 0 22px;
+		}
+		@media (max-width: 1180px) {
+			body { padding-top: 48px; }
 		}
 		@media (max-width: 768px) {
 			body { padding-top: 48px; }
 			.btn-group { white-space: normal; max-width: 100%; }
+			.range-title, .limits-label { min-width: 0; text-align: center; }
+		}
+		@media (max-width: 480px) {
+			.corner {
+				max-width: calc(100vw - 8px);
+				gap: 4px;
+			}
+			.corner.topbutton,
+			.corner .topbutton {
+				width: auto;
+				min-width: 0;
+				font-size: 11px;
+				line-height: 1.2;
+				padding: 3px 6px;
+				margin: 0 2px;
+			}
 		}
 		.limits-label {
-			vertical-align: text-bottom;
-			margin-left: 3px;
+			min-width: 155px;
+			text-align: left;
 			font-weight: bold;
+			white-space: nowrap;
 		}
 		.corner img:hover {opacity: 0.8;}
 		.topbutton:hover {background-color: #CDE; text-decoration: none;}
@@ -126,15 +221,15 @@
 		<a class="topbutton" id="donate" href="https://www.paypal.com/donate/?business=HLRYRKCXRYX7C">Donate</a>
 	</div>
 
-	<div style="margin: 10px">
-		<div style="display: inline-block; vertical-align: top; margin-top: 7px;">
+	<div class="gallery-top-bar">
+		<div class="gallery-auth-actions">
 			<a ng-href="{{steamLoginUrl}}" ng-if="!loggedIn">
 				<img src='/img/steam_openid.png' alt="Sign in through Steam" width="114" height="43"/>
 			</a>
-			<button type="button" class="btn btn-primary" ng-click="openInventoryImporter()" style="margin-left: 6px; vertical-align: top;">Import Inventory</button>
-			<button type="button" class="btn" ng-if="loggedIn" ng-click="userLogout()" style="margin-left: 4px; vertical-align: top;">Logout</button>
+			<button type="button" class="btn btn-primary" ng-click="openInventoryImporter()">Import Inventory</button>
+			<button type="button" class="btn" ng-if="loggedIn" ng-click="userLogout()">Logout</button>
 		</div>
-		<div style="display: inline-block; margin: 0 15px">
+		<div class="gallery-auth-status">
 			<b>Number of items:</b> {{filteredItems.length}}
 			<br>
 			<i role="status" aria-live="polite" aria-atomic="true">{{user_status}}</i>
@@ -144,12 +239,12 @@
 		</div>
 	</div>
 
-	<div class="input-prepend" style="margin: 5px; display: inline-block">
-		<label for="emote-filter-input" class="add-on" style="width:50px;display:inline-block;margin-bottom:0;">Filter</label>
+	<div class="st-bar-group input-prepend">
+		<label for="emote-filter-input" class="add-on" style="width:50px;">Filter</label>
 		<input id="emote-filter-input" class="span2" type="text" ng-model="filterText" ng-model-options="{debounce: 250}" autocorrect="off" autocapitalize="none" spellcheck="false" />
 	</div>
 
-	<div style="display: inline-block; margin: 5px;" class="input-prepend btn-group">
+	<div class="st-bar-group input-prepend btn-group">
 		<span class="add-on" style="width:50px">Order</span>
 		<button type="button" class="btn btn-inverse" ng-class="{active: order === byHue}" aria-pressed="{{order === byHue}}" ng-click="setOrder(byHue)">Hue</button>
 		<button type="button" class="btn btn-inverse" ng-class="{active: order === byBrightness}" aria-pressed="{{order === byBrightness}}" ng-click="setOrder(byBrightness)">Brightness</button>
@@ -160,14 +255,14 @@
 		<button type="button" class="btn btn-inverse" ng-class="{active: order === byPrice}" aria-pressed="{{order === byPrice}}" ng-click="setOrder(byPrice)">Price</button>
 		<button type="button" class="btn btn-inverse" ng-class="{active: order === byLength}" aria-pressed="{{order === byLength}}" ng-click="setOrder(byLength)">Name Length</button>
 		<button type="button" class="btn btn-inverse" ng-class="{active: order === byRandom}" aria-pressed="{{order === byRandom}}" ng-click="setOrder(byRandom)">Random</button>
-	</div><br>
-	<div style="width: min(750px, 100%); margin: auto;" ng-show="showRange">
-		<span style="font-weight: bold; font-size: 14pt">{{limits.type}}: </span>
-		<div class="slider" range-slider min="0" max="100" model-min="limits.min" model-max="limits.max"></div>
+	</div>
+	<div class="range-row" ng-show="showRange">
+		<span class="range-title">{{limits.type}}:</span>
+		<div class="slider" range-slider min="0" max="100" model-min="limits.min" model-max="limits.max" on-handle-up="flushRangeFilter()"></div>
 		<span class="limits-label">{{limits.rangeLabel}}</span>
 	</div>
 
-	<div style="display: inline-block; margin: 5px" class="input-prepend btn-group">
+	<div class="st-bar-group input-prepend btn-group">
 		<span class="add-on" style="width:50px">Toggle</span>
 		<button type="button" class="btn btn-inverse" ng-class="{active: names}" aria-pressed="{{!!names}}" ng-click="names=!names">Name</button>
 		<button type="button" class="btn btn-inverse" ng-class="{active: small}" aria-pressed="{{!!small}}" ng-click="small=!small">Size</button>
@@ -193,11 +288,11 @@
 
 	<script src="https://code.jquery.com/jquery-2.2.0.min.js" integrity="sha384-K+ctZQ+LL8q6tP7I94W+qzQsfRV2a+AfHIi9k8z8l9ggpc8X+Ytst4yBo/hH+8Fk" crossorigin="anonymous"></script>
 	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.6/angular.min.js" integrity="sha384-Wm/fcldF74JKp+X609mkWQUjA/AsRbY2zqUhRjznliDz924gK7f19e8nOcxVVDof" crossorigin="anonymous"></script>
-	<script src="angular.rangeSlider.js"></script>
-	<script src="../js/steamtools-config.js?v=20261116f"></script>
-	<script src="../js/import-worker.js?v=20261116f"></script>
-	<script src="../js/steamtools-import.js?v=20261116f"></script>
-	<script src="main.js?v=20261116f"></script>
+	<script src="angular.rangeSlider.js?v=20261116g"></script>
+	<script src="../js/steamtools-config.js?v=20261116g"></script>
+	<script src="../js/import-worker.js?v=20261116g"></script>
+	<script src="../js/steamtools-import.js?v=20261116g"></script>
+	<script src="main.js?v=20261116g"></script>
 
 	<!-- Start of StatCounter Code for Default Guide -->
 	<script>

@@ -159,7 +159,7 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 		e.hue = vecs.hue;
 	}
 
-	$scope.loadInventory = function() {
+	$scope.loadInventory = function(initialJson) {
 		if (!window.SteamToolsImport) return;
 		var idHint = String($scope.UserID || '').trim();
 		window.SteamToolsImport.openImportDialog({
@@ -167,6 +167,7 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 			appid: '753',
 			contextid: '6',
 			steamId: idHint,
+			initialJson: typeof initialJson === 'string' ? initialJson : undefined,
 			title: 'Load Owned Emoticons',
 			subtitle: 'Paste EmoticonList JSON (even []), or paste/drop/bookmarklet-sync your 753/6 Steam inventory JSON.',
 			onImport: function(parsed) {
@@ -200,6 +201,21 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 			}
 		});
 	};
+
+	if (typeof CFG.attachSteamIdPasteGuard === 'function') {
+		CFG.attachSteamIdPasteGuard(document.getElementById('mos-userid'), {
+			onJsonPaste: function(text) {
+				$scope.$applyAsync(function() {
+					$scope.loadInventory(text);
+				});
+			},
+			onOversizedPaste: function() {
+				$scope.$applyAsync(function() {
+					$scope.status = "Pasted text is too long for a SteamID — click Import… to paste JSON.";
+				});
+			}
+		});
+	}
 
 	$scope.emoticons = [];
 	$scope.usedEmotes = [];
@@ -438,11 +454,10 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 
 	$scope.displayEmoticons = function() {
 		$scope.mosaic = [];
-		var line = [];
-		for (var i=0; i<$scope.emoticons.length; i++) {
-			line.push($scope.emoticons[i]);
+		var cols = Math.max(1, ($scope.width && $scope.width.value) || 30);
+		for (var i = 0; i < $scope.emoticons.length; i += cols) {
+			$scope.mosaic.push($scope.emoticons.slice(i, i + cols));
 		}
-		$scope.mosaic.push(line);
 	};
 
 	$scope.averageColor = function(colors) {
@@ -610,20 +625,35 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 		}).result;
 	};
 
+	function getMosaicLocalCoords(ev) {
+		var mdiv = document.getElementById("mosaic");
+		if (!mdiv) return { x: 0, y: 0 };
+		var rect = mdiv.getBoundingClientRect();
+		var cs = window.getComputedStyle(mdiv);
+		var padL = parseFloat(cs.paddingLeft) || 0;
+		var padT = parseFloat(cs.paddingTop) || 0;
+		return {
+			x: ev.clientX - rect.left - mdiv.clientLeft - padL + mdiv.scrollLeft,
+			y: ev.clientY - rect.top - mdiv.clientTop - padT + mdiv.scrollTop
+		};
+	}
+
 	$scope.mouseMove = function(e) {
 		if (!$scope.clicking) return;
+		if (!$scope.mosaic || !$scope.mosaic.length || !$scope.mosaic[0] || !$scope.mosaic[0].length) return;
 
-		var container = document.getElementById("container");
-		var mdiv = document.getElementById("mosaic");
-		var x = e.pageX - container.offsetLeft - mdiv.offsetLeft - 9;
-		var y = e.pageY - container.offsetTop - mdiv.offsetTop - 9;
-		var x1 = Math.max(0, Math.min(Math.floor(x/18), $scope.mosaic[0].length - 1));
-		var y1 = Math.max(0, Math.min(Math.floor(y/18), $scope.mosaic.length - 1));
+		var coords = getMosaicLocalCoords(e);
+		var x = coords.x;
+		var y = coords.y;
+		var y1 = Math.max(0, Math.min(Math.floor(y / 18), $scope.mosaic.length - 1));
+		var rowLen = $scope.mosaic[y1] ? $scope.mosaic[y1].length : 0;
+		if (rowLen === 0) return;
+		var x1 = Math.max(0, Math.min(Math.floor(x / 18), rowLen - 1));
 
-		var x2 = Math.floor($scope.startX/18);
-		var y2 = Math.floor($scope.startY/18);
-		x2 = Math.max(0, Math.min(x2, $scope.mosaic[0].length - 1));
+		var y2 = Math.floor($scope.startY / 18);
 		y2 = Math.max(0, Math.min(y2, $scope.mosaic.length - 1));
+		var rowLen2 = $scope.mosaic[y2] ? $scope.mosaic[y2].length : rowLen;
+		var x2 = Math.max(0, Math.min(Math.floor($scope.startX / 18), rowLen2 - 1));
 
 		var i, j;
 		var dx = Math.abs(x2 - x1);
@@ -726,13 +756,13 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 	$scope.startX = 0;
 	$scope.startY = 0;
 	$scope.mouseDown = function(e) {
+		if (!$scope.mosaic || !$scope.mosaic.length || !$scope.mosaic[0] || !$scope.mosaic[0].length) return;
 		$scope.clicking = true;
 		$scope.mosaicCopy = copyMatrix($scope.mosaic);
 
-		var container = document.getElementById("container");
-		var mdiv = document.getElementById("mosaic");
-		$scope.startX = e.pageX - container.offsetLeft - mdiv.offsetLeft - 9;
-		$scope.startY = e.pageY - container.offsetTop - mdiv.offsetTop - 9;
+		var coords = getMosaicLocalCoords(e);
+		$scope.startX = coords.x;
+		$scope.startY = coords.y;
 
 		$scope.mouseMove(e);
 	};
@@ -766,7 +796,7 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 		for (j = 0; j < $scope.mosaic.length; j++) {
 			for (i = 0; i < $scope.mosaic[j].length; i++) {
 				emote = $scope.mosaic[j][i];
-				if (emote.used) continue;
+				if (!emote || emote.used) continue;
 				$scope.usedEmotes.push(emote);
 				emote.used = true;
 			}

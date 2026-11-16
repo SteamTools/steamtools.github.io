@@ -497,7 +497,8 @@
                                 originalPosition = (modelValue / range) * 100,
                                 originalClick = client(event),
                                 previousClick = originalClick,
-                                previousProposal = false;
+                                previousProposal = false,
+                                rafPending = false;
 
                             if (angular.isFunction(scope.onHandleDown)) {
                                 scope.onHandleDown();
@@ -598,8 +599,16 @@
                                             modelMax(parseFloat(parseFloat((((proposal * range) / 100) + scope.min)).toFixed(scope.decimalPlaces)));
                                         }
 
-                                        // update angular
-                                        scope.$apply();
+                                        // Coalesce angular digests to once per animation frame while dragging
+                                        if (!rafPending) {
+                                            rafPending = true;
+                                            window.requestAnimFrame(function() {
+                                                rafPending = false;
+                                                if (!scope.$$destroyed) {
+                                                    scope.$apply();
+                                                }
+                                            });
+                                        }
 
                                         previousProposal = proposal;
 
@@ -608,6 +617,13 @@
                                     previousClick = currentClick;
 
                                 }).bind(offEvent, function() {
+
+                                    if (rafPending) {
+                                        rafPending = false;
+                                        if (!scope.$$destroyed) {
+                                            scope.$apply();
+                                        }
+                                    }
 
                                     if (angular.isFunction(scope.onHandleUp)) {
                                         scope.onHandleUp();

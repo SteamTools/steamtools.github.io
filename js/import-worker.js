@@ -263,7 +263,7 @@
         throw new Error('Steam returned empty/null JSON. Your inventory may be private or rate-limited.');
       }
       if (typeof val === 'string') {
-        var trimmed = val.trim();
+        var trimmed = val.replace(/^\uFEFF/, '').trim();
         if (!trimmed) return;
         if (trimmed.charAt(0) !== '{' && trimmed.charAt(0) !== '[') {
           if (mode === 'emotes' || /:[A-Za-z0-9_.-]+:/.test(trimmed)) {

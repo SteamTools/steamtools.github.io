@@ -23,6 +23,9 @@
 			text-align: center;
 			font-size: 14px;
 			color: #626262;
+			margin: 0;
+			padding: 12px 12px 32px;
+			overflow-wrap: break-word;
 		}
 
 		h1, h2, h3, h4, h5 {
@@ -34,10 +37,13 @@
 			font-family: 'Open Sans';
 			text-align: left;
 			margin: auto;
-			width: min(800px, calc(100vw - 24px));
+			width: min(800px, 100%);
 			max-width: 100%;
 			padding: 0 12px;
 			box-sizing: border-box;
+		}
+		:where(a, code) {
+			overflow-wrap: anywhere;
 		}
 		:where(a, button, [tabindex]):focus-visible {
 			outline: 2px solid #159;

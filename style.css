@@ -100,11 +100,17 @@ footer {
 }
 
 
+footer > div {
+	vertical-align: top;
+}
+
 footer #affiliates {
 	color: #777;
 	font-weight: bold;
 	background-color: #444;
-	height: 25px;
+	min-height: 25px;
+	height: auto;
+	padding: 2px 8px;
 	font-size: 12pt;
 	font-family: 'Oswald', Calibri, Arial, sans-serif;
 	line-height: 25px;

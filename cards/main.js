@@ -183,7 +183,7 @@ function($scope, $http, $filter, $compile, $modal, $timeout){
 		$scope.importUserData();
 	};
 
-	$scope.openInventoryImporter = function() {
+	$scope.openInventoryImporter = function(initialJson) {
 		if (!window.SteamToolsImport) return;
 		var idHint = ($scope.user && $scope.user.steamid64) || String($scope.UserID || '').trim();
 		window.SteamToolsImport.openImportDialog({
@@ -191,6 +191,7 @@ function($scope, $http, $filter, $compile, $modal, $timeout){
 			appid: '753',
 			contextid: '6',
 			steamId: idHint,
+			initialJson: typeof initialJson === 'string' ? initialJson : undefined,
 			title: 'Import Steam Inventory (753/6)',
 			subtitle: 'Computes card sets, foil cards, emotes, and backgrounds locally without backend calls.',
 			onImport: function(parsed) {
@@ -227,6 +228,21 @@ function($scope, $http, $filter, $compile, $modal, $timeout){
 			}
 		});
 	};
+
+	if (typeof CFG.attachSteamIdPasteGuard === 'function') {
+		CFG.attachSteamIdPasteGuard(document.getElementById('cards-steamid'), {
+			onJsonPaste: function(text) {
+				$timeout(function() {
+					$scope.openInventoryImporter(text);
+				}, 0);
+			},
+			onOversizedPaste: function() {
+				$timeout(function() {
+					$scope.user_status = "Pasted text is too long for a SteamID — use Import Inventory (753/6) below.";
+				}, 0);
+			}
+		});
+	}
 
 	// Load user data into rows
 	$scope.importUserData = function() {
@@ -538,12 +554,12 @@ function($scope, $http, $filter, $compile, $modal, $timeout){
 	};
 
 	// Add currency bar to table
-	var currencyMenuHTML = '<div class="input-group btn-group">' +
-'   <div class="input-group-addon">Currency</div>' +
-'   <div class="dropdown" dropdown>' +
-'       <a class="btn btn-default" href="" dropdown-toggle>' +
-			'{{ CDATA[curIndex].name }}' +
-		'<b class="caret"></b></a>' +
+	var currencyMenuHTML = '<div class="input-group">' +
+'   <span class="input-group-addon">Currency</span>' +
+'   <div class="input-group-btn dropdown" dropdown>' +
+'       <button type="button" class="btn btn-default dropdown-toggle" dropdown-toggle>' +
+			'{{ CDATA[curIndex].name }} ' +
+		'<span class="caret"></span></button>' +
 '       <ul class="dropdown-menu" role="menu">' +
 '           <li ng-repeat="currency in CDATA">' +
 '               <a href="" ng-click="$event.preventDefault(); setCurrency($index)">{{currency.name}}</a>' +

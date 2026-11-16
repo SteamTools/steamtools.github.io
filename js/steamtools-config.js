@@ -1061,6 +1061,52 @@
     }
   }
 
+  function classifySteamIdPaste(rawText) {
+    var s = String(rawText === null || rawText === undefined ? '' : rawText);
+    var trimmed = s.replace(/^\uFEFF/, '').trim();
+    if (!trimmed) {
+      return { block: false, isJson: false };
+    }
+    var first = trimmed.charAt(0);
+    if (first === '{' || first === '[') {
+      return { block: true, isJson: true };
+    }
+    if (s.length > 512) {
+      return { block: true, isJson: false };
+    }
+    return { block: false, isJson: false };
+  }
+
+  function attachSteamIdPasteGuard(inputEl, callbacks) {
+    if (!inputEl || typeof inputEl.addEventListener !== 'function') return;
+    if (inputEl._stPasteGuarded) return;
+    inputEl._stPasteGuarded = true;
+    if (typeof inputEl.getAttribute === 'function' && !inputEl.getAttribute('maxlength') && typeof inputEl.setAttribute === 'function') {
+      inputEl.setAttribute('maxlength', '256');
+    }
+    var cb = callbacks || {};
+    inputEl.addEventListener('paste', function (ev) {
+      var clip = (ev && ev.clipboardData) || (root && root.clipboardData);
+      if (!clip || typeof clip.getData !== 'function') return;
+      var text = '';
+      try {
+        text = clip.getData('text/plain') || clip.getData('text') || '';
+      } catch (e) {
+        return;
+      }
+      var res = classifySteamIdPaste(text);
+      if (!res.block) return;
+      if (typeof ev.preventDefault === 'function') {
+        ev.preventDefault();
+      }
+      if (res.isJson && typeof cb.onJsonPaste === 'function') {
+        cb.onJsonPaste(text);
+      } else if (!res.isJson && typeof cb.onOversizedPaste === 'function') {
+        cb.onOversizedPaste(text);
+      }
+    });
+  }
+
   function refresh() {
     config.CDN_BASE = resolveUrlSetting('st_cdn_base', DEFAULTS.CDN_BASE);
     config.CDN2_BASE = resolveUrlSetting('st_cdn2_base', DEFAULTS.CDN2_BASE);
@@ -1114,6 +1160,8 @@
     normalizeSteamAssetUrl: normalizeSteamAssetUrl,
     isInAppWebview: isInAppWebview,
     mountWebviewNotice: mountWebviewNotice,
+    classifySteamIdPaste: classifySteamIdPaste,
+    attachSteamIdPasteGuard: attachSteamIdPasteGuard,
     refresh: refresh
   };
 
