@@ -172,12 +172,31 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 			subtitle: 'Paste EmoticonList JSON (even []), or paste/drop/bookmarklet-sync your 753/6 Steam inventory JSON.',
 			onImport: function(parsed) {
 				$scope.$applyAsync(function() {
-					var emotes = Array.isArray(parsed && parsed.emoticons) ? parsed.emoticons : [];
-					if (emotes.length === 0) {
-						$scope.status = "No emoticons found in import.";
-					} else {
-						$scope.loadEmotes(emotes);
+					var DEFAULT_EMOTES = [
+						'steambored',
+						'steamfacepalm',
+						'steamhappy',
+						'steammocking',
+						'steamsad',
+						'steamsalty'
+					];
+					var imported = Array.isArray(parsed && parsed.emoticons) ? parsed.emoticons : [];
+					var seen = Object.create(null);
+					var emotes = [];
+					var i;
+					for (i = 0; i < imported.length; i++) {
+						if (imported[i] && !seen[imported[i]]) {
+							seen[imported[i]] = true;
+							emotes.push(imported[i]);
+						}
 					}
+					for (i = 0; i < DEFAULT_EMOTES.length; i++) {
+						if (!seen[DEFAULT_EMOTES[i]]) {
+							seen[DEFAULT_EMOTES[i]] = true;
+							emotes.push(DEFAULT_EMOTES[i]);
+						}
+					}
+					$scope.loadEmotes(emotes);
 				});
 			}
 		});

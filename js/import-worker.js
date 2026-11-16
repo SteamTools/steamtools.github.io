@@ -443,6 +443,24 @@
     return merged.descMap[cid + '_' + iid] || merged.descMap[cid + '_0'] || merged.descByClass[cid] || null;
   }
 
+  function normalize753Type(itemClass, rawType) {
+    var ic = String(itemClass || '').toLowerCase();
+    var rt = String(rawType || '').toLowerCase();
+    if (ic === 'item_class_2' || ic === 'trading card' || rt.indexOf('trading card') !== -1) {
+      return 'card';
+    }
+    if (ic === 'item_class_3' || ic === 'profile background' || rt.indexOf('profile background') !== -1) {
+      return 'background';
+    }
+    if (ic === 'item_class_4' || ic === 'emoticon' || rt.indexOf('emoticon') !== -1) {
+      return 'emoticon';
+    }
+    if (ic === 'item_class_5' || ic === 'booster pack' || rt.indexOf('booster pack') !== -1) {
+      return 'booster';
+    }
+    return '???';
+  }
+
   function extractDescriptionMeta(desc, appid) {
     var tags = Array.isArray(desc.tags) ? desc.tags : [];
     var type = null;
@@ -464,7 +482,7 @@
       if (cat === 'item_class') {
         itemClass = internal || label;
       } else if (cat === 'cardborder') {
-        cardBorder = internal;
+        cardBorder = internal || label;
       } else if (cat === 'game') {
         game = label;
       } else if (cat === 'rarity') {
@@ -485,6 +503,9 @@
     var hashName = desc.market_hash_name || desc.name || '';
     var quotedKey = quoteSteamKey(hashName);
     var effectiveAppId = String(appid || desc.appid || '753');
+    if (effectiveAppId === '753') {
+      type = normalize753Type(itemClass, type || desc.type);
+    }
 
     return {
       market_hash_name: hashName,
@@ -492,8 +513,10 @@
       quoted_key: quotedKey,
       bucket: effectiveAppId === '753' ? fnv1a32Hex2(quotedKey) : null,
       url: effectiveAppId + '/' + quotedKey,
+      bg: sanitizeHexColor(desc.background_color, '292929'),
       color: sanitizeHexColor(desc.name_color, 'D2D2D2'),
       icon: desc.icon_url || desc.icon_url_large || '',
+      marketable: Boolean(desc.marketable === 1 || desc.marketable === '1' || desc.marketable === true),
       type: type,
       rarity: rarity,
       rcolor: rcolor,
@@ -631,6 +654,7 @@
           cards[gameAppId] = [0, 0, 0, 0];
         }
         var isFoil = meta.cardBorder === 'cardborder_1' ||
+          meta.cardBorder === 'Foil' ||
           /\(Foil Trading Card\)/i.test(String(dObj.type || '')) ||
           /\(Foil\)$/i.test(String(dObj.market_hash_name || ''));
         if (isFoil) {

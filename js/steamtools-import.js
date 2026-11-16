@@ -305,11 +305,14 @@
 
     function applyPriceLookup(priceMap) {
       var valued = [];
+      var hasPriceMap = Boolean(priceMap && Object.keys(priceMap).length > 0);
       for (var i = 0; i < list.length; i++) {
         var it = list[i];
-        var cents = priceMap && Object.prototype.hasOwnProperty.call(priceMap, it.quoted_key)
-          ? priceMap[it.quoted_key]
-          : undefined;
+        var hasPrice = priceMap && Object.prototype.hasOwnProperty.call(priceMap, it.quoted_key);
+        if (appStr === '730' && hasPriceMap && !hasPrice && it.marketable === false) {
+          continue;
+        }
+        var cents = hasPrice ? priceMap[it.quoted_key] : undefined;
         var priceDollars = typeof cents === 'number' && Number.isFinite(cents) ? cents / 100 : 0;
         valued.push(Object.assign({}, it, { price: priceDollars }));
       }
