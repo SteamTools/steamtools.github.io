@@ -114,6 +114,15 @@ function SteamCtrl($scope, $http){
 	$scope.userError = "";
 
 	$scope.gameData = {};
+	var _knownAppNames = Object.create(null);
+	if (Array.isArray(CFG.TOP_6_APPS)) {
+		for (var ti = 0; ti < CFG.TOP_6_APPS.length; ti++) {
+			var topApp = CFG.TOP_6_APPS[ti];
+			if (topApp && topApp.appid && topApp.appid !== '753' && topApp.name) {
+				_knownAppNames[String(topApp.appid)] = String(topApp.name);
+			}
+		}
+	}
 	var _gameBucketPromises = Object.create(null);
 	var _loadedGameBuckets = Object.create(null);
 	var _monolithGameDataPromise = null;
@@ -314,18 +323,20 @@ function SteamCtrl($scope, $http){
 		var newList = [];
 		for (var i = 0; i < s.fullGameList.length; i++){
 			var appid = s.fullGameList[i];
-			if (s.gameData.hasOwnProperty(appid)){
-				var entry = s.gameData[appid];
-				if (q) {
-					var gname = String((entry && entry.name) || appid).toLowerCase();
-					if (gname.indexOf(q) === -1) continue;
-				}
-				if (flags.length > 0) {
-					var res = subtract(flags, (entry && entry.flags) || []);
-					if (res.length !== 0) continue;
-				}
-				newList.push(appid);
+			var hasEntry = s.gameData.hasOwnProperty(appid);
+			var entry = hasEntry ? s.gameData[appid] : null;
+			if (flags.length > 0 && !hasEntry) {
+				continue;
 			}
+			if (q) {
+				var gname = String(s.getGameName(appid) || appid).toLowerCase();
+				if (gname.indexOf(q) === -1) continue;
+			}
+			if (flags.length > 0) {
+				var res = subtract(flags, (entry && entry.flags) || []);
+				if (res.length !== 0) continue;
+			}
+			newList.push(appid);
 		}
 		s.gameList = newList;
 	}
@@ -501,9 +512,7 @@ function SteamCtrl($scope, $http){
 	$scope.exportGames = function(){
 		var results = [];
 		for (var i = 0; i < $scope.gameList.length; i++) {
-			var appid = $scope.gameList[i];
-			var e = $scope.gameData && $scope.gameData[appid];
-			results.push((e && e.name) ? e.name : String(appid));
+			results.push($scope.getGameName($scope.gameList[i]));
 		}
 		results.sort();
 
@@ -518,8 +527,11 @@ function SteamCtrl($scope, $http){
 	};
 
 	$scope.getGameName = function(appid) {
-		var e = $scope.gameData && $scope.gameData[appid];
-		return (e && e.name) ? e.name : ('App ' + String(appid));
+		var key = String(appid);
+		var e = $scope.gameData && $scope.gameData[key];
+		if (e && e.name) return e.name;
+		if (_knownAppNames[key]) return _knownAppNames[key];
+		return 'App ' + key;
 	};
 
 	function gamesLoaded(){

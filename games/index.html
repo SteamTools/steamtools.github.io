@@ -19,8 +19,8 @@
 	<link rel="shortcut icon" href="/favicon.ico">
 	<link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" integrity="sha384-4FeI0trTH/PCsLWrGCD1mScoFu9Jf2NdknFdFoJhXZFwsvzZ3Bo5sAh7+zL8Xgnd" crossorigin="anonymous" rel="stylesheet">
 	<link rel="stylesheet" type="text/css" href="jquery.mCustomScrollbar.css" media="all">
-	<link rel="stylesheet" type="text/css" href="../css/steamtools-import.css?v=20261116e" media="all">
-	<link rel="stylesheet" type="text/css" href="style.css?v=20261116e" media="all">
+	<link rel="stylesheet" type="text/css" href="../css/steamtools-import.css?v=20261116f" media="all">
+	<link rel="stylesheet" type="text/css" href="style.css?v=20261116f" media="all">
 </head>
 <body ng-controller="SteamCtrl" ng-cloak>
 	<a class="corner topbutton" style="left: 25px;" href="../">&laquo; Hub</a>
@@ -106,7 +106,7 @@
 			<div id="game-content">
 				<a ng-repeat="game in gameList | orderBy:getGameName" adjust-size
 					ng-href="https://store.steampowered.com/app/[[game]]" target="_blank" rel="noopener noreferrer">
-					<div class="game" draggable="true" ng-bind="gameData[game].name" scrollbar></div>
+					<div class="game" draggable="true" ng-bind="getGameName(game)" scrollbar></div>
 				</a>
 			</div>
 				<button ng-show="gameList.length>0" class="btn btn-inverse" ng-click="exportGames()"
@@ -142,8 +142,8 @@
 		</div>
 	</dialog>
 
-	<script type="text/javascript" src="../js/steamtools-config.js?v=20261116e"></script>
-	<script type="text/javascript" src="steam.js?v=20261116e"></script>
+	<script type="text/javascript" src="../js/steamtools-config.js?v=20261116f"></script>
+	<script type="text/javascript" src="steam.js?v=20261116f"></script>
 
 	<!-- Start of StatCounter Code for Default Guide -->
 	<script>
