@@ -308,12 +308,22 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 		});
 	};
 
+	function rebuildEmoteTree(emotesList) {
+		var points = [];
+		for (var i = 0; i < emotesList.length; i++) {
+			var em = emotesList[i];
+			if (em && em.rgb1) {
+				var pt = em.rgb1.toObject();
+				pt.emote = em;
+				points.push(pt);
+			}
+		}
+		return new kdTree(points, dist, Array.range(3));
+	}
+
 	function commitEmoteVectors(e, vecs, gen) {
 		if (gen !== loadGeneration) return;
 		applyDecodedVectors(e, vecs);
-		var obj = e.rgb1.toObject();
-		obj.emote = e;
-		$scope.emoteTree.insert(obj);
 		if (!$scope.selectedEmote) {
 			$scope.selectedEmote = e;
 			$scope.selectedEmote.select = true;
@@ -406,6 +416,7 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 			if ($scope.toProcess <= 0) {
 				$scope.toProcess = 0;
 				$scope.emoticons = $scope.orderBy($scope.emoticons, 'hue');
+				$scope.emoteTree = rebuildEmoteTree($scope.emoticons);
 				$scope.processedEmotes = $scope.emoticons.length > 0;
 				$scope.status = $scope.emoticons.length > 0 ? "" : "Could not load emoticon images.";
 				if ($scope.emoticons.length > 0) {
@@ -491,7 +502,8 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 		if ($scope.emoticons.length === 0 || !$scope.imageLoaded) return;
 
 		var q = $scope.q;
-		var tree = new kdTree([], dist, Array.range(q * q * 3));
+		var dims = Array.range(q * q * 3);
+		var points = [];
 
 		var emote, obj;
 		for (var j = 0; j < $scope.emoticons.length; j++) {
@@ -500,9 +512,10 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 			if (!emote.disable) {
 				obj = emote[$scope.compareMode + q].toObject();
 				obj.emote = emote;
-				tree.insert(obj);
+				points.push(obj);
 			}
 		}
+		var tree = new kdTree(points, dist, dims);
 		$scope.usedEmotes = [];
 
 		var ctx = $scope.smallCvs.getContext("2d", {willReadFrequently: true});

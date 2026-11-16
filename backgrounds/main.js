@@ -1,66 +1,14 @@
 angular.module('BGApp', ['ui-rangeSlider'])
-.filter('range', function($filter) {
-	return function(input, limits) {
-		var newMin, newMax;
-		if (limits.type === "Random" || limits.type === "Name" || limits.type === "Game") {
-			return input;
-		} else if (limits.type === "Hue" || limits.type === "Brightness" || limits.type === "Saturation") {
-			newMin = limits.min / 100 * 255;
-			newMax = limits.max / 100 * 255;
-		} else if (limits.type === "Price") {
-			newMin = Math.pow(limits.min, 3) / Math.pow(100, 3) * limits.maxPrice;
-			newMax = Math.pow(limits.max, 3) / Math.pow(100, 3) * limits.maxPrice;
-		} else if (limits.type === "Date") {
-			newMin = limits.min / 100 * limits.dateRange;
-			newMax = limits.max / 100 * limits.dateRange;
-		}
-
-		var minLabel, maxLabel;
-		if (limits.type === "Price") {
-			minLabel = '$' + $filter('number')(newMin, 2);
-			maxLabel = '$' + $filter('number')(newMax, 2);
-		} else if (limits.type === "Date") {
-			minDate = (newMin + 1368590400) * 1000;
-			maxDate = (newMax + 1368590400) * 1000;
-			minLabel = new Date(minDate).toDateString().substr(4);
-			maxLabel = new Date(maxDate).toDateString().substr(4);
-		} else {
-			minLabel = parseInt(newMin, 10);
-			maxLabel = parseInt(newMax, 10);
-		}
-		limits.rangeLabel = minLabel + ' - ' + maxLabel;
-
-		var data = 0;
-		var newList = [];
-		for (var i = 0; i < input.length; i++) {
-			var hls = input[i].hls || [0, 0, 0]
-			if (limits.type === "Hue") {
-				data = hls[0];
-			} else if (limits.type === "Brightness") {
-				data = hls[1];
-			} else if (limits.type === "Saturation") {
-				data = hls[2];
-			} else if (limits.type === "Price") {
-				data = input[i].price;
-			} else if (limits.type === "Date") {
-				data = input[i].time;
-			}
-
-			if (newMin <= data && data <= newMax)
-				newList.push(input[i]);
-		}
-		return newList;
-	};
-})
-.controller('BGCtrl', ['$scope', '$http', '$location',
-function($scope, $http, $location) {
+.controller('BGCtrl', ['$scope', '$http', '$location', '$filter',
+function($scope, $http, $location, $filter) {
 	var CFG = window.STEAMTOOLS_CONFIG;
 	$scope.BASE_URL = "https://steamcommunity.com/market/listings/";
 	$scope.ECON_URL = CFG.STEAM_ECON_BASE + "/image/";
 	$scope.steamLoginUrl = CFG.getLoginUrl();
 	$scope.bg = [];
+	$scope.filteredItems = [];
 	$scope.numLines = 20;
-	$scope.itemsPerLine = 0;
+	$scope.itemsPerLine = 4;
 
 	$scope.limits = {
 		min: 0,
@@ -70,24 +18,111 @@ function($scope, $http, $location) {
 		maxPrice: 400,
 	};
 
+	function applyFilterAndSort() {
+		var source = $scope.bg || [];
+		var limits = $scope.limits;
+		var type = limits.type;
+		var useRange = !(type === "Random" || type === "Name" || type === "Game");
+		var newMin = 0, newMax = Infinity;
+
+		if (useRange) {
+			if (type === "Hue" || type === "Brightness" || type === "Saturation") {
+				newMin = limits.min / 100 * 255;
+				newMax = limits.max / 100 * 255;
+			} else if (type === "Price") {
+				newMin = Math.pow(limits.min, 3) / Math.pow(100, 3) * limits.maxPrice;
+				newMax = Math.pow(limits.max, 3) / Math.pow(100, 3) * limits.maxPrice;
+			} else if (type === "Date") {
+				newMin = limits.min / 100 * limits.dateRange;
+				newMax = limits.max / 100 * limits.dateRange;
+			}
+
+			var minLabel, maxLabel;
+			if (type === "Price") {
+				minLabel = '$' + $filter('number')(newMin, 2);
+				maxLabel = '$' + $filter('number')(newMax, 2);
+			} else if (type === "Date") {
+				var minDate = (newMin + 1368590400) * 1000;
+				var maxDate = (newMax + 1368590400) * 1000;
+				minLabel = new Date(minDate).toDateString().substr(4);
+				maxLabel = new Date(maxDate).toDateString().substr(4);
+			} else {
+				minLabel = parseInt(newMin, 10);
+				maxLabel = parseInt(newMax, 10);
+			}
+			limits.rangeLabel = minLabel + ' - ' + maxLabel;
+		}
+
+		var q = String($scope.filterText || '').trim().toLowerCase();
+		var hasOwn = Object.keys($scope.owned || {}).length > 0;
+		var revOwn = !!$scope.reverseOwn;
+		var filtered = [];
+
+		for (var i = 0; i < source.length; i++) {
+			var item = source[i];
+			if (hasOwn || revOwn) {
+				var isOwned = $scope.owned.hasOwnProperty(item.name);
+				if (revOwn ? !isOwned : isOwned) continue;
+			}
+			if (q && item._search.indexOf(q) === -1) continue;
+
+			if (useRange) {
+				var hls = item.hls || [0, 0, 0];
+				var data = 0;
+				if (type === "Hue") {
+					data = hls[0];
+				} else if (type === "Brightness") {
+					data = hls[1];
+				} else if (type === "Saturation") {
+					data = hls[2];
+				} else if (type === "Price") {
+					data = item.price;
+				} else if (type === "Date") {
+					data = item.time;
+				}
+				if (!(newMin <= data && data <= newMax)) continue;
+			}
+			filtered.push(item);
+		}
+
+		var orderFn = $scope.order;
+		var rev = !!$scope.rev;
+		if (typeof orderFn === 'function') {
+			filtered.sort(function(a, b) {
+				var va = orderFn(a);
+				var vb = orderFn(b);
+				var cmp = va < vb ? -1 : (va > vb ? 1 : (a._idx - b._idx));
+				return rev ? -cmp : cmp;
+			});
+		}
+
+		$scope.filteredItems = filtered;
+	}
+	$scope.recomputeFiltered = applyFilterAndSort;
 
 	$http.get(CFG.CDN_BASE + '/data/bg.json').success(function(data){
 		var maxPrice = 0;
 		for (var i = 0; i < data.length; i++) {
-			data[i].appid = data[i].url.split('-')[0].substr(4);
-			data[i].price = data[i].price === null ? Infinity : parseFloat(data[i].price);
-			if (data[i].price < 1000 && data[i].price > maxPrice)
-				maxPrice = data[i].price;
+			var b = data[i];
+			b._idx = i;
+			b.appid = b.url.split('-')[0].substr(4);
+			b.price = b.price === null ? Infinity : parseFloat(b.price);
+			b._search = (String(b.name || '') + '\t' + String(b.game || '') + '\t' + b.appid).toLowerCase();
+			b._rand = String(b.name || '').hashCode();
+			if (b.price < 1000 && b.price > maxPrice)
+				maxPrice = b.price;
 		}
 
 		$scope.limits.maxPrice = maxPrice;
 		$scope.bg = data;
 		$scope.genDates();
+		applyFilterAndSort();
 	});
 
 	$http.get(CFG.CDN_BASE + '/data/dates.json').success(function(data){
 		$scope.dates = data;
 		$scope.genDates();
+		applyFilterAndSort();
 	});
 
 	$scope.owned = {};
@@ -114,6 +149,7 @@ function($scope, $http, $location) {
 			for (var i = 0; i < data.items.length; i++) {
 				$scope.owned[data.items[i]] = true;
 			}
+			applyFilterAndSort();
 		}).error(function(errData){
 			$scope.user_status = (errData && errData.reason ? errData.reason : "Could not fetch inventory") +
 				" — try Import Inventory.";
@@ -137,6 +173,7 @@ function($scope, $http, $location) {
 					}
 					$scope.loggedIn = true;
 					$scope.user_status = bgList.length + " items filtered (local import)";
+					applyFilterAndSort();
 				});
 			}
 		});
@@ -155,6 +192,7 @@ function($scope, $http, $location) {
 		$scope.user_status = "Login or Import Inventory to filter owned items";
 		$scope.loggedIn = false;
 		$scope.owned = {};
+		applyFilterAndSort();
 	};
 
 	$scope.genDates = function(){
@@ -172,8 +210,7 @@ function($scope, $http, $location) {
 
 	$scope.getStyle = function(p){
 		if (!p || p.length < 3) return {};
-		var host = p[0] > 375 ? CFG.CDN_BASE : CFG.CDN2_BASE;
-		var url = host + "/backgrounds/" + p[0] + ".jpg?v3";
+		var url = CFG.CDN_BASE + "/backgrounds/" + p[0] + ".jpg?v3";
 		var style = {
 			backgroundImage: "url(" + url + ")",
 			backgroundPosition: (p[1] * -256) + "px " + (p[2] * -160) + "px"
@@ -267,11 +304,11 @@ function($scope, $http, $location) {
 	$scope.byHue = function Hue(e){ return e.hls ? e.hls[0] : 0; };
 	$scope.byBrightness = function Brightness(e){ return e.hls ? -e.hls[1] : 0; };
 	$scope.bySaturation = function Saturation(e){ return e.hls ? e.hls[2] : 0; };
-	$scope.byName = function Name(e){ return e.name.toLowerCase(); };
-	$scope.byGame = function Game(e){ return e.game.toLowerCase(); };
+	$scope.byName = function Name(e){ return (e.name || '').toLowerCase(); };
+	$scope.byGame = function Game(e){ return (e.game || '').toLowerCase(); };
 	$scope.byPrice = function Price(e){ return e.price; };
-	$scope.byRandom = function Random(e){ return e.name.hashCode(); };
-	$scope.byDate = function Date(e){ return e.time;	};
+	$scope.byRandom = function Random(e){ return e._rand || 0; };
+	$scope.byDate = function Date(e){ return e.time; };
 
 	$scope.order = $scope.byDate;
 	$scope.showRange = true;
@@ -295,10 +332,16 @@ function($scope, $http, $location) {
 			$scope.order = orderFun;
 			$scope.rev = false;
 		}
+		applyFilterAndSort();
 	};
 
 	$scope.$watch('filterText', function(path) {
-		$location.path(path).replace();
+		$location.path(path || '').replace();
+		applyFilterAndSort();
+	});
+
+	$scope.$watchGroup(['reverseOwn', 'limits.min', 'limits.max', 'limits.type'], function() {
+		applyFilterAndSort();
 	});
 
 	$scope.$watch(function() {
@@ -315,7 +358,7 @@ function($scope, $http, $location) {
 	};
 
 	$scope.fixDivSize = function() {
-		var bg_count = Math.floor(window.innerWidth / 256) - 1;
+		var bg_count = Math.max(1, Math.floor(window.innerWidth / 256) - 1);
 		var page_size = Math.ceil(window.innerHeight / 256);
 
 		$scope.divWidth = (bg_count * (256 + 10) + 10) + "px";
@@ -323,21 +366,36 @@ function($scope, $http, $location) {
 		$scope.numLines = Math.max(page_size, $scope.numLines);
 	};
 
-	window.onscroll = function(){
-		if ($scope.numLines * $scope.itemsPerLine > $scope.bg.length) return;
+	$scope.fixDivSize();
 
-		var p = window.scrollY + window.innerHeight + 200;
-		if (p < document.body.offsetHeight) return;
+	function loadMoreRows() {
+		var perLine = Math.max(1, $scope.itemsPerLine || 1);
+		if ($scope.numLines * perLine >= $scope.filteredItems.length) return;
+		var page_size = Math.max(4, Math.ceil(window.innerHeight / 256));
+		$scope.$applyAsync(function() {
+			$scope.numLines += page_size;
+		});
+	}
 
-		var page_size = Math.ceil(window.innerHeight / 256);
-		$scope.numLines += page_size;
-		$scope.$apply();
-	};
+	var sentinel = document.getElementById('scroll-sentinel');
+	if (sentinel && 'IntersectionObserver' in window) {
+		var observer = new IntersectionObserver(function(entries) {
+			if (entries && entries[0] && entries[0].isIntersecting) {
+				loadMoreRows();
+			}
+		}, { rootMargin: '400px 0px' });
+		observer.observe(sentinel);
+	} else {
+		window.addEventListener('scroll', function() {
+			if (window.scrollY + window.innerHeight + 250 >= document.documentElement.scrollHeight) {
+				loadMoreRows();
+			}
+		}, { passive: true });
+	}
 
-	window.onload = window.onresize = function() {
-		$scope.fixDivSize();
-		$scope.$apply();
-	};
+	window.addEventListener('resize', function() {
+		$scope.$applyAsync($scope.fixDivSize);
+	}, { passive: true });
 
 	CFG.checkAuthSession($http).then(function(auth) {
 		if (auth && auth.authenticated && auth.steamid) {

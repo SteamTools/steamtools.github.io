@@ -465,20 +465,18 @@ function SteamCtrl($scope, $http){
 		}, 100);
 	}
 
-	function intersect(arr1,arr2){
+	function intersect(arr1, arr2) {
+		var set2 = new Set(arr2);
 		return arr1.filter(function(n) {
-					if(arr2.indexOf(n) === -1)
-						return false;
-					return true;
-				});
+			return set2.has(n);
+		});
 	}
 
-	function subtract(arr1,arr2){
-	return arr1.filter(function(n) {
-				if(arr2.indexOf(n) !== -1)
-					return false;
-				return true;
-			});
+	function subtract(arr1, arr2) {
+		var set2 = new Set(arr2);
+		return arr1.filter(function(n) {
+			return !set2.has(n);
+		});
 	}
 }
 
