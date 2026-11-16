@@ -16,6 +16,7 @@
     STEAM_ECON_BASE: 'https://community.akamai.steamstatic.com/economy',
     EMOTE_CORS_BASE: 'https://emotes.steam.tools',
     API_BASE: 'https://api.steam.tools',
+    API_POOL: ['https://api.steam.tools', 'https://api2.steam.tools'],
     AUTH_BASE: 'https://api.steam.tools',
     GAMES_API_BASE: 'https://api.steam.tools',
     TURNSTILE_SITEKEY: '0x4AAAAAAGCoBDnjdhsVPpPB',
@@ -337,6 +338,236 @@
   var _manifestCache = Object.create(null);
   var _manifestPromises = Object.create(null);
   var MANIFEST_TTL_MS = 300000;
+  var API_PRIMARY_STORAGE_KEY = 'st_api_primary';
+
+  function isPoolApiBase(base) {
+    return DEFAULTS.API_POOL.indexOf(base) !== -1;
+  }
+
+  function getApiCandidates(preferredBase) {
+    var base = trimTrailingSlashes(preferredBase || config.API_BASE || DEFAULTS.API_BASE);
+    if (!base) base = DEFAULTS.API_BASE;
+    if (!isPoolApiBase(base)) {
+      return [base];
+    }
+    var pool = DEFAULTS.API_POOL.slice();
+    var primary = null;
+    try {
+      if (root && root.sessionStorage) {
+        var stored = trimTrailingSlashes(root.sessionStorage.getItem(API_PRIMARY_STORAGE_KEY) || '');
+        if (isPoolApiBase(stored)) {
+          primary = stored;
+        } else {
+          primary = Math.random() < 0.5 ? pool[0] : pool[1];
+          root.sessionStorage.setItem(API_PRIMARY_STORAGE_KEY, primary);
+        }
+      }
+    } catch (e) {}
+    if (!primary) {
+      primary = base;
+    }
+    var candidates = [primary];
+    for (var i = 0; i < pool.length; i++) {
+      if (pool[i] !== primary) {
+        candidates.push(pool[i]);
+      }
+    }
+    return candidates;
+  }
+
+  function promotePrimaryApiBase(base) {
+    if (!isPoolApiBase(base)) return;
+    try {
+      if (root && root.sessionStorage) {
+        root.sessionStorage.setItem(API_PRIMARY_STORAGE_KEY, base);
+      }
+    } catch (e) {}
+  }
+
+  function normalizeApiPath(pathAndQuery) {
+    var s = String(pathAndQuery || '');
+    if (!s) return '/';
+    return s.charAt(0) === '/' ? s : ('/' + s);
+  }
+
+  function appendQueryParam(pathAndQuery, key, val) {
+    var sep = pathAndQuery.indexOf('?') !== -1 ? '&' : '?';
+    return pathAndQuery + sep + encodeURIComponent(key) + '=' + encodeURIComponent(String(val));
+  }
+
+  function getTurnstileHeaderName(headers) {
+    if (!headers || typeof headers !== 'object') return null;
+    var keys = Object.keys(headers);
+    for (var i = 0; i < keys.length; i++) {
+      if (keys[i].toLowerCase() === 'x-turnstile-token' && headers[keys[i]]) {
+        return keys[i];
+      }
+    }
+    return null;
+  }
+
+  function isRetriableApiFailure(status, data, hasTurnstileToken) {
+    var code = data && typeof data === 'object' ? String(data.error || '') : '';
+    var softRetry = status >= 200 && status < 300 &&
+      data && data.success === false &&
+      (code === 'rate_limited' || code === 'upstream_unavailable');
+    var hasPass = Boolean(data && typeof data === 'object' && data.key && data.ts);
+
+    if (hasTurnstileToken) {
+      if (status <= 0 || status === 502 || status === 503 || status === 504) {
+        return true;
+      }
+      if (hasPass && (softRetry || status === 429 || status === 500)) {
+        return true;
+      }
+      return false;
+    }
+    return status <= 0 || status === 429 || status === 500 || status === 502 || status === 503 || status === 504 || softRetry;
+  }
+
+  function cloneReqConfigWithBase(reqConfig, base, pathAndQuery) {
+    var cfg = {};
+    if (reqConfig && typeof reqConfig === 'object') {
+      var keys = Object.keys(reqConfig);
+      for (var i = 0; i < keys.length; i++) {
+        cfg[keys[i]] = reqConfig[keys[i]];
+      }
+      if (reqConfig.headers && typeof reqConfig.headers === 'object') {
+        cfg.headers = Object.assign({}, reqConfig.headers);
+      }
+    }
+    if (!cfg.method) cfg.method = 'GET';
+    cfg.url = trimTrailingSlashes(base) + normalizeApiPath(pathAndQuery);
+    return cfg;
+  }
+
+  function httpRequestWithFailover($http, pathAndQuery, reqConfig, options) {
+    if (typeof $http !== 'function') {
+      return Promise.reject(new Error('Angular $http client is required.'));
+    }
+    var opts = options || {};
+    var candidates = getApiCandidates(opts.preferredBase);
+    var cleanPath = normalizeApiPath(pathAndQuery);
+    var turnstileHdr = getTurnstileHeaderName(reqConfig && reqConfig.headers);
+    var hasTurnstileToken = Boolean(turnstileHdr);
+    var issuedPass = null;
+
+    function runAttempt(idx, currentPath, currentConfig, allowTurnstile) {
+      var attemptBase = candidates[idx];
+      var attemptCfg = cloneReqConfigWithBase(currentConfig, attemptBase, currentPath);
+      if (!allowTurnstile && attemptCfg.headers) {
+        var hdr = getTurnstileHeaderName(attemptCfg.headers);
+        if (hdr) delete attemptCfg.headers[hdr];
+      }
+
+      return new Promise(function (resolve, reject) {
+        var req = $http(attemptCfg);
+        var onSuccess = function (resp) {
+          var status = resp && typeof resp.status === 'number' ? resp.status : 200;
+          var data = resp ? resp.data : null;
+          if (data && typeof data === 'object' && data.key && data.ts) {
+            issuedPass = { key: data.key, ts: data.ts };
+          }
+          if (idx + 1 < candidates.length && isRetriableApiFailure(status, data, allowTurnstile)) {
+            var nextPath = currentPath;
+            var nextAllowTurnstile = allowTurnstile;
+            if (allowTurnstile && issuedPass) {
+              nextAllowTurnstile = false;
+              nextPath = appendQueryParam(appendQueryParam(nextPath, 'ts', issuedPass.ts), 'key', issuedPass.key);
+            }
+            runAttempt(idx + 1, nextPath, currentConfig, nextAllowTurnstile).then(resolve, reject);
+            return;
+          }
+          if (idx > 0) {
+            promotePrimaryApiBase(attemptBase);
+          }
+          resolve(resp);
+        };
+        var onError = function (errResp) {
+          var status = errResp && typeof errResp.status === 'number' ? errResp.status : 0;
+          var data = errResp ? errResp.data : null;
+          if (data && typeof data === 'object' && data.key && data.ts) {
+            issuedPass = { key: data.key, ts: data.ts };
+          } else if (issuedPass && errResp && typeof errResp === 'object') {
+            if (!errResp.data || typeof errResp.data !== 'object') {
+              errResp.data = {};
+            }
+            if (!errResp.data.key) errResp.data.key = issuedPass.key;
+            if (!errResp.data.ts) errResp.data.ts = issuedPass.ts;
+          }
+          if (idx + 1 < candidates.length && isRetriableApiFailure(status, data, allowTurnstile)) {
+            var nextPath = currentPath;
+            var nextAllowTurnstile = allowTurnstile;
+            if (allowTurnstile && issuedPass) {
+              nextAllowTurnstile = false;
+              nextPath = appendQueryParam(appendQueryParam(nextPath, 'ts', issuedPass.ts), 'key', issuedPass.key);
+            }
+            runAttempt(idx + 1, nextPath, currentConfig, nextAllowTurnstile).then(resolve, reject);
+            return;
+          }
+          reject(errResp);
+        };
+        if (typeof req.then === 'function') {
+          req.then(onSuccess, onError);
+        } else if (typeof req.success === 'function') {
+          req.success(function (d, st, h) { onSuccess({ data: d, status: st || 200, headers: h }); })
+             .error(function (d, st, h) { onError({ data: d, status: st || 0, headers: h }); });
+        } else {
+          onError({ status: 0, data: null });
+        }
+      });
+    }
+
+    return runAttempt(0, cleanPath, reqConfig || {}, hasTurnstileToken);
+  }
+
+  function fetchJsonWithFailover(pathAndQuery, options) {
+    var opts = options || {};
+    var f = opts.fetchImpl || (root && typeof root.fetch === 'function' ? root.fetch.bind(root) : null);
+    if (!f) {
+      return Promise.reject(new Error('Fetch API is not available.'));
+    }
+    var candidates = getApiCandidates(opts.preferredBase);
+    var cleanPath = normalizeApiPath(pathAndQuery);
+
+    function runAttempt(idx) {
+      var attemptBase = candidates[idx];
+      var fetchOpts = {};
+      if (opts.method) fetchOpts.method = opts.method;
+      if (opts.headers) fetchOpts.headers = opts.headers;
+      if (opts.credentials) fetchOpts.credentials = opts.credentials;
+
+      return Promise.resolve().then(function () {
+        return f(trimTrailingSlashes(attemptBase) + cleanPath, fetchOpts);
+      }).then(function (resp) {
+        if (!resp) {
+          throw new Error('Empty response from ' + attemptBase);
+        }
+        return resp.json().catch(function () { return null; }).then(function (data) {
+          if (idx + 1 < candidates.length && isRetriableApiFailure(resp.status, data, false)) {
+            return runAttempt(idx + 1);
+          }
+          if (idx > 0 && resp.ok) {
+            promotePrimaryApiBase(attemptBase);
+          }
+          return {
+            response: resp,
+            ok: Boolean(resp.ok),
+            status: resp.status,
+            data: data,
+            base: attemptBase
+          };
+        });
+      }).catch(function (err) {
+        if (idx + 1 < candidates.length) {
+          return runAttempt(idx + 1);
+        }
+        throw err;
+      });
+    }
+
+    return runAttempt(0);
+  }
 
   function fetchRawJson(url, options) {
     var opts = options || {};
@@ -818,6 +1049,7 @@
     STEAM_ECON_BASE: DEFAULTS.STEAM_ECON_BASE,
     EMOTE_CORS_BASE: DEFAULTS.EMOTE_CORS_BASE,
     API_BASE: DEFAULTS.API_BASE,
+    API_POOL: DEFAULTS.API_POOL.slice(),
     AUTH_BASE: DEFAULTS.AUTH_BASE,
     GAMES_API_BASE: DEFAULTS.GAMES_API_BASE,
     TURNSTILE_SITEKEY: DEFAULTS.TURNSTILE_SITEKEY,
@@ -825,6 +1057,9 @@
     isTrustedOriginUrl: isTrustedOriginUrl,
     isTurnstileConfigured: isTurnstileConfigured,
     getContextId: getContextId,
+    getApiCandidates: getApiCandidates,
+    httpRequestWithFailover: httpRequestWithFailover,
+    fetchJsonWithFailover: fetchJsonWithFailover,
     getManifest: getManifest,
     resolveDatasetUrl: resolveDatasetUrl,
     getDatasetJson: getDatasetJson,

@@ -98,9 +98,14 @@ function($scope, $http, $filter, $compile, $modal, $timeout){
 		$scope.userData = {'games': 2, 'cards': 2, 'badges': 2};
 		$scope.user_status = "";
 
-		var url = CFG.API_BASE + "/UserInfo?id=" + encodeURIComponent(steamid.trim());
+		var path = "/UserInfo?id=" + encodeURIComponent(steamid.trim());
+		var reqPromise = typeof CFG.httpRequestWithFailover === 'function'
+			? CFG.httpRequestWithFailover($http, path, { method: 'GET', withCredentials: true })
+			: $http.get(CFG.API_BASE + path, { withCredentials: true });
 
-		$http.get(url, {withCredentials: true}).success(function(data){
+		reqPromise.then(function(resp){
+			$timeout(function() {
+			var data = resp && resp.data;
 			if (!data || !data.success){
 				var sMsg = (data && data.reason) ? String(data.reason) : "Unable to load profile.";
 				if (data && data.help === 2) {
@@ -134,16 +139,20 @@ function($scope, $http, $filter, $compile, $modal, $timeout){
 			}
 
 			$scope.importUserData();
-		}).error(function(errData){
-			var msg = (errData && errData.reason)
-				? String(errData.reason)
-				: "Could not load Steam profile.";
-			if (errData && errData.help === 2) {
-				msg += " Try pasting your full Steam profile URL.";
-			}
-			msg += " Or use Import Inventory (753/6) below.";
-			$scope.user_status = msg;
-			$scope.userData = {'games': 0, 'cards': 0, 'badges': 0};
+			}, 0);
+		}, function(errResp){
+			$timeout(function() {
+				var errData = errResp && errResp.data;
+				var msg = (errData && errData.reason)
+					? String(errData.reason)
+					: "Could not load Steam profile.";
+				if (errData && errData.help === 2) {
+					msg += " Try pasting your full Steam profile URL.";
+				}
+				msg += " Or use Import Inventory (753/6) below.";
+				$scope.user_status = msg;
+				$scope.userData = {'games': 0, 'cards': 0, 'badges': 0};
+			}, 0);
 		});
 	};
 

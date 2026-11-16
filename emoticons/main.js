@@ -163,25 +163,35 @@ function($scope, $http, $location, $filter) {
 			return;
 		}
 		$scope.loggedIn = false;
-		var url = CFG.API_BASE + "/FetchEmotes?id=" + encodeURIComponent(cleanId);
-		$http.get(url, {withCredentials: true}).success(function(data){
-			if (!data || !data.success) {
-				$scope.user_status = (data && data.reason ? data.reason : "Unable to load inventory") +
-					" — try Import Inventory.";
-				return;
-			}
+		var path = "/FetchEmotes?id=" + encodeURIComponent(cleanId);
+		var reqPromise = typeof CFG.httpRequestWithFailover === 'function'
+			? CFG.httpRequestWithFailover($http, path, { method: 'GET', withCredentials: true })
+			: $http.get(CFG.API_BASE + path, { withCredentials: true });
 
-			$scope.owned = {};
-			$scope.loggedIn = true;
-			$scope.user_status = data.items.length + " items filtered" + (data.stale ? " (cached)" : "");
-			for (var i = 0; i < data.items.length; i++) {
-				var name = ":" + data.items[i] + ":";
-				$scope.owned[name] = true;
-			}
-			applyFilterAndSort();
-		}).error(function(errData){
-			$scope.user_status = (errData && errData.reason ? errData.reason : "Could not fetch inventory") +
-				" — try Import Inventory.";
+		reqPromise.then(function(resp){
+			$scope.$applyAsync(function() {
+				var data = resp && resp.data;
+				if (!data || !data.success) {
+					$scope.user_status = (data && data.reason ? data.reason : "Unable to load inventory") +
+						" — try Import Inventory.";
+					return;
+				}
+
+				$scope.owned = {};
+				$scope.loggedIn = true;
+				$scope.user_status = data.items.length + " items filtered" + (data.stale ? " (cached)" : "");
+				for (var i = 0; i < data.items.length; i++) {
+					var name = ":" + data.items[i] + ":";
+					$scope.owned[name] = true;
+				}
+				applyFilterAndSort();
+			});
+		}, function(errResp){
+			$scope.$applyAsync(function() {
+				var errData = errResp && errResp.data;
+				$scope.user_status = (errData && errData.reason ? errData.reason : "Could not fetch inventory") +
+					" — try Import Inventory.";
+			});
 		});
 	};
 

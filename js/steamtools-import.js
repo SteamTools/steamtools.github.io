@@ -129,26 +129,33 @@
         reason: 'Cannot resolve custom URLs here — enter your 17-digit SteamID64 directly.'
       });
     }
-    var apiBase = String(getConfig().API_BASE || 'https://api.steam.tools').replace(/\/+$/, '');
-    var url = apiBase + '/ResolveSteamId?id=' + encodeURIComponent(parsed.vanity);
-    return f(url).then(function (resp) {
-      return resp.json().catch(function () {
-        return null;
-      }).then(function (data) {
-        if (resp.ok && data && /^\d{17}$/.test(String(data.steamid64 || ''))) {
-          var sid = String(data.steamid64);
-          _resolvedVanityCache.set(cacheKey, sid);
-          return { ok: true, steamid64: sid, vanity: parsed.vanity };
-        }
-        var detailObj = (data && data.detail && typeof data.detail === 'object') ? data.detail : null;
-        var baseReason = (data && (data.reason || data.message)) ||
-          (detailObj && (detailObj.reason || detailObj.message)) ||
-          'Could not find that Steam custom URL.';
-        return {
-          ok: false,
-          reason: baseReason + ' (Steam login usernames differ from custom profile URLs — paste your steamcommunity.com/profiles/... link if needed.)'
-        };
-      });
+    var cfg = getConfig();
+    var pathAndQuery = '/ResolveSteamId?id=' + encodeURIComponent(parsed.vanity);
+    var reqPromise = typeof cfg.fetchJsonWithFailover === 'function'
+      ? cfg.fetchJsonWithFailover(pathAndQuery, { fetchImpl: f })
+      : f(String(cfg.API_BASE || 'https://api.steam.tools').replace(/\/+$/, '') + pathAndQuery)
+          .then(function (resp) {
+            return resp.json().catch(function () {
+              return null;
+            }).then(function (data) {
+              return { ok: resp.ok, status: resp.status, data: data };
+            });
+          });
+    return reqPromise.then(function (res) {
+      var data = res && res.data;
+      if (res && res.ok && data && /^\d{17}$/.test(String(data.steamid64 || ''))) {
+        var sid = String(data.steamid64);
+        _resolvedVanityCache.set(cacheKey, sid);
+        return { ok: true, steamid64: sid, vanity: parsed.vanity };
+      }
+      var detailObj = (data && data.detail && typeof data.detail === 'object') ? data.detail : null;
+      var baseReason = (data && (data.reason || data.message)) ||
+        (detailObj && (detailObj.reason || detailObj.message)) ||
+        'Could not find that Steam custom URL.';
+      return {
+        ok: false,
+        reason: baseReason + ' (Steam login usernames differ from custom profile URLs — paste your steamcommunity.com/profiles/... link if needed.)'
+      };
     }).catch(function () {
       return {
         ok: false,

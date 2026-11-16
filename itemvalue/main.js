@@ -382,16 +382,16 @@ angular.module('InvApp', ['ui.bootstrap'])
 		$scope.status = "Loading...";
 		clearHelpBox();
 
-		var url = CFG.API_BASE + '/ItemValue?i=1&id=' + encodeURIComponent(user) +
+		var path = '/ItemValue?i=1&id=' + encodeURIComponent(user) +
 			'&app=' + encodeURIComponent(appid);
 		if (huge) {
-			url += '&huge=1';
+			path += '&huge=1';
 		}
 
 		var usedTurnstile = false;
 		var reqHeaders = {};
 		if ($scope.hasValidPass()) {
-			url += '&ts=' + encodeURIComponent($scope.ts) + '&key=' + encodeURIComponent($scope.key);
+			path += '&ts=' + encodeURIComponent($scope.ts) + '&key=' + encodeURIComponent($scope.key);
 		} else if ($scope.turnstileToken) {
 			reqHeaders['X-Turnstile-Token'] = String($scope.turnstileToken);
 			usedTurnstile = true;
@@ -404,7 +404,12 @@ angular.module('InvApp', ['ui.bootstrap'])
 			return;
 		}
 
-		$http({method: 'GET', url: url, headers: reqHeaders, withCredentials: true}).then(function(response) {
+		var reqPromise = typeof CFG.httpRequestWithFailover === 'function'
+			? CFG.httpRequestWithFailover($http, path, { method: 'GET', headers: reqHeaders, withCredentials: true })
+			: $http({ method: 'GET', url: CFG.API_BASE + path, headers: reqHeaders, withCredentials: true });
+
+		reqPromise.then(function(response) {
+			$scope.$applyAsync(function() {
 			$scope.isLoading = false;
 			var data = response && response.data;
 			if (!data) return;
@@ -470,7 +475,9 @@ angular.module('InvApp', ['ui.bootstrap'])
 				profileName: data.name,
 				stale: Boolean(data.stale)
 			});
+			});
 		}, function(response) {
+			$scope.$applyAsync(function() {
 			$scope.isLoading = false;
 			var body = response && response.data;
 			var status = response && response.status;
@@ -572,6 +579,7 @@ angular.module('InvApp', ['ui.bootstrap'])
 			if (!$scope.hasValidPass()) {
 				resetTurnstileWidget();
 			}
+			});
 		});
 	};
 

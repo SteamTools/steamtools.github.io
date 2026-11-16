@@ -173,26 +173,36 @@ function($scope, $http, $location, $filter) {
 			return;
 		}
 		$scope.loggedIn = false;
-		var url = CFG.API_BASE + "/FetchBackgrounds?id=" + encodeURIComponent(cleanId);
-		$http.get(url, {withCredentials: true}).success(function(data){
-			if (!data || !data.success) {
-				$scope.user_status = (data && data.reason ? data.reason : "Unable to load inventory") +
-					" — try Import Inventory.";
-				return;
-			}
+		var path = "/FetchBackgrounds?id=" + encodeURIComponent(cleanId);
+		var reqPromise = typeof CFG.httpRequestWithFailover === 'function'
+			? CFG.httpRequestWithFailover($http, path, { method: 'GET', withCredentials: true })
+			: $http.get(CFG.API_BASE + path, { withCredentials: true });
 
-			var bgNames = Array.isArray(data.items) ? data.items : [];
-			var bgKeys = (Array.isArray(data.urls) && data.urls.length) ? data.urls : bgNames;
-			$scope.owned = {};
-			$scope.loggedIn = true;
-			$scope.user_status = bgNames.length + " items filtered" + (data.stale ? " (cached)" : "");
-			for (var i = 0; i < bgKeys.length; i++) {
-				$scope.owned[bgKeys[i]] = true;
-			}
-			applyFilterAndSort();
-		}).error(function(errData){
-			$scope.user_status = (errData && errData.reason ? errData.reason : "Could not fetch inventory") +
-				" — try Import Inventory.";
+		reqPromise.then(function(resp){
+			$scope.$applyAsync(function() {
+				var data = resp && resp.data;
+				if (!data || !data.success) {
+					$scope.user_status = (data && data.reason ? data.reason : "Unable to load inventory") +
+						" — try Import Inventory.";
+					return;
+				}
+
+				var bgNames = Array.isArray(data.items) ? data.items : [];
+				var bgKeys = (Array.isArray(data.urls) && data.urls.length) ? data.urls : bgNames;
+				$scope.owned = {};
+				$scope.loggedIn = true;
+				$scope.user_status = bgNames.length + " items filtered" + (data.stale ? " (cached)" : "");
+				for (var i = 0; i < bgKeys.length; i++) {
+					$scope.owned[bgKeys[i]] = true;
+				}
+				applyFilterAndSort();
+			});
+		}, function(errResp){
+			$scope.$applyAsync(function() {
+				var errData = errResp && errResp.data;
+				$scope.user_status = (errData && errData.reason ? errData.reason : "Could not fetch inventory") +
+					" — try Import Inventory.";
+			});
 		});
 	};
 
@@ -290,16 +300,22 @@ function($scope, $http, $location, $filter) {
 			return;
 		}
 
-		var url = CFG.API_BASE + "/FetchBackgroundImage?url=" + encodeURIComponent(b.url);
-		$http.get(url).success(function(data){
-			var imgHash = typeof data === "string" ? data : (data && data.img);
-			if (imgHash) {
-				b.img = imgHash;
-				$scope.open(imgHash, b.name);
-			} else if (b.url) {
-				window.open($scope.BASE_URL + b.url, "_blank", "noopener,noreferrer");
-			}
-		}).error(function(){
+		var path = "/FetchBackgroundImage?url=" + encodeURIComponent(b.url);
+		var reqPromise = typeof CFG.httpRequestWithFailover === 'function'
+			? CFG.httpRequestWithFailover($http, path, { method: 'GET' })
+			: $http.get(CFG.API_BASE + path);
+		reqPromise.then(function(resp){
+			$scope.$applyAsync(function() {
+				var data = resp && resp.data;
+				var imgHash = typeof data === "string" ? data : (data && data.img);
+				if (imgHash) {
+					b.img = imgHash;
+					$scope.open(imgHash, b.name);
+				} else if (b.url) {
+					window.open($scope.BASE_URL + b.url, "_blank", "noopener,noreferrer");
+				}
+			});
+		}, function(){
 			if (b.url) {
 				window.open($scope.BASE_URL + b.url, "_blank", "noopener,noreferrer");
 			}

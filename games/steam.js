@@ -149,8 +149,19 @@ function SteamCtrl($scope, $http){
 		}
 	}
 
+	function safeApply(fn) {
+		if (!$scope.$$phase) {
+			$scope.$apply(fn);
+		} else {
+			fn();
+		}
+	}
+
 	function fetchGamesInfo(params) {
-		return $http.get(GAMES_INFO_URL, { params: params }).then(function(resp) {
+		var reqPromise = typeof CFG.httpRequestWithFailover === 'function'
+			? CFG.httpRequestWithFailover($http, '/info', { method: 'GET', params: params }, { preferredBase: CFG.GAMES_API_BASE })
+			: $http.get(GAMES_INFO_URL, { params: params });
+		return reqPromise.then(function(resp) {
 			return resp && resp.data ? resp.data : null;
 		});
 	}
@@ -225,15 +236,19 @@ function SteamCtrl($scope, $http){
 		$scope.userError = "";
 		$scope.Users.push( {"name": "Loading","avatar":"img/loading.gif"} );
 		fetchGamesInfo({ user: query }).then(function(data) {
-			appendUsers(data);
+			safeApply(function() {
+				appendUsers(data);
+			});
 		}, function(err) {
-			$scope.Users = users.slice();
-			var body = err && err.data;
-			var msg = (body && body.reason) ? body.reason : "Failed to load user profile.";
-			if (body && body.help === 2) {
-				msg += " Try pasting your Steam custom URL or full profile link.";
-			}
-			$scope.userError = msg;
+			safeApply(function() {
+				$scope.Users = users.slice();
+				var body = err && err.data;
+				var msg = (body && body.reason) ? body.reason : "Failed to load user profile.";
+				if (body && body.help === 2) {
+					msg += " Try pasting your Steam custom URL or full profile link.";
+				}
+				$scope.userError = msg;
+			});
 		});
 	};
 
@@ -278,9 +293,13 @@ function SteamCtrl($scope, $http){
 			dlg.showModal();
 		}
 		fetchGamesInfo({ friends: userid }).then(function(data) {
-			appendFriends(data);
+			safeApply(function() {
+				appendFriends(data);
+			});
 		}, function() {
-			$scope.friendStatus = 2;
+			safeApply(function() {
+				$scope.friendStatus = 2;
+			});
 		});
 	};
 
@@ -351,10 +370,14 @@ function SteamCtrl($scope, $http){
 			if (!steamid || steamid === undefined) return;
 			if (!games.hasOwnProperty(steamid)) {
 				fetchGamesInfo({ games: steamid }).then(function(data) {
-					appendGames(data);
+					safeApply(function() {
+						appendGames(data);
+					});
 				}, function() {
-					$scope.gameStatus = 1;
-					$scope.userError = "Failed to load games from server.";
+					safeApply(function() {
+						$scope.gameStatus = 1;
+						$scope.userError = "Failed to load games from server.";
+					});
 				});
 			}
 		}
@@ -515,10 +538,12 @@ function SteamCtrl($scope, $http){
 			$scope.loggedIn = true;
 			if (ids.indexOf(auth.steamid) === -1) {
 				fetchGamesInfo({ user: auth.steamid }).then(function(data) {
-					appendUsers(data);
-					if ($scope.selectedUsers.indexOf(auth.steamid) === -1 && ids.indexOf(auth.steamid) !== -1) {
-						$scope.selectedUsers.push(auth.steamid);
-					}
+					safeApply(function() {
+						appendUsers(data);
+						if ($scope.selectedUsers.indexOf(auth.steamid) === -1 && ids.indexOf(auth.steamid) !== -1) {
+							$scope.selectedUsers.push(auth.steamid);
+						}
+					});
 				});
 			}
 		};

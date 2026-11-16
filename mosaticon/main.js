@@ -229,8 +229,12 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 			$scope.loadInventory();
 		} else {
 			$scope.status = "Loading emoticons...";
-			$http.get(CFG.API_BASE + '/FetchEmotes?id=' + encodeURIComponent(u), { withCredentials: true })
-				.then(function(resp) {
+			var emotePath = '/FetchEmotes?id=' + encodeURIComponent(u);
+			var emoteReq = typeof CFG.httpRequestWithFailover === 'function'
+				? CFG.httpRequestWithFailover($http, emotePath, { method: 'GET', withCredentials: true })
+				: $http.get(CFG.API_BASE + emotePath, { withCredentials: true });
+			emoteReq.then(function(resp) {
+				$scope.$applyAsync(function() {
 					var data = resp && resp.data;
 					if (data && data.success && Array.isArray(data.items)) {
 						localStorage.lastUser = u;
@@ -246,7 +250,9 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 							? " Try your Steam custom URL or full profile link, or leave blank to import JSON."
 							: "");
 					}
-				}, function(errResp) {
+				});
+			}, function(errResp) {
+				$scope.$applyAsync(function() {
 					var d = errResp && errResp.data;
 					var reason = (d && d.reason) || "Could not load emoticons.";
 					if (errResp && (errResp.status === 403 || errResp.status === 429 || errResp.status === 503)) {
@@ -258,6 +264,7 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 							: "");
 					}
 				});
+			});
 		}
 	};
 
