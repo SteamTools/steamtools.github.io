@@ -67,6 +67,15 @@ angular.module('valueApp', ['ui.bootstrap'])
 		}
 	};
 })
+function netPriceAfterFee(priceUsd) {
+	var grossCents = Math.round((Number(priceUsd) || 0) * 100);
+	if (grossCents <= 0) return 0;
+	var steamFee = Math.max(1, Math.floor(grossCents / 11.5));
+	var pubFee = Math.max(1, Math.floor(grossCents / 23));
+	return Math.max(0, grossCents - steamFee - pubFee) / 100;
+}
+
+angular.module('InvApp', ['ui.bootstrap'])
 .filter('sumByKey', function() {
 	return function(data, key, mult, fee) {
 		if (data === undefined || key === undefined) {
@@ -76,17 +85,13 @@ angular.module('valueApp', ['ui.bootstrap'])
 		var sum = 0;
 		for (var i = data.length - 1; i >= 0; i--) {
 			if (!data[i][key]) continue;
-			var val = data[i][key];
-			if (fee) {
-				var fee_cost = val * 0.1304;
-				fee_cost = Math.max(fee_cost, 0.02);
-				val -= fee_cost;
-			}
+			var rawVal = Number(data[i][key]) || 0;
+			var val = fee ? netPriceAfterFee(rawVal) : rawVal;
 
 			if (mult === undefined) {
 				sum += val;
 			} else {
-				sum += val * data[i][mult];
+				sum += val * (Number(data[i][mult]) || 0);
 			}
 		}
 
@@ -95,21 +100,21 @@ angular.module('valueApp', ['ui.bootstrap'])
 })
 .filter('currency', function($filter){
 	return function(input, ind, fee) {
-		if (isNaN(input)) return "N/A";
+		if (input === null || input === undefined || isNaN(input)) return "N/A";
 
 		// Get symbol and decide if it comes before or after
-		var symbol = CURRENCY_DATA[ind].symbolFormat;
-		var after = CURRENCY_DATA[ind].right;
-		var ratio = CURRENCY_DATA[ind].ratio;
+		var cur = CURRENCY_DATA[ind] || CURRENCY_DATA[0];
+		var symbol = cur.symbolFormat;
+		var after = cur.right;
+		var ratio = cur.ratio;
 
+		var num = Number(input);
 		if (fee) {
-			var fee_cost = input * 0.1304;
-			fee_cost = Math.max(fee_cost, 0.02);
-			input -= fee_cost;
+			num = netPriceAfterFee(num);
 		}
 
 		// Make sure input was valid, then convert and format it
-		var out = $filter('number')(input * ratio, 2);
+		var out = $filter('number')(num * ratio, 2);
 
 		// Add symbol in the right place
 		if (after) return out + symbol;
@@ -330,7 +335,10 @@ angular.module('valueApp', ['ui.bootstrap'])
 
 			if (!$scope.items[0].icon) {
 				$scope.table.column(0).visible(false);
+				$scope._forceTableView = true;
 				$scope.useTable = true;
+			} else {
+				$scope._forceTableView = false;
 			}
 			$scope.status = opts.statusMessage || "";
 			if (opts.profileName) {
@@ -622,16 +630,35 @@ angular.module('valueApp', ['ui.bootstrap'])
 		else return q.type === $scope.TYPES[$scope.type];
 	};
 
-	$scope.formatCurrency = function(data, type) {
-		// Only perform if it's for displaying
-		if (type !== "display"){
-			return isNaN(data) ? 9999999 : data;
+	$scope.formatCurrency = function(data, type, row, meta) {
+		var useFee = Boolean($scope.flags.fee);
+		var isStackCol = meta && meta.col === 8;
+		var val = data;
+		if (row && typeof row.price === 'number') {
+			var unit = useFee ? netPriceAfterFee(row.price) : row.price;
+			val = isStackCol ? unit * (Number(row.count) || 0) : unit;
+		} else if (useFee && !isNaN(data)) {
+			val = netPriceAfterFee(data);
 		}
-		return $filter('currency')(data, $scope.curIndex, $scope.flags.fee);
+		// Only perform currency formatting when rendering for display
+		if (type !== "display"){
+			return isNaN(val) ? 9999999 : val;
+		}
+		return $filter('currency')(val, $scope.curIndex, false);
+	};
+
+	$scope.gridPrice = function(item) {
+		if (!item || !(item.price > 0)) return "N/A";
+		var unit = $scope.flags.fee ? netPriceAfterFee(item.price) : item.price;
+		var val = $scope.flags.stack ? unit * (Number(item.count) || 0) : unit;
+		return $filter('currency')(val, $scope.curIndex, false) || "N/A";
 	};
 
 	$scope.qualitySort = function(data, type) {
-		if (type === "sort") return QUALITY_SORT[data[0]] || 0;
+		if (type === "sort") {
+			var appMap = QUALITY_SORT[$scope.appidLoaded] || QUALITY_SORT_ALL;
+			return appMap[data[0]] || QUALITY_SORT_ALL[data[0]] || 0;
+		}
 		return addColor(data[0], data[1]);
 	};
 
@@ -670,7 +697,7 @@ angular.module('valueApp', ['ui.bootstrap'])
 		scrollX: true,
 		scrollY: "auto",
 		stateSave: true,
-		order: [[3, 'desc']],
+		order: [[7, 'desc']],
 		scrollCollapse: true,
 		deferRender: true,
 		language: {
@@ -713,7 +740,12 @@ angular.module('valueApp', ['ui.bootstrap'])
 		$scope.appid.model = window.localStorage.lastAppid;
 	}
 
-	if (window.localStorage.curIndex) $scope.curIndex = window.localStorage.curIndex;
+	if (window.localStorage.curIndex !== undefined) {
+		var savedCur = parseInt(window.localStorage.curIndex, 10);
+		if (Number.isInteger(savedCur) && savedCur >= 0 && savedCur < $scope.CDATA.length) {
+			$scope.curIndex = savedCur;
+		}
+	}
 	if (window.localStorage.appid && $scope.apps.indexOf(window.localStorage.appid) !== -1) {
 		$scope.appid.model = window.localStorage.appid;
 	}
@@ -725,7 +757,11 @@ angular.module('valueApp', ['ui.bootstrap'])
 		}
 	}
 	$scope.$watch('appid.model', function(){window.localStorage.appid = $scope.appid.model;});
-	$scope.$watch('useTable', function(){window.localStorage.useTable = $scope.useTable;});
+	$scope.$watch('useTable', function(){
+		if (!$scope._forceTableView) {
+			window.localStorage.useTable = $scope.useTable;
+		}
+	});
 	$scope.$watch('flags.fee', function(){$scope.table.rows().invalidate();});
 	$scope.$watch('flags.dupes', function(){$scope.table.draw();});
 	$scope.$watch('flags.stack', function(newValue){
@@ -799,7 +835,7 @@ function Item(data) {
 	var safeName = escapeValHtml(data.name || '');
 	this.name = "<a href='" + market_link + "' target='_blank' rel='noopener noreferrer'><span style='color: #" +
 		safeColor + "'>" + safeName + "</span></a>";
-	this.game = data.game ? escapeValHtml(data.game) : null;
+	this.game = data.game ? escapeValHtml(data.game) : "";
 	this.type = data.type ? escapeValHtml(data.type) : null;
 	this.rarity = [data.rarity, data.rcolor];
 	this.quality = [data.quality, data.qcolor];
@@ -836,7 +872,7 @@ function FireEvent(ElementId, EventName) {
 
 // Little hack to have overflow ellipsis
 function overflow(data) {
-	return '<span class="name">' + data + '</span>';
+	return '<span class="name">' + (data == null ? '' : data) + '</span>';
 }
 
 
@@ -864,23 +900,45 @@ var RARITY_SORT = {
 };
 
 var QUALITY_SORT = {
-	"Unique": 10,
-	"Vintage": 20,
-	"Strange": 30,
-	"Genuine": 40,
-	"Haunted": 50,
-	"Decorated Weapon": 60,
-	"Unusual": 70,
+	'440': {
+		"Unique": 10,
+		"Vintage": 20,
+		"Strange": 30,
+		"Genuine": 40,
+		"Haunted": 50,
+		"Decorated Weapon": 60,
+		"Unusual": 70,
+	},
+	'570': {
+		"Base": 5,
+		"Standard": 10,
+		"Inscribed": 20,
+		"Genuine": 30,
+		"Corrupted": 40,
+		"Frozen": 50,
+		"Exalted": 60,
+		"Heroic": 70,
+		"Elder": 80,
+		"Unusual": 90,
+		"Autographed": 100,
+	},
+};
 
+var QUALITY_SORT_ALL = {
 	"Base": 5,
 	"Standard": 10,
+	"Unique": 10,
+	"Vintage": 20,
 	"Inscribed": 20,
-	"Genuine": 30,
+	"Strange": 30,
+	"Genuine": 35,
 	"Corrupted": 40,
+	"Haunted": 50,
 	"Frozen": 50,
+	"Decorated Weapon": 60,
 	"Exalted": 60,
 	"Heroic": 70,
 	"Elder": 80,
-	"Unusual": 90,
+	"Unusual": 85,
 	"Autographed": 100,
 };

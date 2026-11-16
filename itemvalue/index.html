@@ -148,9 +148,10 @@
 				<span ng-hide="i.count == 1" class="counter">x{{i.count}}</span>
 				<span ng-show="i.rarity || i.rcolor" class="rarity {{i.rarity + appidLoaded}}" ng-style="{'background-color': '#' + i.rcolor}"
 					tooltip-popup-delay='250' tooltip-placement="top" tooltip="{{i.rarity}}">.</span>
-					<img ng-src="{{ECONOMY + i.icon + '/62fx62f'}}" width="62" height="62" loading="lazy" alt="{{i.name}}" tooltip-popup-delay='250' tooltip-placement="top" tooltip="{{i.name}}" class="itemicon"><br>
+					<img ng-if="i.icon" ng-src="{{ECONOMY + i.icon + '/62fx62f'}}" width="62" height="62" loading="lazy" alt="{{i.name}}" tooltip-popup-delay='250' tooltip-placement="top" tooltip="{{i.name}}" class="itemicon">
+					<span ng-if="!i.icon" class="itemicon no-icon-placeholder" style="display:inline-flex;align-items:center;justify-content:center;width:62px;height:62px;font-size:11px;color:#bbb;" tooltip-popup-delay='250' tooltip-placement="top" tooltip="{{i.name}}">No icon</span><br>
 					<span class="price">
-						{{((i.price * (flags.stack ? i.count : 1) || 'x') | currency:curIndex:flags.fee) || 'N/A'}}
+						{{gridPrice(i)}}
 					</span>
 			</a>
 		</div>

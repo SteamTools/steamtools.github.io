@@ -4,19 +4,22 @@
 	$.fn.thumbPopup = function(options)
 	{
 		//Combine the passed in options with the default settings
-		settings = jQuery.extend({
+		var settings = jQuery.extend({
 			popupId: "thumbPopup",
 			cursorTopOffset: 15,
 			cursorLeftOffset: 15,
 			loadingHtml: "<span style='padding: 5px;'>Loading</span>"
 		}, options);
 
-		//Create our popup element
-		popup =
-		$("<div />")
-		.attr("id", settings.popupId)
-		.css("position", "absolute")
-		.appendTo("body").hide();
+		//Reuse a single popup element across DataTables redraws
+		var $popup = $("#" + settings.popupId);
+		if ($popup.length === 0) {
+			$popup = $("<div />")
+				.attr("id", settings.popupId)
+				.css("position", "absolute")
+				.appendTo("body")
+				.hide();
+		}
 
 		//Attach hover events that manage the popup
 		$(this)
@@ -37,9 +40,9 @@
 			{
 				//Only display the larger image if the thumbnail is still being hovered
 				if ($(event.data.thumbImage).data("hovered") == true) {
-					$(popup).empty().append(this);
+					$popup.empty().append(this);
 					updatePopupPosition(event);
-					$(popup).show();
+					$popup.show();
 				}
 				$(event.data.thumbImage).data("cached", true);
 			})
@@ -47,8 +50,8 @@
 
 			//If no image has been loaded yet then place a loading message
 			if ($(this).data("cached") != true) {
-				$(popup).append($(settings.loadingHtml));
-				$(popup).show();
+				$popup.empty().append($(settings.loadingHtml));
+				$popup.show();
 			}
 
 			updatePopupPosition(event);
@@ -59,21 +62,21 @@
 			var windowSize = getWindowSize();
 			var popupSize = getPopupSize();
 			if (windowSize.width + windowSize.scrollLeft < event.pageX + popupSize.width + settings.cursorLeftOffset){
-				$(popup).css("left", event.pageX - popupSize.width - settings.cursorLeftOffset);
+				$popup.css("left", event.pageX - popupSize.width - settings.cursorLeftOffset);
 			} else {
-				$(popup).css("left", event.pageX + settings.cursorLeftOffset);
+				$popup.css("left", event.pageX + settings.cursorLeftOffset);
 			}
 			if (windowSize.height + windowSize.scrollTop < event.pageY + popupSize.height + settings.cursorTopOffset){
-				$(popup).css("top", event.pageY - popupSize.height - settings.cursorTopOffset);
+				$popup.css("top", event.pageY - popupSize.height - settings.cursorTopOffset);
 			} else {
-				$(popup).css("top", event.pageY + settings.cursorTopOffset);
+				$popup.css("top", event.pageY + settings.cursorTopOffset);
 			}
 		}
 
 		function hidePopup(event)
 		{
 			$(this).data("hovered", false);
-			$(popup).empty().hide();
+			$popup.empty().hide();
 		}
 
 		function getWindowSize() {
@@ -87,8 +90,8 @@
 
 		function getPopupSize() {
 			return {
-				width: $(popup).width(),
-				height: $(popup).height()
+				width: $popup.width(),
+				height: $popup.height()
 			};
 		}
 
