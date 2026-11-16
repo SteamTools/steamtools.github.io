@@ -43,7 +43,7 @@ function($scope, $http, $location, $filter) {
 			var minLabel, maxLabel;
 			if (type === "Price") {
 				minLabel = '$' + $filter('number')(newMin, 2);
-				maxLabel = '$' + $filter('number')(newMax, 2);
+				maxLabel = '$' + $filter('number')(newMax, 2) + (limits.max >= 100 ? '+' : '');
 			} else if (type === "Date") {
 				var minDate = (newMin + 1368590400) * 1000;
 				var maxDate = (newMax + 1368590400) * 1000;
@@ -85,7 +85,11 @@ function($scope, $http, $location, $filter) {
 				} else if (type === "Length") {
 					data = item.name.length - 2;
 				}
-				if (!(newMin <= data && data <= newMax)) continue;
+				if (type === "Price" && limits.max >= 100) {
+					if (!(data >= newMin)) continue;
+				} else if (!(newMin <= data && data <= newMax)) {
+					continue;
+				}
 			}
 			filtered.push(item);
 		}
@@ -110,7 +114,8 @@ function($scope, $http, $location, $filter) {
 		for (var i = 0; i < data.length; i++) {
 			var e = data[i];
 			e._idx = i;
-			e.appid = e.url.split('-')[0].substr(4);
+			var appMatch = /^753\/(\d+)-/.exec(e.url || '');
+			e.appid = appMatch ? appMatch[1] : '753';
 			e.price = e.price === null ? Infinity : parseFloat(e.price);
 			e._search = (String(e.name || '') + '\t' + String(e.game || '') + '\t' + e.appid).toLowerCase();
 			e._rand = String(e.name || '').hashCode();

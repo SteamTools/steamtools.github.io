@@ -18,6 +18,13 @@ function($scope, $http, $location, $filter) {
 		maxPrice: 400,
 	};
 
+	function isBgOwned(item) {
+		if (!item) return false;
+		if (item.url && $scope.owned.hasOwnProperty(item.url)) return true;
+		if (item.name && $scope.owned.hasOwnProperty(item.name)) return true;
+		return false;
+	}
+
 	function applyFilterAndSort() {
 		var source = $scope.bg || [];
 		var limits = $scope.limits;
@@ -40,7 +47,7 @@ function($scope, $http, $location, $filter) {
 			var minLabel, maxLabel;
 			if (type === "Price") {
 				minLabel = '$' + $filter('number')(newMin, 2);
-				maxLabel = '$' + $filter('number')(newMax, 2);
+				maxLabel = '$' + $filter('number')(newMax, 2) + (limits.max >= 100 ? '+' : '');
 			} else if (type === "Date") {
 				var minDate = (newMin + 1368590400) * 1000;
 				var maxDate = (newMax + 1368590400) * 1000;
@@ -61,7 +68,7 @@ function($scope, $http, $location, $filter) {
 		for (var i = 0; i < source.length; i++) {
 			var item = source[i];
 			if (hasOwn || revOwn) {
-				var isOwned = $scope.owned.hasOwnProperty(item.name);
+				var isOwned = isBgOwned(item);
 				if (revOwn ? !isOwned : isOwned) continue;
 			}
 			if (q && item._search.indexOf(q) === -1) continue;
@@ -80,7 +87,11 @@ function($scope, $http, $location, $filter) {
 				} else if (type === "Date") {
 					data = item.time;
 				}
-				if (!(newMin <= data && data <= newMax)) continue;
+				if (type === "Price" && limits.max >= 100) {
+					if (!(data >= newMin)) continue;
+				} else if (!(newMin <= data && data <= newMax)) {
+					continue;
+				}
 			}
 			filtered.push(item);
 		}
@@ -105,7 +116,8 @@ function($scope, $http, $location, $filter) {
 		for (var i = 0; i < data.length; i++) {
 			var b = data[i];
 			b._idx = i;
-			b.appid = b.url.split('-')[0].substr(4);
+			var appMatch = /^753\/(\d+)-/.exec(b.url || '');
+			b.appid = appMatch ? appMatch[1] : '753';
 			b.price = b.price === null ? Infinity : parseFloat(b.price);
 			b._search = (String(b.name || '') + '\t' + String(b.game || '') + '\t' + b.appid).toLowerCase();
 			b._rand = String(b.name || '').hashCode();
@@ -143,11 +155,13 @@ function($scope, $http, $location, $filter) {
 				return;
 			}
 
+			var bgNames = Array.isArray(data.items) ? data.items : [];
+			var bgKeys = (Array.isArray(data.urls) && data.urls.length) ? data.urls : bgNames;
 			$scope.owned = {};
 			$scope.loggedIn = true;
-			$scope.user_status = data.items.length + " items filtered";
-			for (var i = 0; i < data.items.length; i++) {
-				$scope.owned[data.items[i]] = true;
+			$scope.user_status = bgNames.length + " items filtered";
+			for (var i = 0; i < bgKeys.length; i++) {
+				$scope.owned[bgKeys[i]] = true;
 			}
 			applyFilterAndSort();
 		}).error(function(errData){
@@ -167,9 +181,11 @@ function($scope, $http, $location, $filter) {
 			onImport: function(parsed) {
 				$scope.$applyAsync(function() {
 					var bgList = parsed && Array.isArray(parsed.backgrounds) ? parsed.backgrounds : [];
+					var bgKeys = (parsed && Array.isArray(parsed.background_urls) && parsed.background_urls.length)
+						? parsed.background_urls : bgList;
 					$scope.owned = {};
-					for (var i = 0; i < bgList.length; i++) {
-						$scope.owned[bgList[i]] = true;
+					for (var i = 0; i < bgKeys.length; i++) {
+						$scope.owned[bgKeys[i]] = true;
 					}
 					$scope.loggedIn = true;
 					$scope.user_status = bgList.length + " items filtered (local import)";
@@ -182,9 +198,9 @@ function($scope, $http, $location, $filter) {
 	$scope.reverseOwn = false;
 	$scope.ownTest = function(item) {
 		if ($scope.reverseOwn)
-			return $scope.owned.hasOwnProperty(item.name);
+			return isBgOwned(item);
 		else
-			return !$scope.owned.hasOwnProperty(item.name);
+			return !isBgOwned(item);
 	};
 
 	$scope.userLogout = function() {
@@ -228,7 +244,7 @@ function($scope, $http, $location, $filter) {
 			return;
 		}
 
-		var url = CFG.API_BASE + "/FetchBackgroundImage?url=" + encodeURIComponent(btoa(b.url));
+		var url = CFG.API_BASE + "/FetchBackgroundImage?url=" + encodeURIComponent(b.url);
 		$http.get(url).success(function(data){
 			var imgHash = typeof data === "string" ? data : (data && data.img);
 			if (imgHash) {
@@ -349,13 +365,6 @@ function($scope, $http, $location, $filter) {
 	}, function(path) {
 		$scope.filterText = path.substring(1);
 	});
-
-	$scope.updateCount = function(){
-		var numItem = document.getElementById('numItem');
-		var items = document.getElementsByClassName("bg");
-		numItem.innerHTML = "<b>Number of items:</b> " + items.length;
-		return false;
-	};
 
 	$scope.fixDivSize = function() {
 		var bg_count = Math.max(1, Math.floor(window.innerWidth / 256) - 1);

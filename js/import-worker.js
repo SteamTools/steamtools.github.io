@@ -636,6 +636,8 @@
     var emoteSeen = Object.create(null);
     var backgrounds = [];
     var bgSeen = Object.create(null);
+    var backgroundUrls = [];
+    var bgUrlSeen = Object.create(null);
 
     for (var c = 0; c < classOrder.length; c++) {
       var classId = classOrder[c];
@@ -679,6 +681,12 @@
           bgSeen[bgName] = true;
           backgrounds.push(bgName);
         }
+        var bgHash = String(dObj.market_hash_name || '').trim();
+        var bgKey = bgHash ? ('753/' + quoteSteamKey(bgHash)) : bgName;
+        if (bgKey && !bgUrlSeen[bgKey]) {
+          bgUrlSeen[bgKey] = true;
+          backgroundUrls.push(bgKey);
+        }
       }
     }
 
@@ -687,7 +695,8 @@
       emote_count: emoteCount,
       bg_count: bgCount,
       emoticons: emoticons,
-      backgrounds: backgrounds
+      backgrounds: backgrounds,
+      background_urls: backgroundUrls
     };
   }
 
@@ -713,7 +722,8 @@
         emote_count: normalized.emotes.length,
         bg_count: 0,
         emoticons: normalized.emotes,
-        backgrounds: []
+        backgrounds: [],
+        background_urls: []
       };
     }
 
@@ -738,7 +748,8 @@
       emote_count: community.emote_count,
       bg_count: community.bg_count,
       emoticons: community.emoticons,
-      backgrounds: community.backgrounds
+      backgrounds: community.backgrounds,
+      background_urls: community.background_urls
     };
   }
 
