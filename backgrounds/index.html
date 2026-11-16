@@ -12,7 +12,7 @@
 	<meta name="author" content="Ehsan Kia">
 	<title>Background Gallery</title>
 	<link rel="shortcut icon" href="/favicon.ico">
-	<link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.no-icons.min.css" rel="stylesheet">
+	<link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.no-icons.min.css" integrity="sha384-nITPVmSN/64KqhfcWtEJQwuzHIHqSgbSPmp74MISiB8zab+d6ThLyqTpw8bYMBqY" crossorigin="anonymous" rel="stylesheet">
 	<link href="angular.rangeSlider.css?v=20261116b" rel="stylesheet">
 	<link href="../css/steamtools-import.css?v=20261116b" rel="stylesheet">
 
@@ -185,8 +185,8 @@
 <body ng-controller="BGCtrl" ng-cloak>
 	<a class="corner topbutton" style="left: 25px;" href="../">&laquo; Hub</a>
 	<div class="corner" style="right: 25px;">
-		<a target="_blank" href="https://twitter.com/SteamTools"><img src="/img/twitter.png" alt="Twitter" width="25" height="25"></a>
-		<a target="_blank" href="https://steamcommunity.com/groups/steam_tools"><img src="/img/steam.png" alt="Steam Group" width="25" height="25"></a>
+		<a target="_blank" rel="noopener noreferrer" href="https://twitter.com/SteamTools"><img src="/img/twitter.png" alt="Twitter" width="25" height="25"></a>
+		<a target="_blank" rel="noopener noreferrer" href="https://steamcommunity.com/groups/steam_tools"><img src="/img/steam.png" alt="Steam Group" width="25" height="25"></a>
 		<a class="topbutton" id="feedback"  href="https://steamcommunity.com/groups/steam_tools">Feedback</a>
 		<a class="topbutton" id="donate" href="https://www.paypal.com/donate/?business=HLRYRKCXRYX7C">Donate</a>
 	</div>
@@ -244,26 +244,13 @@
 	</div>
 	<div id="scroll-sentinel" aria-hidden="true" style="height: 1px;"></div>
 
-	<script src="//code.jquery.com/jquery-2.2.0.min.js"></script>
-	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.6/angular.min.js"></script>
+	<script src="https://code.jquery.com/jquery-2.2.0.min.js" integrity="sha384-K+ctZQ+LL8q6tP7I94W+qzQsfRV2a+AfHIi9k8z8l9ggpc8X+Ytst4yBo/hH+8Fk" crossorigin="anonymous"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.6/angular.min.js" integrity="sha384-Wm/fcldF74JKp+X609mkWQUjA/AsRbY2zqUhRjznliDz924gK7f19e8nOcxVVDof" crossorigin="anonymous"></script>
 	<script src="angular.rangeSlider.js"></script>
 	<script src="../js/steamtools-config.js?v=20261116b"></script>
 	<script src="../js/import-worker.js?v=20261116b"></script>
 	<script src="../js/steamtools-import.js?v=20261116b"></script>
 	<script src="main.js?v=20261116b"></script>
-
-	<!-- Start of Google Analytics code -->
-	<script>
-		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-		})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
-		ga('create', 'UA-30619812-2', 'auto');
-		ga('require', 'linkid', 'linkid.js');
-		ga('send', 'pageview');
-	</script>
-	<!-- End of Google Analytics code -->
 
 	<!-- Start of StatCounter Code for Default Guide -->
 	<script>

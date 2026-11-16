@@ -10,13 +10,13 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Privacy Policy</title>
 
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/jQuery-linkify/2.1.6/linkify.min.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/jQuery-linkify/2.1.6/linkify-element.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jQuery-linkify/2.1.6/linkify.min.js" integrity="sha384-Z3ub17svajFM8GlaeVUcsbsitERgZTKNhk12NpxLQTTyONfOGw3PCwvUNVySf8Kf" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jQuery-linkify/2.1.6/linkify-element.min.js" integrity="sha384-o9PyE41Wq2cWMEF+azDhN+Vyd5O+dsaECNgPZ6yl2W48fPWHavn+6J91WVE+mVsJ" crossorigin="anonymous"></script>
 
-	<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" integrity="sha384-GYBZMlEOunzhR/VZ6XhlOir+4wC0SyDpSIotW0oxJizkK/V2czMG1GvOmuRiNUNP" crossorigin="anonymous">
 	<link href='https://fonts.googleapis.com/css?family=Arvo' rel='stylesheet' type='text/css'>
 	<link href='https://fonts.googleapis.com/css?family=PT+Sans' rel='stylesheet' type='text/css'>
-	<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:400:700">
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:400,700">
 	<style>
 		body {
 			font-family: 'PT Sans', Helvetica, Arial, sans-serif;
@@ -78,6 +78,7 @@
 	</style>
 </head>
 <body>
+	<p style="margin: 10px 0 0;"><a href="/">&laquo; Return to SteamTools Hub</a></p>
 	<h2>Privacy Policy</h2>
 	<hr>
 
@@ -87,8 +88,8 @@
 		<ol>
 			<li>We are committed to safeguarding the privacy of our website visitors and service users.</li>
 			<li>This policy applies where we are acting as a data controller with respect to the personal data of our website visitors and service users; in other words, where we determine the purposes and means of the processing of that personal data.</li>
-			<li>We use cookies on our website. Insofar as those cookies are not strictly necessary for the provision of our website and services, we will ask you to consent to our use of cookies when you first visit our website.</li>
-			<li>In this policy, "we", "us" and "our" refer SteamTools. For more information about us, see Section 13.</li>
+			<li>We use cookies and browser storage on our website. Strictly necessary cookies keep authentication and abuse-prevention passes working; optional preferences such as currency choice are stored locally in your browser.</li>
+			<li>In this policy, "we", "us" and "our" refer to SteamTools. For our contact details, see Section 12 ("Our details").</li>
 		</ol>
 	</li>
 
@@ -127,23 +128,23 @@
 		</ol>
 	</li>
 
-	<li>International transfers of your personal data
+	<li>International transfers and infrastructure services
 		<ol>
-			<li>In this Section 5, we provide information about the circumstances in which your personal data may be transferred to countries outside the European Economic Area (EEA).</li>
-			<li>The hosting facilities for our website are situated in US. The European Commission has made an "adequacy decision" with respect to the data protection laws of each of these countries. Transfers to each of these countries will be protected by appropriate safeguards, namely EU-U.S. Privacy Shield Framework.</li>
-			<li>Mailing databases are situated in US. The European Commission has made an "adequacy decision" with respect to the data protection laws of each of these countries. Transfers to each of these countries will be protected by appropriate safeguards, namely  EU-U.S. Privacy Shield and Swiss-U.S. Privacy Shield.</li>
-			<li>You acknowledge that personal data that you submit for publication through our website or services may be available, via the internet, around the world. We cannot prevent the use (or misuse) of such personal data by others.</li>
+			<li>In this Section 5, we explain how infrastructure providers process requests on SteamTools.</li>
+			<li>Static pages are hosted on GitHub Pages, market datasets and thumbnails are served through Cloudflare R2 and Cloudflare CDN, API backends run on Google App Engine (United States), and abusive automated requests are mitigated with Cloudflare Turnstile (https://www.cloudflare.com/privacypolicy/).</li>
+			<li>Personal data submitted through public Steam Community lookups only reflects public Steam Web API / Community inventory data or data you choose to import directly in your browser.</li>
 		</ol>
 	</li>
 
 	<li>Retaining and deleting personal data
 		<ol>
-			<li>This Section 6 sets out our data retention policies and procedure, which are designed to help ensure that we comply with our legal obligations in relation to the retention and deletion of personal data.</li>
+			<li>This Section 6 sets out our data retention policies and procedures, which are designed to help ensure that we comply with our legal obligations in relation to the retention and deletion of personal data.</li>
 			<li>Personal data that we process for any purpose or purposes shall not be kept for longer than is necessary for that purpose or those purposes.</li>
-			<li>We will retain and delete your personal data as follows:
+			<li>We retain transient session and cache data as follows:
 				<ol type='a'>
-					<li>We do not retain any profile data. All profile data is loaded directly from Steam and discarded shortly afterwards.</li>
-					<li>Cookie data will be retained for no longer than 30 days.</li>
+					<li>Signed-out public Steam lookups use an in-memory API stale-while-revalidate cache for up to 24 hours (typically fresh for 15 minutes) and are discarded automatically when expired or evicted.</li>
+					<li>Signed-in authentication cookies (`st_session`, `st_logged_in`) expire after 7 days or immediately upon Logout; Turnstile verification pass cookies (`st_iv_pass`) expire after 10 minutes.</li>
+					<li>Local Inventory Importer files are parsed locally inside your browser; optional staged session data stored in browser `sessionStorage`/`IndexedDB` or display preferences in `localStorage` remain solely on your device and can be cleared via Reset or browser site-data settings.</li>
 				</ol>
 			</li>
 			<li>Notwithstanding the other provisions of this Section 6, we may retain your personal data where such retention is necessary for compliance with a legal obligation to which we are subject, or in order to protect your vital interests or the vital interests of another natural person.</li>
@@ -186,7 +187,7 @@
 			<li>You have the right to object to our processing of your personal data for direct marketing purposes (including profiling for direct marketing purposes). If you make such an objection, we will cease to process your personal data for this purpose.</li>
 			<li>If you consider that our processing of your personal information infringes data protection laws, you have a legal right to lodge a complaint with a supervisory authority responsible for data protection. You may do so in the EU member state of your habitual residence, your place of work or the place of the alleged infringement.</li>
 			<li>To the extent that the legal basis for our processing of your personal information is consent, you have the right to withdraw that consent at any time. Withdrawal will not affect the lawfulness of processing before the withdrawal.</li>
-			<li>You may exercise any of your rights in relation to your personal data by contacting us using the details outlined in section 13.</li>
+			<li>You may exercise any of your rights in relation to your personal data by contacting us using the details outlined in Section 12.</li>
 		</ol>
 	</li>
 
@@ -219,7 +220,7 @@
 			<li>We use Google Analytics and Comscore to analyse the use of our website. Google Analytics and Comscore gather information about website use by means of cookies. The information gathered relating to our website is used to create reports about the use of our website. Google's privacy policy is available at: https://www.google.com/policies/privacy/. Comscore’s privacy policy is available at https://www.comscore.com/About-comScore/Privacy-Policy.</li>
 			<li>We publish Google AdSense interest-based advertisements on our website. These are tailored by Google to reflect your interests. To determine your interests, Google will track your behaviour on our website and on other websites across the web using cookies. You can view, delete or add interest categories associated with your browser by visiting: https://adssettings.google.com. You can also opt out of the AdSense partner network cookie using those settings or using the Network Advertising Initiative's multi-cookie opt-out mechanism at: http://optout.networkadvertising.org. However, these opt-out mechanisms themselves use cookies, and if you clear the cookies from your browser your opt-out will not be maintained. To ensure that an opt-out is maintained in respect of a particular browser, you may wish to consider using the Google browser plug-ins available at: https://support.google.com/ads/answer/7395996.</li>
 			<li>We use Avocet, OpenX, PulsePoint, Sovrn and Google Audiences to carry out retargeting and Header Bidding. These service uses cookies for retargeting ads and targeting ads based on your interests. You can view the privacy policy of these service providers at http://avocet.io/privacy-policy, https://www.openx.com/legal/privacy-policy/, https://www.pulsepoint.com/privacy-policy.html, https://www.sovrn.com/privacy-policy/ and https://www.google.com/policies/privacy/</li>
-			<li>We use third party advertisements to support our site. Some of these advertisers may be served from our third party advertiser, you can view their <a href="https://www.network-n.com/network-privacy-policy/" target="_blank">privacy policy</a> and <a href="https://www.network-n.com/network-cookie-policy/" target="_blank">cookie policy</a> here. You can manage your cookie settings <a class="nn-cmp-show" href="#">here</a>.
+			<li>We use third party advertisements to support our site. Some of these advertisers may be served from our third party advertiser, you can view their <a href="https://www.network-n.com/network-privacy-policy/" target="_blank" rel="noopener noreferrer">privacy policy</a> and <a href="https://www.network-n.com/network-cookie-policy/" target="_blank" rel="noopener noreferrer">cookie policy</a> here. You can manage your cookie settings <a class="nn-cmp-show" href="#">here</a>.
 		</ol>
 	</li>
 
@@ -247,7 +248,9 @@
 				<ol type='a'>
 					<li>by email, using this email address
 						<a href="mailto:spam@steam.tools" id="lnkMail"
-						   onmouseover="this.href = this.href.replace('spam', 'contact')">
+						   onmouseover="this.href = this.href.replace('spam', 'contact')"
+						   onfocus="this.href = this.href.replace('spam', 'contact')"
+						   onclick="this.href = this.href.replace('spam', 'contact')">
 							sloot.maets@tcatnoc
 						</a>
 					</li>

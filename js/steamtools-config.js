@@ -149,14 +149,21 @@
     return trimTrailingSlashes(defaultValue);
   }
 
+  function isLocalDevHost() {
+    var host = root && root.location && root.location.hostname ? String(root.location.hostname).toLowerCase() : '';
+    return host === 'localhost' || host === '127.0.0.1';
+  }
+
   function resolveSitekey() {
-    var fromQuery = safeSearchParamGet('st_turnstile_sitekey');
-    if (fromQuery && /^[0-9A-Za-z_-]{8,128}$/.test(fromQuery.trim())) {
-      return fromQuery.trim();
-    }
-    var fromStorage = safeLocalStorageGet('st_turnstile_sitekey');
-    if (fromStorage && /^[0-9A-Za-z_-]{8,128}$/.test(fromStorage.trim())) {
-      return fromStorage.trim();
+    if (isLocalDevHost()) {
+      var fromQuery = safeSearchParamGet('st_turnstile_sitekey');
+      if (fromQuery && /^[0-9A-Za-z_-]{8,128}$/.test(fromQuery.trim())) {
+        return fromQuery.trim();
+      }
+      var fromStorage = safeLocalStorageGet('st_turnstile_sitekey');
+      if (fromStorage && /^[0-9A-Za-z_-]{8,128}$/.test(fromStorage.trim())) {
+        return fromStorage.trim();
+      }
     }
     return DEFAULTS.TURNSTILE_SITEKEY;
   }
@@ -203,19 +210,29 @@
     return null;
   }
 
-  function checkAuthSession($http) {
-    var authBase = trimTrailingSlashes(config.AUTH_BASE);
-    var cookieSteamId = parseValidatedOauthCookie();
+  function hasLoggedInHintCookie(cookieString) {
+    var src = typeof cookieString === 'string'
+      ? cookieString
+      : (root && root.document && typeof root.document.cookie === 'string' ? root.document.cookie : '');
+    if (!src) return false;
+    return /(?:^|;\s*)st_logged_in=1(?:;|$)/.test(src);
+  }
 
-    function cookieFallback() {
-      if (cookieSteamId) {
-        return { authenticated: true, steamid: cookieSteamId, source: 'cookie' };
-      }
-      return { authenticated: false, steamid: null, source: null };
+  function clearLoggedInHintCookie() {
+    if (root && root.document) {
+      root.document.cookie = 'st_logged_in=; path=/; domain=.steam.tools; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+      root.document.cookie = 'st_logged_in=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
     }
+  }
 
+  function checkAuthSession($http) {
+    clearLegacyOauthCookie();
+    if (!hasLoggedInHintCookie()) {
+      return Promise.resolve({ authenticated: false, steamid: null, source: null });
+    }
+    var authBase = trimTrailingSlashes(config.AUTH_BASE);
     if (!$http || typeof $http.get !== 'function') {
-      return Promise.resolve(cookieFallback());
+      return Promise.resolve({ authenticated: false, steamid: null, source: null });
     }
 
     return new Promise(function (resolve) {
@@ -230,10 +247,11 @@
           });
           return;
         }
-        resolve(cookieFallback());
+        clearLoggedInHintCookie();
+        resolve({ authenticated: false, steamid: null, source: null });
       };
       var onError = function () {
-        resolve(cookieFallback());
+        resolve({ authenticated: false, steamid: null, source: null });
       };
       if (typeof req.then === 'function') {
         req.then(onSuccess, onError);
@@ -242,7 +260,7 @@
           onSuccess({ data: data });
         }).error(onError);
       } else {
-        resolve(cookieFallback());
+        onError();
       }
     });
   }
@@ -259,14 +277,17 @@
     return url;
   }
 
-  function clearLegacyOauthCookie() {
-    if (root && root.document) {
-      root.document.cookie = 'oauth_steamid=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
-    }
+  function clearLegacyOauthCookie(force) {
+    if (!root || !root.document) return;
+    var cur = String(root.document.cookie || '');
+    if (!force && !/(?:^|;\s*)oauth_steamid=/.test(cur)) return;
+    root.document.cookie = 'oauth_steamid=; path=/; domain=.steam.tools; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+    root.document.cookie = 'oauth_steamid=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
   }
 
   function performLogout($http) {
-    clearLegacyOauthCookie();
+    clearLegacyOauthCookie(true);
+    clearLoggedInHintCookie();
     var authBase = trimTrailingSlashes(config.AUTH_BASE);
     if (!$http || typeof $http.post !== 'function') {
       return Promise.resolve({ ok: true });
@@ -275,6 +296,7 @@
       var req = $http.post(authBase + '/auth/logout', {}, { withCredentials: true });
       var done = function () {
         clearLegacyOauthCookie();
+        clearLoggedInHintCookie();
         resolve({ ok: true });
       };
       if (typeof req.then === 'function') {
@@ -295,6 +317,11 @@
   function isTurnstileConfigured() {
     var key = String(config.TURNSTILE_SITEKEY || '').trim();
     return key.length > 0 && !/PLACEHOLDER/i.test(key);
+  }
+
+  function escapeCsvFormula(str) {
+    var s = String(str === null || str === undefined ? '' : str);
+    return /^[=+\-@\t\r]/.test(s) ? ("'" + s) : s;
   }
 
   function escapeHtml(str) {
@@ -694,10 +721,13 @@
     formatPriceUsd: formatPriceUsd,
     openTextExportDialog: openTextExportDialog,
     parseValidatedOauthCookie: parseValidatedOauthCookie,
+    hasLoggedInHintCookie: hasLoggedInHintCookie,
+    clearLoggedInHintCookie: clearLoggedInHintCookie,
     checkAuthSession: checkAuthSession,
     getLoginUrl: getLoginUrl,
     performLogout: performLogout,
     clearLegacyOauthCookie: clearLegacyOauthCookie,
+    escapeCsvFormula: escapeCsvFormula,
     escapeHtml: escapeHtml,
     normalizeSteamAssetUrl: normalizeSteamAssetUrl,
     isInAppWebview: isInAppWebview,

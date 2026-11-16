@@ -11,13 +11,13 @@
 	<meta name="author" content="Ehsan Kia">
 	<title>Game Filter</title>
 
-	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js" integrity="sha384-WksqwlT8hWlAsDjVT3cRrnCjB7YvUzq8jcwbyvcUWsT2leBuNB5KOay2yMPL43EV" crossorigin="anonymous"></script>
 	<script src="jquery.mCustomScrollbar.concat.min.js"></script>
-	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js"></script>
-	<script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.2/js/bootstrap.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js" integrity="sha384-25OA1Qsy+8YnGp0IWGZ+Ej1rjq+GnXMxO+Vj4rGk/DYO9Qjx6zIPVP/5occ4ZdIR" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.2/js/bootstrap.min.js" integrity="sha384-7sVK908dLMjOwvGD47EHg9cxk32sTpllx4Qqg0vzxEIlyBSsK9UauzrqZl8SPP0+" crossorigin="anonymous"></script>
 
 	<link rel="shortcut icon" href="/favicon.ico">
-	<link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" rel="stylesheet">
+	<link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" integrity="sha384-4FeI0trTH/PCsLWrGCD1mScoFu9Jf2NdknFdFoJhXZFwsvzZ3Bo5sAh7+zL8Xgnd" crossorigin="anonymous" rel="stylesheet">
 	<link rel="stylesheet" type="text/css" href="jquery.mCustomScrollbar.css" media="all">
 	<link rel="stylesheet" type="text/css" href="../css/steamtools-import.css?v=20261116c" media="all">
 	<link rel="stylesheet" type="text/css" href="style.css?v=20261116b" media="all">
@@ -25,8 +25,8 @@
 <body ng-controller="SteamCtrl" ng-cloak>
 	<a class="corner topbutton" style="left: 25px;" href="../">&laquo; Hub</a>
 	<div class="corner" style="right: 25px;">
-		<a target="_blank" href="https://twitter.com/SteamTools"><img src="/img/twitter.png" alt="Twitter" width="25" height="25"></a>
-		<a target="_blank" href="https://steamcommunity.com/groups/steam_tools"><img src="/img/steam.png" alt="Steam Group" width="25" height="25"></a>
+		<a target="_blank" rel="noopener noreferrer" href="https://twitter.com/SteamTools"><img src="/img/twitter.png" alt="Twitter" width="25" height="25"></a>
+		<a target="_blank" rel="noopener noreferrer" href="https://steamcommunity.com/groups/steam_tools"><img src="/img/steam.png" alt="Steam Group" width="25" height="25"></a>
 		<a class="topbutton" id="feedback"  href="https://steamcommunity.com/groups/steam_tools">Feedback</a>
 		<a class="topbutton" id="donate" href="https://www.paypal.com/donate/?business=HLRYRKCXRYX7C">PayPal</a>
 	</div>
@@ -105,7 +105,7 @@
 			</ng:switch>
 			<div id="game-content">
 				<a ng-repeat="game in gameList | orderBy:getGameName" adjust-size
-					ng-href="https://store.steampowered.com/app/[[game]]" target="_blank">
+					ng-href="https://store.steampowered.com/app/[[game]]" target="_blank" rel="noopener noreferrer">
 					<div class="game" draggable="true" ng-bind="gameData[game].name" scrollbar></div>
 				</a>
 			</div>
@@ -144,19 +144,6 @@
 
 	<script type="text/javascript" src="../js/steamtools-config.js?v=20261116b"></script>
 	<script type="text/javascript" src="steam.js?v=20261116b"></script>
-
-	<!-- Start of Google Analytics code -->
-	<script>
-		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-		})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
-		ga('create', 'UA-30619812-2', 'auto');
-		ga('require', 'linkid', 'linkid.js');
-		ga('send', 'pageview');
-	</script>
-	<!-- End of Google Analytics code -->
 
 	<!-- Start of StatCounter Code for Default Guide -->
 	<script>

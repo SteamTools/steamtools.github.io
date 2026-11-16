@@ -389,10 +389,11 @@ angular.module('InvApp', ['ui.bootstrap'])
 		}
 
 		var usedTurnstile = false;
+		var reqHeaders = {};
 		if ($scope.hasValidPass()) {
 			url += '&ts=' + encodeURIComponent($scope.ts) + '&key=' + encodeURIComponent($scope.key);
 		} else if ($scope.turnstileToken) {
-			url += '&cf-turnstile-response=' + encodeURIComponent($scope.turnstileToken);
+			reqHeaders['X-Turnstile-Token'] = String($scope.turnstileToken);
 			usedTurnstile = true;
 			// Single-use Turnstile token is consumed by this submission; reset immediately so it cannot be reused.
 			resetTurnstileWidget();
@@ -403,7 +404,7 @@ angular.module('InvApp', ['ui.bootstrap'])
 			return;
 		}
 
-		$http({method: 'GET', url: url, withCredentials: true}).then(function(response) {
+		$http({method: 'GET', url: url, headers: reqHeaders, withCredentials: true}).then(function(response) {
 			$scope.isLoading = false;
 			var data = response && response.data;
 			if (!data) return;
@@ -731,10 +732,9 @@ angular.module('InvApp', ['ui.bootstrap'])
 	});
 
 	function escapeCsvCell(val) {
-		var s = String(val === null || val === undefined ? '' : val);
-		if (/^[=+\-@\t\r]/.test(s)) {
-			s = "'" + s;
-		}
+		var s = typeof CFG.escapeCsvFormula === 'function'
+			? CFG.escapeCsvFormula(val)
+			: String(val === null || val === undefined ? '' : val);
 		if (/[",\n\r]/.test(s)) {
 			return '"' + s.replace(/"/g, '""') + '"';
 		}

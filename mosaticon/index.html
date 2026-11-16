@@ -21,8 +21,8 @@
 <body ng-controller="mosaticonCtrl" ng-cloak>
 	<a class="corner topbutton" style="left: 25px;" href="../">&laquo; Hub</a>
 	<div class="corner" style="right: 25px;">
-		<a target="_blank" href="https://twitter.com/SteamTools"><img src="/img/twitter.png" alt="Twitter" width="25" height="25"></a>
-		<a target="_blank" href="https://steamcommunity.com/groups/steam_tools"><img src="/img/steam.png" alt="Steam Group" width="25" height="25"></a>
+		<a target="_blank" rel="noopener noreferrer" href="https://twitter.com/SteamTools"><img src="/img/twitter.png" alt="Twitter" width="25" height="25"></a>
+		<a target="_blank" rel="noopener noreferrer" href="https://steamcommunity.com/groups/steam_tools"><img src="/img/steam.png" alt="Steam Group" width="25" height="25"></a>
 		<a class="topbutton" id="feedback"  href="https://steamcommunity.com/groups/steam_tools">Feedback</a>
 		<a class="topbutton" id="donate" href="https://www.paypal.com/donate/?business=HLRYRKCXRYX7C">Donate</a>
 	</div>
@@ -177,7 +177,7 @@
 		</div>
 	</script>
 
-	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.10/angular.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.10/angular.min.js" integrity="sha384-w00wP54lz1yheNCj2qHsYSAzvnOwattZOVdRTD+va3MGP+jgpNaJLQ68RSHJhnOc" crossorigin="anonymous"></script>
 	<script src="hotkeys.min.js"></script>
 	<script src="ui-bootstrap-tpls-0.12.0.min.js"></script>
 	<script src="kdTree.min.js"></script>
@@ -186,19 +186,6 @@
 	<script src="../js/import-worker.js?v=20261116c"></script>
 	<script src="../js/steamtools-import.js?v=20261116c"></script>
 	<script src="main.js?v=20261116c"></script>
-
-	<!-- Start of Google Analytics code -->
-	<script>
-		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-		})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
-		ga('create', 'UA-30619812-2', 'auto');
-		ga('require', 'linkid', 'linkid.js');
-		ga('send', 'pageview');
-	</script>
-	<!-- End of Google Analytics code -->
 
 	<!-- Start of StatCounter Code for Default Guide -->
 	<script>

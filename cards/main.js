@@ -51,8 +51,13 @@ function($scope, $http, $filter, $compile, $modal, $timeout){
 	};
 	// Little hack to have overflow ellipsis
 	$scope.overflow = function(data, type) {
-		if (type === "export") return data;
-		const game = data.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+		var s = (data === null || data === undefined) ? '' : String(data);
+		if (type === "export") {
+			return typeof CFG.escapeCsvFormula === 'function'
+				? CFG.escapeCsvFormula(s)
+				: (/^[=+\-@\t\r]/.test(s) ? ("'" + s) : s);
+		}
+		var game = s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 		return '<span class="game">' + game + '</span>';
 	};
 
@@ -440,6 +445,7 @@ function($scope, $http, $filter, $compile, $modal, $timeout){
 				extend: 'copy',
 				exportOptions: {
 					columns: ':visible',
+					orthogonal: 'export',
 				},
 			},
 			{
