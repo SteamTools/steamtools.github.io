@@ -252,10 +252,27 @@
     return p;
   }
 
+  function fetchDatasetViaConfig(logicalKey, cdnBase, fetchImpl) {
+    var cfg = getConfig();
+    var cleanKey = String(logicalKey || '').replace(/^\/+/, '');
+    var fallbackUrl = cdnBase.replace(/\/+$/, '') + '/' + cleanKey;
+    if (typeof cfg.resolveDatasetUrl === 'function') {
+      return cfg.resolveDatasetUrl(cleanKey, { cdnBase: cdnBase, fetchImpl: fetchImpl })
+        .then(function (resolvedUrl) {
+          return fetchJsonStrict(resolvedUrl, fetchImpl).catch(function (err) {
+            if (resolvedUrl !== fallbackUrl) {
+              return fetchJsonStrict(fallbackUrl, fetchImpl);
+            }
+            throw err;
+          });
+        });
+    }
+    return fetchJsonStrict(fallbackUrl, fetchImpl);
+  }
+
   function fetch753Monolith(cdnBase, fetchImpl) {
     if (_753MonolithPromise) return _753MonolithPromise;
-    var url = cdnBase.replace(/\/+$/, '') + '/value/753.json';
-    _753MonolithPromise = fetchJsonStrict(url, fetchImpl).catch(function (err) {
+    _753MonolithPromise = fetchDatasetViaConfig('value/753.json', cdnBase, fetchImpl).catch(function (err) {
       _753MonolithPromise = null;
       throw err;
     });
@@ -320,14 +337,14 @@
     }
 
     if (appStr !== '753' || cfg.USE_753_BUCKETS === false) {
-      var singleUrl = cdnBase + '/value/' + encodeURIComponent(appStr) + '.json';
-      return fetchJsonStrict(singleUrl, fetchImpl).then(function (priceMap) {
-        return {
-          items: applyPriceLookup(priceMap),
-          usedBucketFallback: appStr === '753',
-          bucketsFetched: []
-        };
-      });
+      return fetchDatasetViaConfig('value/' + encodeURIComponent(appStr) + '.json', cdnBase, fetchImpl)
+        .then(function (priceMap) {
+          return {
+            items: applyPriceLookup(priceMap),
+            usedBucketFallback: appStr === '753',
+            bucketsFetched: []
+          };
+        });
     }
 
     var bucketSet = Object.create(null);
@@ -348,8 +365,7 @@
     var mergedPrices = Object.create(null);
 
     return runWithConcurrency(buckets, 8, function (hex2) {
-      var bucketUrl = cdnBase + '/value/753/' + hex2 + '.json';
-      return fetchJsonStrict(bucketUrl, fetchImpl).then(function (map) {
+      return fetchDatasetViaConfig('value/753/' + hex2 + '.json', cdnBase, fetchImpl).then(function (map) {
         return { hex2: hex2, map: map };
       });
     }).then(function (entries) {

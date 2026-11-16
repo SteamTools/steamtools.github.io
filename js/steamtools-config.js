@@ -334,6 +334,138 @@
   }
 
   var _currencyPromise = null;
+  var _manifestCache = Object.create(null);
+  var _manifestPromises = Object.create(null);
+  var MANIFEST_TTL_MS = 300000;
+
+  function fetchRawJson(url, options) {
+    var opts = options || {};
+    var $http = opts.$http;
+    var fetchImpl = opts.fetchImpl;
+    if (fetchImpl) {
+      return Promise.resolve().then(function () { return fetchImpl(url); }).then(function (resp) {
+        if (!resp || !resp.ok) {
+          var err = new Error('HTTP ' + (resp ? resp.status : 'ERR') + ' loading ' + url);
+          err.status = resp ? resp.status : 0;
+          throw err;
+        }
+        return resp.json();
+      });
+    }
+    if ($http && typeof $http.get === 'function') {
+      return new Promise(function (resolve, reject) {
+        var req = $http.get(url);
+        var ok = function (resp) { resolve(resp && resp.data !== undefined ? resp.data : resp); };
+        var fail = function (err) {
+          var status = err && typeof err.status === 'number' ? err.status : 0;
+          var e = new Error('HTTP ' + status + ' loading ' + url);
+          e.status = status;
+          reject(e);
+        };
+        if (typeof req.then === 'function') {
+          req.then(ok, fail);
+        } else if (typeof req.success === 'function') {
+          req.success(function (d) { resolve(d); }).error(function (_d, st) {
+            var e = new Error('HTTP ' + (st || 0) + ' loading ' + url);
+            e.status = st || 0;
+            reject(e);
+          });
+        } else {
+          fail({ status: 0 });
+        }
+      });
+    }
+    if (root && typeof root.fetch === 'function') {
+      return root.fetch(url).then(function (resp) {
+        if (!resp || !resp.ok) {
+          var err = new Error('HTTP ' + (resp ? resp.status : 'ERR') + ' loading ' + url);
+          err.status = resp ? resp.status : 0;
+          throw err;
+        }
+        return resp.json();
+      });
+    }
+    return Promise.reject(new Error('No HTTP client available.'));
+  }
+
+  function getManifest(options) {
+    var opts = options || {};
+    var cdnBase = trimTrailingSlashes(opts.cdnBase || config.CDN_BASE);
+    if (!opts.forceRefresh) {
+      var mem = _manifestCache[cdnBase];
+      if (mem && (Date.now() - mem.ts) < MANIFEST_TTL_MS) {
+        return Promise.resolve(mem.data);
+      }
+      try {
+        if (root && root.sessionStorage) {
+          var raw = root.sessionStorage.getItem('st_manifest_v1:' + cdnBase);
+          if (raw) {
+            var parsed = JSON.parse(raw);
+            if (parsed && parsed.ts && (Date.now() - parsed.ts) < MANIFEST_TTL_MS && parsed.data && parsed.data.datasets) {
+              _manifestCache[cdnBase] = parsed;
+              return Promise.resolve(parsed.data);
+            }
+          }
+        }
+      } catch (e) {}
+    }
+
+    if (_manifestPromises[cdnBase]) return _manifestPromises[cdnBase];
+    var p = fetchRawJson(cdnBase + '/manifest.json', opts).then(function (data) {
+      delete _manifestPromises[cdnBase];
+      if (data && typeof data === 'object' && data.datasets) {
+        var rec = { ts: Date.now(), data: data };
+        _manifestCache[cdnBase] = rec;
+        try {
+          if (root && root.sessionStorage) {
+            root.sessionStorage.setItem('st_manifest_v1:' + cdnBase, JSON.stringify(rec));
+          }
+        } catch (e) {}
+        return data;
+      }
+      return null;
+    }).catch(function () {
+      delete _manifestPromises[cdnBase];
+      return null;
+    });
+    _manifestPromises[cdnBase] = p;
+    return p;
+  }
+
+  function resolveDatasetUrl(logicalKey, options) {
+    var opts = options || {};
+    var cleanKey = String(logicalKey || '').replace(/^\/+/, '');
+    var cdnBase = trimTrailingSlashes(opts.cdnBase || config.CDN_BASE);
+    var fallbackUrl = cdnBase + '/' + cleanKey;
+    return getManifest(opts).then(function (manifest) {
+      var entry = manifest && manifest.datasets && manifest.datasets[cleanKey];
+      var rel = entry && (entry.v_key || entry.path);
+      if (typeof rel === 'string' && rel.trim()) {
+        return cdnBase + '/' + rel.trim().replace(/^\/+/, '');
+      }
+      return fallbackUrl;
+    }).catch(function () {
+      return fallbackUrl;
+    });
+  }
+
+  function getDatasetJson($http, logicalKey, options) {
+    var opts = Object.assign({}, options || {});
+    if ($http && typeof $http.get === 'function' && !opts.$http) {
+      opts.$http = $http;
+    }
+    var cleanKey = String(logicalKey || '').replace(/^\/+/, '');
+    var cdnBase = trimTrailingSlashes(opts.cdnBase || config.CDN_BASE);
+    var fallbackUrl = cdnBase + '/' + cleanKey;
+    return resolveDatasetUrl(cleanKey, opts).then(function (resolvedUrl) {
+      return fetchRawJson(resolvedUrl, opts).catch(function (err) {
+        if (resolvedUrl !== fallbackUrl) {
+          return fetchRawJson(fallbackUrl, opts);
+        }
+        throw err;
+      });
+    });
+  }
 
   function applyCurrencyRatesMap(data) {
     if (!data || typeof data !== 'object') return 0;
@@ -364,7 +496,6 @@
       }
     } catch (e) {}
 
-    var url = trimTrailingSlashes(config.CDN_BASE) + '/data/currency.json';
     var handleData = function (data) {
       var count = applyCurrencyRatesMap(data);
       if (count > 0) {
@@ -377,36 +508,14 @@
       return { updated: count, total: CURRENCY_DATA.length, cached: false };
     };
 
-    if ($http && typeof $http.get === 'function') {
-      _currencyPromise = new Promise(function (resolve) {
-        var req = $http.get(url);
-        var ok = function (resp) {
-          var d = resp && resp.data !== undefined ? resp.data : resp;
-          resolve(handleData(d));
-        };
-        var fail = function () {
-          resolve({ updated: 0, total: CURRENCY_DATA.length, error: true });
-        };
-        if (typeof req.then === 'function') {
-          req.then(ok, fail);
-        } else if (typeof req.success === 'function') {
-          req.success(function (d) { ok({ data: d }); }).error(fail);
-        } else {
-          fail();
-        }
-      });
-      return _currencyPromise;
-    }
+    var resolveCurrencyPromise = ($http && typeof $http.get === 'function') || (root && typeof root.fetch === 'function')
+      ? getDatasetJson($http, 'data/currency.json')
+      : Promise.resolve(null);
 
-    if (root && typeof root.fetch === 'function') {
-      _currencyPromise = root.fetch(url)
-        .then(function (r) { return r && r.ok ? r.json() : null; })
-        .then(handleData)
-        .catch(function () { return { updated: 0, total: CURRENCY_DATA.length, error: true }; });
-      return _currencyPromise;
-    }
-
-    return Promise.resolve({ updated: 0, total: CURRENCY_DATA.length });
+    _currencyPromise = resolveCurrencyPromise
+      .then(handleData)
+      .catch(function () { return { updated: 0, total: CURRENCY_DATA.length, error: true }; });
+    return _currencyPromise;
   }
 
   function getSavedCurIndex() {
@@ -716,6 +825,9 @@
     isTrustedOriginUrl: isTrustedOriginUrl,
     isTurnstileConfigured: isTurnstileConfigured,
     getContextId: getContextId,
+    getManifest: getManifest,
+    resolveDatasetUrl: resolveDatasetUrl,
+    getDatasetJson: getDatasetJson,
     loadCurrencyRates: loadCurrencyRates,
     getSavedCurIndex: getSavedCurIndex,
     formatPriceUsd: formatPriceUsd,

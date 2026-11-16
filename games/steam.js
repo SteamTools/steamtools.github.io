@@ -113,22 +113,28 @@ function SteamCtrl($scope, $http){
 	$scope.Users = users.slice();
 	$scope.userError = "";
 
-	var url = CFG.CDN_BASE + "/data/game_data.json";
-	$http.get(url).success(function(data){
-		if (data && typeof data === 'object') {
-			var keys = Object.keys(data);
-			for (var k = 0; k < keys.length; k++) {
-				var entry = data[keys[k]];
-				if (entry && typeof entry.name === 'string') {
-					entry.name = entry.name.replace(/http:\/\//gi, 'https://');
+	CFG.getDatasetJson($http, 'data/game_data.json').then(function(data){
+		var run = function() {
+			if (data && typeof data === 'object') {
+				var keys = Object.keys(data);
+				for (var k = 0; k < keys.length; k++) {
+					var entry = data[keys[k]];
+					if (entry && typeof entry.name === 'string') {
+						entry.name = entry.name.replace(/http:\/\//gi, 'https://');
+					}
 				}
 			}
+			$scope.gameData = data;
+			if ($scope.fullGameList.length > 0) {
+				applyFlags($scope.f, [], $scope);
+			}
+		};
+		if (!$scope.$$phase) {
+			$scope.$apply(run);
+		} else {
+			run();
 		}
-		$scope.gameData = data;
-		if ($scope.fullGameList.length > 0) {
-			applyFlags($scope.f, [], $scope);
-		}
-	});
+	}, function(){});
 
 	function addPrivate(steamid) {
 		if (steamid && privates.indexOf(steamid) === -1) {

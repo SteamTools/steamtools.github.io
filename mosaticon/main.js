@@ -135,8 +135,7 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 
 	function loadEmoteColorsCatalog() {
 		if (_emoteCatalogPromise) return _emoteCatalogPromise;
-		_emoteCatalogPromise = $http.get(CFG.CDN_BASE + '/data/emote_colors.json').then(function(resp) {
-			var body = resp && resp.data;
+		_emoteCatalogPromise = CFG.getDatasetJson($http, 'data/emote_colors.json').then(function(body) {
 			if (body && body.emotes && typeof body.emotes === 'object') {
 				return body.emotes;
 			}

@@ -121,31 +121,37 @@ function($scope, $http, $location, $filter) {
 	}
 	$scope.recomputeFiltered = applyFilterAndSort;
 
-	$http.get(CFG.CDN_BASE + '/data/emote.json').success(function(data){
-		var maxPrice = 0;
-		for (var i = 0; i < data.length; i++) {
-			var e = data[i];
-			e._idx = i;
-			var appMatch = /^753\/(\d+)-/.exec(e.url || '');
-			e.appid = appMatch ? appMatch[1] : '753';
-			e.price = e.price === null ? Infinity : parseFloat(e.price);
-			e._search = (String(e.name || '') + '\t' + String(e.game || '') + '\t' + e.appid).toLowerCase();
-			e._rand = String(e.name || '').hashCode();
-			if (e.price < 1000 && e.price > maxPrice)
-				maxPrice = e.price;
-		}
+	CFG.getDatasetJson($http, 'data/emote.json').then(function(data){
+		$scope.$applyAsync(function() {
+			if (!Array.isArray(data)) return;
+			var maxPrice = 0;
+			for (var i = 0; i < data.length; i++) {
+				var e = data[i];
+				e._idx = i;
+				var appMatch = /^753\/(\d+)-/.exec(e.url || '');
+				e.appid = appMatch ? appMatch[1] : '753';
+				e.price = e.price === null ? Infinity : parseFloat(e.price);
+				e._search = (String(e.name || '') + '\t' + String(e.game || '') + '\t' + e.appid).toLowerCase();
+				e._rand = String(e.name || '').hashCode();
+				if (e.price < 1000 && e.price > maxPrice)
+					maxPrice = e.price;
+			}
 
-		$scope.limits.maxPrice = maxPrice;
-		$scope.emotes = data;
-		$scope.genDates();
-		applyFilterAndSort();
-	});
+			$scope.limits.maxPrice = maxPrice;
+			$scope.emotes = data;
+			$scope.genDates();
+			applyFilterAndSort();
+		});
+	}, function(){});
 
-	$http.get(CFG.CDN_BASE + '/data/dates.json').success(function(data){
-		$scope.dates = data;
-		$scope.genDates();
-		applyFilterAndSort();
-	});
+	CFG.getDatasetJson($http, 'data/dates.json').then(function(data){
+		$scope.$applyAsync(function() {
+			if (!data || typeof data !== 'object') return;
+			$scope.dates = data;
+			$scope.genDates();
+			applyFilterAndSort();
+		});
+	}, function(){});
 
 	$scope.owned = {};
 	$scope.loggedIn = false;

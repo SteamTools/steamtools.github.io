@@ -548,29 +548,7 @@ function($scope, $http, $filter, $compile, $modal, $timeout){
 
 	// Get and load set data from the server
 	$scope.dataLoaded = false;
-	var url = CFG.CDN_BASE + "/data/set_data.json";
-	$http.get(url).success(function(data){
-		$scope.dataLoaded = true;
-		$scope.data = data;
-		$scope.rows = [];
-		$scope.nameToAppid = {};
-		$scope.appidToSet = {};
-
-		// For each set, add the normal and foil row, if they exist
-		for (var i = 0; i < $scope.data.sets.length; i++) {
-			var set = $scope.data.sets[i];
-			set.clean_game = $filter('normalizeForSearch')(set.game);
-			if (set.normal !== null) $scope.rows.push(new CardSet(set, false));
-			if (set.foil !== null) $scope.rows.push(new CardSet(set, true));
-			$scope.nameToAppid[set.clean_game] = set.appid;
-			$scope.appidToSet[set.appid] = set;
-		}
-
-		// Add rows to table and update
-		$scope.importUserData();
-		$scope.table.rows.add($scope.rows).draw();
-		$scope.table.scroller.measure()
-	}).error(function() {
+	var showSetDataError = function() {
 		var error = "<br>Error while loading set data. Try the following:<br><br>";
 		error += "1. Do a full browser refresh (ctrl+F5)<br>";
 		error += "2. Test in a new browser or icognito/private browsing<br>";
@@ -578,6 +556,36 @@ function($scope, $http, $filter, $compile, $modal, $timeout){
 		error += "If none of these work, your government/ISP is blocking this site.<br><br>";
 		$scope.tableSettings.oLanguage.sEmptyTable = error;
 		$scope.table.draw();
+	};
+	CFG.getDatasetJson($http, 'data/set_data.json').then(function(data){
+		$timeout(function() {
+			if (!data || !Array.isArray(data.sets)) {
+				showSetDataError();
+				return;
+			}
+			$scope.dataLoaded = true;
+			$scope.data = data;
+			$scope.rows = [];
+			$scope.nameToAppid = {};
+			$scope.appidToSet = {};
+
+			// For each set, add the normal and foil row, if they exist
+			for (var i = 0; i < $scope.data.sets.length; i++) {
+				var set = $scope.data.sets[i];
+				set.clean_game = $filter('normalizeForSearch')(set.game);
+				if (set.normal !== null) $scope.rows.push(new CardSet(set, false));
+				if (set.foil !== null) $scope.rows.push(new CardSet(set, true));
+				$scope.nameToAppid[set.clean_game] = set.appid;
+				$scope.appidToSet[set.appid] = set;
+			}
+
+			// Add rows to table and update
+			$scope.importUserData();
+			$scope.table.rows.add($scope.rows).draw();
+			$scope.table.scroller.measure();
+		}, 0);
+	}, function() {
+		$timeout(showSetDataError, 0);
 	});
 
 	if (window.localStorage.hasOwnProperty("curIndex")) {
