@@ -18,7 +18,7 @@
     API_BASE: 'https://api.steam.tools',
     AUTH_BASE: 'https://api.steam.tools',
     GAMES_API_BASE: 'https://api.steam.tools',
-    TURNSTILE_SITEKEY: 'TURNSTILE_SITEKEY_PLACEHOLDER',
+    TURNSTILE_SITEKEY: '0x4AAAAAAGCoBDnjdhsVPpPB',
     USE_753_BUCKETS: true
   };
 
