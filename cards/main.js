@@ -553,7 +553,7 @@ function($scope, $http, $filter, $compile, $modal, $timeout){
 	var currencyMenuHTML = '<div class="input-group btn-group">' +
 '   <div class="input-group-addon">Currency</div>' +
 '   <div class="dropdown" dropdown>' +
-'       <a class="btn btn-default" data-toggle="dropdown" href="" ng-click="$event.preventDefault()" dropdown-toggle>' +
+'       <a class="btn btn-default" href="" dropdown-toggle>' +
 			'{{ CDATA[curIndex].name }}' +
 		'<b class="caret"></b></a>' +
 '       <ul class="dropdown-menu" role="menu">' +

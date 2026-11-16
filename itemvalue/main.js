@@ -55,6 +55,18 @@ angular.module('valueApp', ['ui.bootstrap'])
 .config(['$locationProvider', function($locationProvider) {
   $locationProvider.hashPrefix('');
 }])
+.directive('tooltip', function() {
+	return {
+		restrict: 'A',
+		priority: 1000,
+		compile: function(tElem, tAttrs) {
+			if (!tAttrs.tooltipTrigger) tAttrs.$set('tooltipTrigger', 'mouseenter');
+			if (!tAttrs.tooltipPlacement) tAttrs.$set('tooltipPlacement', 'top');
+			if (!tAttrs.tooltipAnimation) tAttrs.$set('tooltipAnimation', 'true');
+			if (!tAttrs.tooltipPopupDelay) tAttrs.$set('tooltipPopupDelay', '250');
+		}
+	};
+})
 .filter('sumByKey', function() {
 	return function(data, key, mult, fee) {
 		if (data === undefined || key === undefined) {
