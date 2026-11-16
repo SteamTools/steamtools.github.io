@@ -93,7 +93,7 @@
         invalid: 'Paste a valid Steam profile URL (steamcommunity.com/id/... or /profiles/...) or custom URL name.'
       };
     }
-    if (/^[A-Za-z0-9_-]{2,64}$/.test(val)) {
+    if (/^[A-Za-z0-9_.-]{2,64}$/.test(val) && val !== '.' && val !== '..') {
       return { raw: val, steamid64: '', vanity: val, invalid: '' };
     }
     return {
@@ -193,20 +193,20 @@
 
     return (
       "(function(){" +
-      "var O=" + qOrigin + ",A=" + qApp + ",C=" + qCtx + ",S=window,D=S.opener,P=[],T='',M=1,N=0;" +
+      "var O=" + qOrigin + ",A=" + qApp + ",C=" + qCtx + ",S=window,D=S.opener,P=[],T='',M=1,N=0,R=0;" +
       "if(location.origin!=='https://steamcommunity.com')return alert('Open https://steamcommunity.com first.');" +
       "if(!D||D.closed)return alert('Launch from SteamTools Import first.');" +
-      "if(!" + lockApp + "){var h=location.hash.match(/(\\d+)_(\\d+)/);if(h){A=h[1];C=h[2];}}" +
-      "var I=S.g_steamID||(S.g_rgProfileData&&S.g_rgProfileData.steamid)||(/\\/profiles\\/(\\d{17})/.exec(location.pathname)||[])[1]||'';" +
+      "if(!" + lockApp + "){var h=location.hash.match(/(\\d+)(?:_(\\d+))?/);if(h){A=h[1];C=h[2]||(A==='753'?'6':A==='322330'?'1':'2');}}" +
+      "var I=(/\\/profiles\\/(\\d{17})/.exec(location.pathname)||[])[1]||(S.g_rgProfileData&&S.g_rgProfileData.steamid)||S.g_steamID||'';" +
       "function post(p,i,e){D.postMessage({type:'STEAMTOOLS_INVENTORY_IMPORT',appid:A,contextid:C,steamid:i,pages:p,partial:!!e,error:e||''},O);}" +
       "function go(i){" +
       "if(!/^\\d{17}$/.test(i))return alert('Sign into Steam first.');" +
       "(function step(){" +
       "if(!M||N++>=25){post(P,i,'');return alert('Sent '+P.length+' page(s) to SteamTools.');}" +
       "fetch('https://steamcommunity.com/inventory/'+i+'/'+A+'/'+C+'?l=english&count=2000'+(T?'&start_assetid='+encodeURIComponent(T):''),{credentials:'include'})" +
-      ".then(function(r){if(!r.ok)throw Error('HTTP '+r.status);return r.json();})" +
-      ".then(function(d){if(!d||d.success===0)throw Error((d&&d.error)||'Unavailable');P.push(d);M=d.more_items&&d.last_assetid;T=M||'';if(M)setTimeout(step,600);else step();})" +
-      ".catch(function(e){if(P.length)post(P,i,e.message);else alert('SteamTools error: '+e.message);});" +
+      ".then(function(r){if(r.status===429&&!R){R=1;return new Promise(function(ok){setTimeout(function(){ok('RETRY');},2500);});}R=0;if(!r.ok)throw Error('HTTP '+r.status);return r.json();})" +
+      ".then(function(d){if(d==='RETRY')return step();if(!d||d.success===0)throw Error((d&&d.error)||'Unavailable');P.push(d);M=d.more_items&&d.last_assetid;T=M||'';if(M)setTimeout(step,600);else step();})" +
+      ".catch(function(e){if(P.length){post(P,i,e.message);alert('Partial import ('+P.length+' page(s)): '+e.message);}else alert('SteamTools error: '+e.message);});" +
       "})();}" +
       "if(I)go(I);else fetch('https://steamcommunity.com/my/?xml=1',{credentials:'include'}).then(function(r){return r.text();}).then(function(t){" +
       "var m=/<steamID64>(\\d{17})<\\/steamID64>/.exec(t);go(m?m[1]:'');}).catch(function(){alert('Cannot detect SteamID64.');});" +
@@ -336,6 +336,15 @@
       bucketSet[b] = true;
     }
     var buckets = Object.keys(bucketSet).sort();
+    if (buckets.length > 96) {
+      return fetch753Monolith(cdnBase, fetchImpl).then(function (monolith) {
+        return {
+          items: applyPriceLookup(monolith),
+          usedBucketFallback: true,
+          bucketsFetched: []
+        };
+      });
+    }
     var mergedPrices = Object.create(null);
 
     return runWithConcurrency(buckets, 8, function (hex2) {
@@ -447,6 +456,7 @@
   // ---- IndexedDB Session Storage for Multi-Page Inventory Wizard ----
   var DB_NAME = 'steamtools_import_v1';
   var STORE_NAME = 'sessions';
+  var SESSION_TTL_MS = 24 * 60 * 60 * 1000;
   var _memorySessions = new Map();
   var _dbPromise = null;
 
@@ -494,21 +504,33 @@
     });
   }
 
+  function isExpiredSession(record) {
+    return !record || !record.updatedAt || (Date.now() - Number(record.updatedAt)) > SESSION_TTL_MS;
+  }
+
   function loadImportSession(scopeKey) {
+    function validate(rec) {
+      if (!rec) return null;
+      if (isExpiredSession(rec)) {
+        clearImportSession(scopeKey);
+        return null;
+      }
+      return rec;
+    }
     return openSessionDb().then(function (db) {
-      if (!db) return _memorySessions.get(scopeKey) || null;
+      if (!db) return validate(_memorySessions.get(scopeKey) || null);
       return new Promise(function (resolve) {
         try {
           var tx = db.transaction(STORE_NAME, 'readonly');
           var req = tx.objectStore(STORE_NAME).get(scopeKey);
           req.onsuccess = function () {
-            resolve(req.result || _memorySessions.get(scopeKey) || null);
+            resolve(validate(req.result || _memorySessions.get(scopeKey) || null));
           };
           req.onerror = function () {
-            resolve(_memorySessions.get(scopeKey) || null);
+            resolve(validate(_memorySessions.get(scopeKey) || null));
           };
         } catch (e) {
-          resolve(_memorySessions.get(scopeKey) || null);
+          resolve(validate(_memorySessions.get(scopeKey) || null));
         }
       });
     });
@@ -658,7 +680,9 @@
     var state = {
       options: null,
       rawPages: [],
+      parsedPages: [],
       parsedResult: null,
+      restoredSession: false,
       popupRef: null,
       lastFocused: null,
       liveTimer: null,
@@ -677,7 +701,7 @@
       }, typeof delayMs === 'number' ? delayMs : 80);
     }
 
-    function setBanner(kind, msg) {
+    function setBanner(kind, msg, opts) {
       if (!msg) {
         els.statusBanner.hidden = true;
         els.statusBanner.className = 'st-status-banner';
@@ -687,6 +711,17 @@
       els.statusBanner.hidden = false;
       els.statusBanner.className = 'st-status-banner is-' + kind;
       els.statusBanner.textContent = msg;
+      if (opts && opts.showClear && els.resetSessionBtn) {
+        var clearInline = doc.createElement('button');
+        clearInline.type = 'button';
+        clearInline.className = 'st-btn st-btn-danger';
+        clearInline.style.marginLeft = '8px';
+        clearInline.textContent = 'Clear';
+        clearInline.addEventListener('click', function () {
+          els.resetSessionBtn.click();
+        });
+        els.statusBanner.appendChild(clearInline);
+      }
       announce(msg);
     }
 
@@ -719,7 +754,9 @@
       var mode = opts.mode || 'auto';
       var appid = String(opts.appid || '753');
       var ctx = String(opts.contextid || getConfig().getContextId(appid));
-      return mode + ':' + appid + ':' + ctx;
+      var sid = getEffectiveSteamId() ||
+        String((els.steamIdInput && els.steamIdInput.value) || opts.steamId || '').trim().toLowerCase();
+      return mode + ':' + appid + ':' + ctx + ':' + (sid || 'anon');
     }
 
     function getEffectiveSteamId() {
@@ -877,25 +914,57 @@
       els.bmSize.textContent = String(href.length);
     }
 
-    function processIncomingInputs(newInputs, appendToSession) {
+    function decodeIncomingPage(item) {
+      if (typeof item !== 'string') return item;
+      var trimmed = item.trim();
+      if (trimmed && trimmed.charCodeAt(0) === 0xFEFF) {
+        trimmed = trimmed.slice(1).trim();
+      }
+      if (!trimmed) return item;
+      if (trimmed.charAt(0) === '{' || trimmed.charAt(0) === '[') {
+        return JSON.parse(trimmed);
+      }
+      return item;
+    }
+
+    function processIncomingInputs(newInputs, appendToSession, parseOpts) {
       setBanner(null, '');
       setFieldError(els.jsonInput, els.jsonErr, 'st-import-json-hint', '');
+      var isRestored = Boolean(parseOpts && parseOpts.restored);
+
+      var decodedNew = [];
+      try {
+        for (var p = 0; p < newInputs.length; p++) {
+          decodedNew.push(decodeIncomingPage(newInputs[p]));
+        }
+      } catch (jsonErr) {
+        var jsonMsg = 'Invalid JSON input: ' + (jsonErr && jsonErr.message ? jsonErr.message : 'parse error');
+        setFieldError(els.jsonInput, els.jsonErr, 'st-import-json-hint', jsonMsg);
+        setBanner('error', jsonMsg);
+        announce(jsonMsg);
+        return Promise.resolve(null);
+      }
 
       var payloadList = appendToSession ? state.rawPages.concat(newInputs) : newInputs;
+      var parsedList = appendToSession ? state.parsedPages.concat(decodedNew) : decodedNew;
       var opts = state.options || {};
 
-      return parseInWorkerOrSync(payloadList, {
+      return parseInWorkerOrSync(parsedList, {
         mode: opts.mode || 'auto',
         appid: opts.appid || '753'
       }).then(function (result) {
         if (result.isEmoticonList && result.isEmptyArray) {
           state.rawPages = [];
+          state.parsedPages = [];
           state.parsedResult = result;
+          state.restoredSession = false;
           renderWizardState();
           return result;
         }
         state.rawPages = payloadList;
+        state.parsedPages = parsedList;
         state.parsedResult = result;
+        state.restoredSession = isRestored;
         renderWizardState();
         saveImportSession({
           scopeKey: getScopeKey(),
@@ -903,7 +972,14 @@
           steamId: getEffectiveSteamId() || String(els.steamIdInput.value || '').trim(),
           updatedAt: Date.now()
         });
-        if (!result.isEmoticonList) {
+        if (isRestored) {
+          setBanner(
+            'warning',
+            'Restored staged session (' + result.page_count + ' page(s), ' +
+              result.asset_count + ' item(s)).',
+            { showClear: true }
+          );
+        } else if (!result.isEmoticonList) {
           setBanner('success', 'Parsed ' + result.asset_count + ' asset(s) across ' + result.page_count + ' page(s).');
         } else {
           setBanner('success', 'Extracted ' + result.emoticons.length + ' unique emoticon(s).');
@@ -952,12 +1028,19 @@
         }
       }
       if (rv === 'apply' && typeof callback === 'function' && result) {
+        if (!result.more_items) {
+          state.rawPages = [];
+          state.parsedPages = [];
+          state.parsedResult = null;
+          state.restoredSession = false;
+          clearImportSession(getScopeKey());
+        }
         callback(result);
       }
     });
 
     // Progressive enhancement backdrop click close only if closedBy is unsupported
-    if (!('closedBy' in root.HTMLDialogElement.prototype)) {
+    if (typeof root.HTMLDialogElement === 'function' && !('closedBy' in root.HTMLDialogElement.prototype)) {
       dlg.addEventListener('pointerdown', function (ev) {
         var rect = dlg.getBoundingClientRect();
         state.downOutside =
@@ -1006,7 +1089,8 @@
         els.jsonInput.focus();
         return;
       }
-      processIncomingInputs([raw], state.rawPages.length > 0);
+      var canAppend = !state.restoredSession && state.rawPages.length > 0 && state.parsedResult && state.parsedResult.more_items;
+      processIncomingInputs([raw], Boolean(canAppend));
     });
 
     els.clearPasteBtn.addEventListener('click', function () {
@@ -1017,7 +1101,9 @@
 
     els.resetSessionBtn.addEventListener('click', function () {
       state.rawPages = [];
+      state.parsedPages = [];
       state.parsedResult = null;
+      state.restoredSession = false;
       els.jsonInput.value = '';
       clearImportSession(getScopeKey());
       renderWizardState();
@@ -1039,7 +1125,8 @@
           reader.readAsText(file);
         });
       })).then(function (texts) {
-        return processIncomingInputs(texts, state.rawPages.length > 0);
+        var canAppend = !state.restoredSession && state.rawPages.length > 0 && state.parsedResult && state.parsedResult.more_items;
+        return processIncomingInputs(texts, Boolean(canAppend));
       }).catch(function (err) {
         setBanner('error', err && err.message ? err.message : 'Failed reading dropped file(s).');
       });
@@ -1125,7 +1212,9 @@
       open: function (options) {
         state.options = options || {};
         state.rawPages = [];
+        state.parsedPages = [];
         state.parsedResult = null;
+        state.restoredSession = false;
         state.lastFocused = doc.activeElement;
 
         els.title.textContent = state.options.title || 'Import Steam Inventory';
@@ -1159,7 +1248,7 @@
               els.steamIdInput.value = String(saved.steamId);
               resolveInputNow(false);
             }
-            processIncomingInputs(saved.rawPages, false);
+            processIncomingInputs(saved.rawPages, false, { restored: true });
           }
         });
       }
