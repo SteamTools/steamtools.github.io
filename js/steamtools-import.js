@@ -583,9 +583,9 @@
       '    <p class="st-error-msg" id="st-import-steamid-err" hidden></p>',
       '  </div>',
       '  <div class="st-import-tabs" role="tablist" aria-label="Import methods">',
-      '    <button type="button" class="st-tab-btn" role="tab" id="st-tab-paste" aria-selected="true" aria-controls="st-panel-paste">Paste JSON</button>',
-      '    <button type="button" class="st-tab-btn" role="tab" id="st-tab-drop" aria-selected="false" aria-controls="st-panel-drop">Drop .json Files</button>',
-      '    <button type="button" class="st-tab-btn" role="tab" id="st-tab-bookmarklet" aria-selected="false" aria-controls="st-panel-bookmarklet">Bookmarklet Sync</button>',
+      '    <button type="button" class="st-tab-btn" role="tab" id="st-tab-paste" aria-selected="true" tabindex="0">Paste JSON</button>',
+      '    <button type="button" class="st-tab-btn" role="tab" id="st-tab-drop" aria-selected="false" tabindex="-1">Drop .json Files</button>',
+      '    <button type="button" class="st-tab-btn" role="tab" id="st-tab-bookmarklet" aria-selected="false" tabindex="-1">Bookmarklet Sync</button>',
       '  </div>',
       '  <div class="st-tabpanel" role="tabpanel" id="st-panel-paste" aria-labelledby="st-tab-paste">',
       '    <div class="st-field-group">',
@@ -741,11 +741,24 @@
       }
     }
 
-    function selectTab(tabIndex) {
+    function selectTab(tabIndex, focusTab) {
+      if (!els.tabs || els.tabs.length === 0) return;
+      var idx = ((tabIndex % els.tabs.length) + els.tabs.length) % els.tabs.length;
       for (var i = 0; i < els.tabs.length; i++) {
-        var active = i === tabIndex;
+        var active = i === idx;
         els.tabs[i].setAttribute('aria-selected', active ? 'true' : 'false');
+        els.tabs[i].setAttribute('tabindex', active ? '0' : '-1');
         els.panels[i].hidden = !active;
+      }
+      if (focusTab && typeof els.tabs[idx].focus === 'function') {
+        els.tabs[idx].focus();
+      }
+      if (typeof els.tabs[idx].scrollIntoView === 'function') {
+        try {
+          els.tabs[idx].scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        } catch (e) {
+          // Ignore scrollIntoView unsupported option objects.
+        }
       }
     }
 
@@ -997,7 +1010,23 @@
     for (var t = 0; t < els.tabs.length; t++) {
       (function (idx) {
         els.tabs[idx].addEventListener('click', function () {
-          selectTab(idx);
+          selectTab(idx, false);
+        });
+        els.tabs[idx].addEventListener('keydown', function (ev) {
+          var key = ev.key || ev.keyCode;
+          if (key === 'ArrowRight' || key === 39) {
+            ev.preventDefault();
+            selectTab(idx + 1, true);
+          } else if (key === 'ArrowLeft' || key === 37) {
+            ev.preventDefault();
+            selectTab(idx - 1, true);
+          } else if (key === 'Home' || key === 36) {
+            ev.preventDefault();
+            selectTab(0, true);
+          } else if (key === 'End' || key === 35) {
+            ev.preventDefault();
+            selectTab(els.tabs.length - 1, true);
+          }
         });
       })(t);
     }
@@ -1209,6 +1238,7 @@
 
     _dialogInstance = {
       els: els,
+      selectTab: selectTab,
       open: function (options) {
         state.options = options || {};
         state.rawPages = [];

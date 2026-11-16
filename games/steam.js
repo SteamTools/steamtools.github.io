@@ -247,6 +247,7 @@ function SteamCtrl($scope, $http){
 		$scope.Friends = [];
 		var dlg = document.getElementById('friendListModal');
 		if (dlg && typeof dlg.showModal === 'function' && !dlg.open) {
+			dlg._prevFocus = document.activeElement;
 			dlg.showModal();
 		}
 		fetchGamesInfo({ friends: userid }).then(function(data) {
@@ -488,6 +489,11 @@ $(document).ready(function () {
 	if (friendsDialog) {
 		friendsDialog.addEventListener('close', function () {
 			friendsDialog.returnValue = '';
+			var prev = friendsDialog._prevFocus;
+			friendsDialog._prevFocus = null;
+			if (prev && typeof prev.focus === 'function') {
+				try { prev.focus(); } catch (e) {}
+			}
 		});
 		if (!('closedBy' in HTMLDialogElement.prototype)) {
 			var downOutside = false;

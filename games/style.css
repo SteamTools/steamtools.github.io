@@ -117,7 +117,9 @@ a:hover > .game {
 .topbutton:active {top: 12px; box-shadow: 0px 1px 0px 0px #888;}
 
 #help {
-	width: 675px;
+	width: min(675px, 100%);
+	max-width: 100%;
+	box-sizing: border-box;
 	padding: 8px;
 	background-color: #EEE;
 	border: 4px double #888;
@@ -128,8 +130,16 @@ a:hover > .game {
 }
 
 #container{
-	width: 1000px;
+	width: min(1000px, 100%);
+	max-width: 100%;
+	box-sizing: border-box;
+	padding: 0 8px;
 	margin: 0 auto;
+}
+
+:where(button, a, input, select, [tabindex]):focus-visible {
+	outline: 2px solid #66c0f4;
+	outline-offset: 2px;
 }
 
 #user-selection{
@@ -201,8 +211,16 @@ a:hover > .game {
 	box-shadow: 0 0 6px 0px #777;
 }
 
+#filter-panel > button,
 #filter-panel > div{
 	margin: 5px 12px;
+	display: block;
+	text-align: left;
+}
+
+button.label {
+	border: 0;
+	font-family: inherit;
 }
 
 .content{
@@ -231,17 +249,18 @@ a:hover > .game {
 .st-icon-btn {
 	background: transparent;
 	border: 0;
-	padding: 0;
-	margin: 10px 0 0;
+	padding: 2px;
+	margin: 8px 0 0;
 	line-height: 1;
-	opacity: 0.35;
+	opacity: 0.45;
 	cursor: pointer;
 	display: inline-flex;
+	align-items: center;
 }
 
 .st-icon-btn:hover,
 .st-icon-btn:focus-visible {
-	opacity: 0.75;
+	opacity: 0.85;
 }
 
 dialog.st-friends-dialog {
@@ -252,7 +271,7 @@ dialog.st-friends-dialog {
 	background: #eee;
 	color: #222;
 	width: min(560px, calc(100vw - 24px));
-	max-height: calc(100vh - 40px);
+	max-height: calc(100dvh - 40px);
 	box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
 }
 
@@ -272,7 +291,24 @@ dialog.st-friends-dialog::backdrop {
 }
 
 .st-friends-dialog .modal-body {
-	max-height: 60vh;
+	max-height: 60dvh;
 	overflow-y: auto;
 	overscroll-behavior: contain;
+}
+
+@media (max-width: 980px) {
+	body { padding-top: 48px; }
+	#container { display: flex; flex-direction: column; align-items: center; }
+	#user-selection, #filter-panel, #game-list {
+		float: none;
+		width: min(560px, 100%);
+		max-width: 100%;
+		height: auto;
+		margin: 10px auto;
+		box-sizing: border-box;
+	}
+	#filter-panel > button.label { display: inline-block; margin: 4px 6px; }
+	#game-content { width: 100%; margin-left: 0; }
+	#addinput { margin: 0 auto 10px; max-width: 100%; }
+	#importbtn { margin: 8px auto 0; display: block; text-align: center; }
 }

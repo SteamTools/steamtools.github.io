@@ -272,6 +272,61 @@
       .replace(/^http:\/\//i, 'https://');
   }
 
+  function isInAppWebview(userAgent) {
+    var ua = typeof userAgent === 'string'
+      ? userAgent
+      : (root && root.navigator && typeof root.navigator.userAgent === 'string' ? root.navigator.userAgent : '');
+    if (!ua) return false;
+    return /(FBAN|FBAV|Instagram|Line\/|MicroMessenger|Twitter|Snapchat|TikTok|Discord|Reddit|; wv\))/i.test(ua);
+  }
+
+  function mountWebviewNotice() {
+    if (!root || !root.document || !isInAppWebview()) return;
+    var doc = root.document;
+    var render = function () {
+      if (!doc.body || !doc.querySelector('[ng-app]')) return;
+      if (doc.getElementById('st-webview-banner')) return;
+      try {
+        if (root.sessionStorage && root.sessionStorage.getItem('st_webview_dismissed') === '1') return;
+      } catch (e) {}
+
+      var banner = doc.createElement('div');
+      banner.id = 'st-webview-banner';
+      banner.className = 'st-webview-banner';
+      banner.setAttribute('role', 'note');
+
+      var msg = doc.createElement('span');
+      msg.textContent = 'Using an in-app browser? Steam Sign-In cookies may not persist here — open steam.tools in your system browser or use Import Inventory.';
+      var dismiss = doc.createElement('button');
+      dismiss.type = 'button';
+      dismiss.textContent = 'Dismiss';
+      dismiss.setAttribute('aria-label', 'Dismiss in-app browser notice');
+      dismiss.addEventListener('click', function () {
+        try {
+          if (root.sessionStorage) root.sessionStorage.setItem('st_webview_dismissed', '1');
+        } catch (e) {}
+        if (banner.parentNode) banner.parentNode.removeChild(banner);
+      });
+
+      banner.appendChild(msg);
+      banner.appendChild(dismiss);
+      var container = doc.getElementById('container');
+      if (container && container.firstChild) {
+        container.insertBefore(banner, container.firstChild);
+      } else if (doc.body.firstChild) {
+        doc.body.insertBefore(banner, doc.body.firstChild);
+      } else {
+        doc.body.appendChild(banner);
+      }
+    };
+
+    if (doc.readyState === 'loading') {
+      doc.addEventListener('DOMContentLoaded', render);
+    } else {
+      render();
+    }
+  }
+
   function refresh() {
     config.CDN_BASE = resolveUrlSetting('st_cdn_base', DEFAULTS.CDN_BASE);
     config.CDN2_BASE = resolveUrlSetting('st_cdn2_base', DEFAULTS.CDN2_BASE);
@@ -307,9 +362,12 @@
     clearLegacyOauthCookie: clearLegacyOauthCookie,
     escapeHtml: escapeHtml,
     normalizeSteamAssetUrl: normalizeSteamAssetUrl,
+    isInAppWebview: isInAppWebview,
+    mountWebviewNotice: mountWebviewNotice,
     refresh: refresh
   };
 
   refresh();
+  mountWebviewNotice();
   return config;
 });

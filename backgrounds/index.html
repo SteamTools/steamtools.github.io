@@ -5,6 +5,7 @@
 	<script async src="https://kumo.network-n.com/dist/app.js" site="steam-tools"></script>
 
 	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta name="description" content="Easily browse, filter and sort an up to date list of Steam backgrounds in one page.">
 	<meta name="keywords" content="Steam,backgrounds,list,sort">
 	<meta name="referrer" content="no-referrer-when-downgrade">
@@ -17,16 +18,29 @@
 
 	<style>
 		body{text-align: center; padding-top: 10px; background-image: url(/img/bg.png);}
+		:where(button, a, input, select, [tabindex]):focus-visible {
+			outline: 2px solid #66c0f4;
+			outline-offset: 2px;
+		}
 		#items {
 			background-color: #222;
 			border-radius: 5px;
 			margin: auto;
+			max-width: calc(100vw - 16px);
+			box-sizing: border-box;
 			padding: 5px 0;
 			margin-top: 10px;
 		}
 		.market:hover{ background-color: rgba(200,255,200,0.6); }
-		.bg:hover .market { opacity: 1; }
-		.bg:hover .name { opacity: 1; }
+		.bg:hover .market,
+		.bg:focus-visible .market,
+		.bg:focus-within .market { opacity: 1; }
+		.bg:hover .name,
+		.bg:focus-visible .name,
+		.bg:focus-within .name { opacity: 1; }
+		@media (hover: none) {
+			.bg .market, .bg .name { opacity: 0.92; }
+		}
 		img{ transition: opacity 0.3s; }
 		.bg{
 			position: relative;
@@ -84,7 +98,7 @@
 			background: #14181d;
 			color: #fff;
 			max-width: min(92vw, 1280px);
-			max-height: 92vh;
+			max-height: 90dvh;
 			margin: auto;
 		}
 		dialog.st-bg-lightbox[open] {
@@ -103,12 +117,14 @@
 		}
 		dialog.st-bg-lightbox img {
 			max-width: 100%;
-			max-height: calc(92vh - 64px);
+			max-height: calc(90dvh - 64px);
 			display: block;
 		}
 
 		#help {
-			width: 675px;
+			width: min(675px, calc(100vw - 16px));
+			max-width: 100%;
+			box-sizing: border-box;
 			padding: 8px;
 			background-color: #CCC;
 			border: 4px double #333;
@@ -149,8 +165,12 @@
 		}
 		.slider {
 			display: inline-block;
-			width: 500px;
+			width: min(500px, 85vw);
 			margin-bottom: -7px;
+		}
+		@media (max-width: 768px) {
+			body { padding-top: 48px; }
+			.btn-group { white-space: normal; max-width: 100%; }
 		}
 		.limits-label {
 			vertical-align: text-bottom;
@@ -195,16 +215,16 @@
 	</div>
 	<div class="input-prepend btn-group" style="margin: 10px">
 		<span class="add-on" style="width:50px">Order</span>
-		<button class="btn btn-inverse" ng-click="setOrder(byHue)">Hue</button>
-		<button class="btn btn-inverse" ng-click="setOrder(byBrightness)">Brightness</button>
-		<button class="btn btn-inverse" ng-click="setOrder(bySaturation)">Saturation</button>
-		<button class="btn btn-inverse" ng-click="setOrder(byName)">Name</button>
-		<button class="btn btn-inverse" ng-click="setOrder(byGame)">Game</button>
-		<button class="btn btn-inverse" ng-click="setOrder(byDate)">Date</button>
-		<button class="btn btn-inverse" ng-click="setOrder(byPrice)">Price</button>
-		<button class="btn btn-inverse" ng-click="setOrder(byRandom)">Random</button>
+		<button type="button" class="btn btn-inverse" ng-class="{active: order === byHue}" aria-pressed="{{order === byHue}}" ng-click="setOrder(byHue)">Hue</button>
+		<button type="button" class="btn btn-inverse" ng-class="{active: order === byBrightness}" aria-pressed="{{order === byBrightness}}" ng-click="setOrder(byBrightness)">Brightness</button>
+		<button type="button" class="btn btn-inverse" ng-class="{active: order === bySaturation}" aria-pressed="{{order === bySaturation}}" ng-click="setOrder(bySaturation)">Saturation</button>
+		<button type="button" class="btn btn-inverse" ng-class="{active: order === byName}" aria-pressed="{{order === byName}}" ng-click="setOrder(byName)">Name</button>
+		<button type="button" class="btn btn-inverse" ng-class="{active: order === byGame}" aria-pressed="{{order === byGame}}" ng-click="setOrder(byGame)">Game</button>
+		<button type="button" class="btn btn-inverse" ng-class="{active: order === byDate}" aria-pressed="{{order === byDate}}" ng-click="setOrder(byDate)">Date</button>
+		<button type="button" class="btn btn-inverse" ng-class="{active: order === byPrice}" aria-pressed="{{order === byPrice}}" ng-click="setOrder(byPrice)">Price</button>
+		<button type="button" class="btn btn-inverse" ng-class="{active: order === byRandom}" aria-pressed="{{order === byRandom}}" ng-click="setOrder(byRandom)">Random</button>
 	</div><br>
-	<div style="width: 750px; margin: auto; margin-top: -12px" ng-show="showRange">
+	<div style="width: min(750px, 100%); margin: auto;" ng-show="showRange">
 		<span style="font-weight: bold; font-size: 14pt">{{limits.type}}: </span>
 		<div class="slider" range-slider min="0" max="100" model-min="limits.min" model-max="limits.max"></div>
 		<span class="limits-label">{{limits.rangeLabel}}</span>
@@ -215,8 +235,8 @@
 	<div id="loading" ng-show="bg.length == 0">Loading...</div>
 
 	<div id="items" ng-show="bg.length > 0" ng-style="{'width': divWidth}">
-		<div class="bg" ng-repeat="b in filteredItems | limitTo:(numLines*itemsPerLine) track by b.url"
-		ng-style="b.pos ? getStyle(b.pos) : null" title="{{b.name}}" ng-click="load(b, $event)">
+		<div class="bg" role="button" tabindex="0" aria-label="Preview {{b.name}}" ng-repeat="b in filteredItems | limitTo:(numLines*itemsPerLine) track by b.url"
+		ng-style="b.pos ? getStyle(b.pos) : null" title="{{b.name}}" ng-click="load(b, $event)" ng-keydown="onTileKeydown(b, $event)" ng-keyup="onTileKeyup(b, $event)">
 			<img ng-if="!b.pos && b.img" class="bg-thumb" ng-src="{{ECON_URL + b.img + '/256fx160f'}}" width="256" height="160" loading="lazy" alt="{{b.name}}">
 			<div class="name">{{b.name}}</div>
 			<a target="_blank" rel="noopener noreferrer" ng-href="{{BASE_URL + b.url}}" class="market">{{b.price | currency}}</a>

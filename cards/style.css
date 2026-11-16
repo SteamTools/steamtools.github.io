@@ -129,8 +129,14 @@ label.btn {
 	padding: 15px;
 	padding-bottom: 5px;
 	max-width: 1280px;
+	width: 100%;
+	box-sizing: border-box;
 	background: url(/img/simple.png) #eee;
 	box-shadow: 0 0 12px 5px #666;
+}
+:where(button, a, input, select, [tabindex]):focus-visible {
+	outline: 2px solid #159;
+	outline-offset: 2px;
 }
 
 @media only screen and (max-width: 1680px) {
@@ -292,7 +298,10 @@ input[type=checkbox] {
 
 /* Level calculator */
 #levelInfo {
-	width: 450px;
+	width: min(450px, 100%);
+	max-width: 100%;
+	box-sizing: border-box;
+	padding: 0 12px;
 	font-size: 13pt;
 	margin: auto;
 }
@@ -311,4 +320,30 @@ input[type=checkbox] {
 
 .dropdown-menu {
 	min-width: 70px;
+}
+
+@media (max-width: 960px) {
+	body {
+		padding: 48px 8px 12px;
+	}
+	.panel {
+		position: static;
+		width: min(560px, 100%);
+		margin: 10px auto !important;
+		border-radius: 5px;
+		box-sizing: border-box;
+	}
+	.panel .icon {
+		display: none;
+	}
+	#container {
+		overflow-x: auto;
+		padding: 10px;
+	}
+	.thirds {
+		width: 100%;
+		float: none;
+		display: block;
+		margin-bottom: 6px;
+	}
 }

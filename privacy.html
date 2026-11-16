@@ -7,7 +7,7 @@
 	<meta charset="UTF-8">
 	<meta name="author" content="Ehsan Kia">
 	<meta name="description" content="Privacy Policy for SteamTools">
-	<meta name="viewport" content="width=600">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Privacy Policy</title>
 
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/jQuery-linkify/2.1.6/linkify.min.js"></script>
@@ -34,7 +34,14 @@
 			font-family: 'Open Sans';
 			text-align: left;
 			margin: auto;
-			width: 800px;
+			width: min(800px, calc(100vw - 24px));
+			max-width: 100%;
+			padding: 0 12px;
+			box-sizing: border-box;
+		}
+		:where(a, button, [tabindex]):focus-visible {
+			outline: 2px solid #159;
+			outline-offset: 2px;
 		}
 
 		ol {

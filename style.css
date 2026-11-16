@@ -26,9 +26,11 @@ body {
 #container {
 	margin: auto;
 	background: white;
-	width: 970px;
-	min-height:100%;
-	position:relative;
+	width: min(970px, 100%);
+	max-width: 100%;
+	min-height: 100%;
+	position: relative;
+	padding-bottom: 84px;
 	background: url(/img/simple.png);
 	box-shadow: 0 0 12px 5px #666;
 }
@@ -43,9 +45,14 @@ body {
 
 h1{
 	margin: 10px;
-	font-size: 50pt;
+	font-size: clamp(2.25rem, 1.5rem + 4vw, 4.25rem);
 	font-weight: 300;
 	font-family: 'Oswald', Calibri, Arial, sans-serif;
+}
+
+:where(a, button, [tabindex]):focus-visible {
+	outline: 2px solid #159;
+	outline-offset: 2px;
 }
 
 a {
@@ -72,7 +79,8 @@ a:active {
 	display: inline-block;
 	margin: 10px 10px;
 	padding: 0;
-	width: 380px;
+	width: min(380px, calc(100vw - 32px));
+	max-width: 100%;
 	text-align: left;
 }
 
@@ -116,10 +124,11 @@ footer #affiliates a:hover {
 
 .grid figure div {
 	padding-top: 64px;
-	width: 380px;
+	width: min(380px, calc(100vw - 32px));
+	max-width: 100%;
 	height: 180px;
 	text-align: center;
-	font-size: 32pt;
+	font-size: clamp(1.75rem, 1.2rem + 2.5vw, 2.75rem);
 	font-family: 'Geo', Calibri, Arial, sans-serif;
 }
 
@@ -187,7 +196,7 @@ footer #affiliates a:hover {
 .cs-style-3 figcaption {
 	top: auto;
 	bottom: 0;
-	width: 380px;
+	width: 100%;
 	height: 115px;
 	opacity: 0;
 	-webkit-transition: -webkit-transform 0.4s, opacity 0.1s 0.3s;
@@ -200,6 +209,31 @@ footer #affiliates a:hover {
 	-webkit-backface-visibility: hidden;
 	-moz-backface-visibility: hidden;
 	backface-visibility: hidden;
+}
+
+@media (hover: none), (max-width: 640px) {
+	.cs-style-3 figure div {
+		-webkit-transform: translateY(-48px);
+		transform: translateY(-48px);
+	}
+	.cs-style-3 figcaption {
+		opacity: 1;
+		-webkit-transform: translateY(0px);
+		transform: translateY(0px);
+	}
+	footer {
+		position: relative;
+		height: auto;
+		padding: 12px 8px;
+	}
+	footer #affiliates {
+		height: auto;
+		padding: 6px;
+	}
+	footer #affiliates a {
+		display: inline-block;
+		padding: 0 8px;
+	}
 }
 
 .cs-style-3 figure:hover figcaption,

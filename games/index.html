@@ -5,6 +5,7 @@
 	<script async src="https://kumo.network-n.com/dist/app.js" site="steam-tools"></script>
 
 	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta name="description" content="See the intersection of your Steam games with someone else's, and filter them by categories.">
 	<meta name="keywords" content="Steam,games,filter,compare,intersection">
 	<meta name="author" content="Ehsan Kia">
@@ -18,6 +19,7 @@
 	<link rel="shortcut icon" href="/favicon.ico">
 	<link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" rel="stylesheet">
 	<link rel="stylesheet" type="text/css" href="jquery.mCustomScrollbar.css" media="all">
+	<link rel="stylesheet" type="text/css" href="../css/steamtools-import.css?v=20261116c" media="all">
 	<link rel="stylesheet" type="text/css" href="style.css?v=20261116b" media="all">
 </head>
 <body ng-controller="SteamCtrl" ng-cloak>
@@ -33,56 +35,49 @@
 
 	<div id="container">
 		<div id="user-selection">
-			<a href="" ng-click="$event.preventDefault(); deleteUsers()">
-				<i class="left icon-trash icon-white" rel="tooltip" data-placement="left" data-original-title="Remove selected"></i>
-			</a>
+			<button type="button" class="st-icon-btn left" ng-click="deleteUsers()" aria-label="Remove selected users">
+				<i class="icon-trash icon-white" aria-hidden="true" rel="tooltip" data-placement="left" data-original-title="Remove selected"></i>
+			</button>
 			<form id="addinput" class="input-prepend input-append form-horizontal" ng-submit="addUser()">
 				<label for="games-steamid" class="add-on" style="display:inline-block;margin-bottom:0;">SteamID</label>
-				<input id="games-steamid" style="width: 250px;" type="text" ng-model="UserID" autocorrect="off" autocapitalize="none" spellcheck="false">
-				<button type="submit" class="btn"><i class="icon-user"></i> Add User</button>
+				<input id="games-steamid" style="width: min(250px, 100%);" type="text" ng-model="UserID" autocorrect="off" autocapitalize="none" spellcheck="false">
+				<button type="submit" class="btn"><i class="icon-user" aria-hidden="true"></i> Add User</button>
 			</form>
 			<div ng-show="userError" role="status" aria-live="polite" style="color:#f88; font-size:12px; margin:4px 0;">[[userError]]</div>
-			<a href="" ng-click="$event.preventDefault()">
-				<i style="margin-top: -10px" class="right icon-info-sign icon-white" rel="tooltip" data-placement="right"
-				data-original-title="This tool allows you to see the intersection of your and your friends' games, and filter them using flags. Red border means profile is private."></i>
-			</a>
+			<span class="right" title="This tool allows you to see the intersection of your and your friends' games, and filter them using flags. Red border means profile is private.">
+				<i style="margin-top: -10px" class="icon-info-sign icon-white" rel="tooltip" data-placement="right"
+				data-original-title="This tool allows you to see the intersection of your and your friends' games, and filter them using flags. Red border means profile is private." aria-hidden="true"></i>
+			</span>
 			<ul>
 				<li class="user [[userSelected(user.steamid)]] [[isPrivate(user.steamid)]]" ng-repeat="user in Users" fadey="500" draggable="true" ng-click="selectUser(user.steamid)">
-					<button type="button" class="st-icon-btn left" ng-click="$event.stopPropagation(); showFriends(user.steamid,user.name)" aria-label="Friends list"><i class="icon-list" rel="tooltip" data-placement="top" data-original-title="Friends list"></i></button>
+					<button type="button" class="st-icon-btn left" ng-click="$event.stopPropagation(); showFriends(user.steamid,user.name)" aria-label="Friends list for [[user.name]]"><i class="icon-list" aria-hidden="true" rel="tooltip" data-placement="top" data-original-title="Friends list"></i></button>
 					<p class="left name">[[user.name]]</p>
-					<a href="" ng-click="$event.preventDefault(); $event.stopPropagation(); removeUser(user.steamid)"><i class="icon-remove" rel="tooltip" data-placement="top" data-original-title="Remove"></i></a>
+					<button type="button" class="st-icon-btn right" ng-click="$event.stopPropagation(); removeUser(user.steamid)" aria-label="Remove [[user.name]]"><i class="icon-remove" aria-hidden="true" rel="tooltip" data-placement="top" data-original-title="Remove"></i></button>
 					<img ng-src="[[user.avatar]]" alt="[[user.name]]'s Avatar" width="64" height="64" draggable="false"><br>
 				</li>
 			</ul>
 			<form id="importbtn" class="form-horizontal">
-				<button  class="btn" ng-click="importGames()" ng-disabled="selectedUsers.length==0">
-					<i class="icon-download"></i> Import Games</button>
+				<button type="button" class="btn" ng-click="importGames()" ng-disabled="selectedUsers.length==0">
+					<i class="icon-download" aria-hidden="true"></i> Import Games</button>
 			</form>
 		</div>
 
 		<div id="filter-panel">
 			<div id="filter-title">Flags</div>
 
-			<div ng-click="f.singleplayer=0" ng-show="f.singleplayer == 1" class="label label-success"><i class="icon-check"></i> Single-Player</div>
-			<div ng-click="f.singleplayer=1" ng-show="f.singleplayer == 0" class="label"><i class="icon-plus-sign"></i> Single-Player</div>
+			<button type="button" ng-click="f.singleplayer = 1 - (f.singleplayer || 0)" ng-class="{'label-success': f.singleplayer == 1}" aria-pressed="[[f.singleplayer == 1]]" class="label"><i ng-class="f.singleplayer == 1 && 'icon-check' || 'icon-plus-sign'" aria-hidden="true"></i> Single-Player</button>
 
-			<div ng-click="f.local_coop=0" ng-show="f.local_coop == 1" class="label label-success"><i class="icon-check"></i>Local Co-op</div>
-			<div ng-click="f.local_coop=1" ng-show="f.local_coop == 0" class="label"><i class="icon-plus-sign"></i>Local Co-op</div>
+			<button type="button" ng-click="f.local_coop = 1 - (f.local_coop || 0)" ng-class="{'label-success': f.local_coop == 1}" aria-pressed="[[f.local_coop == 1]]" class="label"><i ng-class="f.local_coop == 1 && 'icon-check' || 'icon-plus-sign'" aria-hidden="true"></i> Local Co-op</button>
 
-			<div ng-click="f.coop=0" ng-show="f.coop == 1" class="label label-success"><i class="icon-check"></i> Co-op</div>
-			<div ng-click="f.coop=1" ng-show="f.coop == 0" class="label"><i class="icon-plus-sign"></i> Co-op</div>
+			<button type="button" ng-click="f.coop = 1 - (f.coop || 0)" ng-class="{'label-success': f.coop == 1}" aria-pressed="[[f.coop == 1]]" class="label"><i ng-class="f.coop == 1 && 'icon-check' || 'icon-plus-sign'" aria-hidden="true"></i> Co-op</button>
 
-			<div ng-click="f.multiplayer=0" ng-show="f.multiplayer == 1" class="label label-success"><i class="icon-check"></i> Multi-Player</div>
-			<div ng-click="f.multiplayer=1" ng-show="f.multiplayer == 0" class="label"><i class="icon-plus-sign"></i> Multi-Player</div>
+			<button type="button" ng-click="f.multiplayer = 1 - (f.multiplayer || 0)" ng-class="{'label-success': f.multiplayer == 1}" aria-pressed="[[f.multiplayer == 1]]" class="label"><i ng-class="f.multiplayer == 1 && 'icon-check' || 'icon-plus-sign'" aria-hidden="true"></i> Multi-Player</button>
 
-			<div ng-click="f.controller=0" ng-show="f.controller == 1" class="label label-success"><i class="icon-check"></i> Controller</div>
-			<div ng-click="f.controller=1" ng-show="f.controller == 0" class="label"><i class="icon-plus-sign"></i> Controller</div>
+			<button type="button" ng-click="f.controller = 1 - (f.controller || 0)" ng-class="{'label-success': f.controller == 1}" aria-pressed="[[f.controller == 1]]" class="label"><i ng-class="f.controller == 1 && 'icon-check' || 'icon-plus-sign'" aria-hidden="true"></i> Controller</button>
 
-			<div ng-click="f.mac=0" ng-show="f.mac == 1" class="label label-success"><i class="icon-check"></i> Mac</div>
-			<div ng-click="f.mac=1" ng-show="f.mac == 0" class="label"><i class="icon-plus-sign"></i> Mac</div>
+			<button type="button" ng-click="f.mac = 1 - (f.mac || 0)" ng-class="{'label-success': f.mac == 1}" aria-pressed="[[f.mac == 1]]" class="label"><i ng-class="f.mac == 1 && 'icon-check' || 'icon-plus-sign'" aria-hidden="true"></i> Mac</button>
 
-			<div ng-click="f.linux=0" ng-show="f.linux == 1" class="label label-success"><i class="icon-check"></i> Linux</div>
-			<div ng-click="f.linux=1" ng-show="f.linux == 0" class="label"><i class="icon-plus-sign"></i> Linux</div>
+			<button type="button" ng-click="f.linux = 1 - (f.linux || 0)" ng-class="{'label-success': f.linux == 1}" aria-pressed="[[f.linux == 1]]" class="label"><i ng-class="f.linux == 1 && 'icon-check' || 'icon-plus-sign'" aria-hidden="true"></i> Linux</button>
 		</div>
 		<div id="game-list">
 			<div id="game-title">Filtered Games</div>

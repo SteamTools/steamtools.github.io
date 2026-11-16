@@ -7,13 +7,18 @@ html, body {
 }
 
 body {margin: 0; padding: 0; background: url(/img/bg.png);}
-button{outline: none !important;}
+:where(button, a, input, select, [tabindex]):focus-visible {
+	outline: 2px solid #159;
+	outline-offset: 2px;
+}
 hr{border-top: 1px solid #AAA;}
 a.item {color: #5BD;}
 a.item:hover {text-decoration: none;}
 
 #container {
-	width: 970px;
+	width: min(970px, 100%);
+	max-width: 100%;
+	box-sizing: border-box;
 	margin: auto;
 	text-align: center;
 	min-height: 100%;
@@ -47,20 +52,20 @@ a.item:hover {text-decoration: none;}
 .corner img:hover {opacity: 0.8;}
 .topbutton:hover {background-color: #CDE; text-decoration: none;}
 .topbutton:active {top: 12px; box-shadow: 0px 1px 0px 0px #888;}
-#stepbox{display: inline-block; vertical-align: top; display: inline-block;}
-#preview {width: 560px; margin-top: 60px; display: inline-block;}
+#stepbox{display: inline-block; vertical-align: top; max-width: 100%;}
+#preview {width: min(560px, 100%); max-width: 100%; margin-top: 60px; display: inline-block; box-sizing: border-box;}
 .btn{padding: 4px 8px;}
-.tool-btn{height: 40px; width: 42px;}
+.tool-btn{min-height: 40px; min-width: 42px;}
 .action-btn{margin-top: 8px; padding: 9px 8px; display: inline-block}
 .btn.active {border-bottom-right-radius: 3px; border-top-right-radius: 3px; border-color: #CCC;}
-.emotebox {width: 380px; text-align: center; background-color: #333; padding: 4px; border-radius: 3px; margin: 5px auto; color: white;}
+.emotebox {width: min(380px, 100%); max-width: 100%; box-sizing: border-box; text-align: center; background-color: #333; padding: 4px; border-radius: 3px; margin: 5px auto; color: white;}
 .select {border: 1px solid #FFF; padding: 1px; margin: 0 !important;}
 .emote {margin: 2px;}
 .disable {opacity: 0.2;}
 .popover {width: 130px; text-align: center;}
 .popover-content {padding: 4px 6px;}
 #error {color: white;}
-#mosaic {background-color: rgb(25,25,25); padding: 8px; margin: auto; text-align: left;}
+#mosaic {background-color: rgb(25,25,25); padding: 8px; margin: auto; text-align: left; max-width: 100%; overflow-x: auto; box-sizing: border-box;}
 #mosaic img {width: 18px;}
 select, input[type="file"] {height: 22px; line-height: initial; width: 200px;}
 select, input[type="number"] {width: 32px; margin-top: 0px; padding: 0 4px 01px; padding-right: 1px; margin-bottom: 2px;}
@@ -84,4 +89,23 @@ select, input[type="number"] {width: 32px; margin-top: 0px; padding: 0 4px 01px;
 
 #nn_skinr {
     margin-left: 487px;
+}
+
+@media (max-width: 1300px) {
+	.adswitch_skin, #nn_skinl, #nn_skinr {
+		display: none;
+	}
+}
+
+@media (max-width: 768px) {
+	#container {
+		padding-top: 48px;
+	}
+	#preview {
+		margin-top: 16px;
+	}
+	.input-prepend, .input-append, .btn-group {
+		white-space: normal;
+		max-width: 100%;
+	}
 }

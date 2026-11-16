@@ -234,6 +234,26 @@ function($scope, $http, $location, $filter) {
 		return style;
 	};
 
+	$scope.onTileKeydown = function(b, e) {
+		if (!e || (e.target && e.target.tagName === "A")) return;
+		var key = e.key || e.keyCode;
+		if (key === "Enter" || key === 13) {
+			if (typeof e.preventDefault === "function") e.preventDefault();
+			$scope.load(b, e);
+		} else if (key === " " || key === "Spacebar" || key === 32) {
+			if (typeof e.preventDefault === "function") e.preventDefault();
+		}
+	};
+
+	$scope.onTileKeyup = function(b, e) {
+		if (!e || (e.target && e.target.tagName === "A")) return;
+		var key = e.key || e.keyCode;
+		if (key === " " || key === "Spacebar" || key === 32) {
+			if (typeof e.preventDefault === "function") e.preventDefault();
+			$scope.load(b, e);
+		}
+	};
+
 	$scope.load = function(b, e) {
 		if (e && e.target && e.target.tagName === "A")
 			return;
