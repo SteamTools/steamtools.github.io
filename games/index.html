@@ -18,7 +18,7 @@
 	<link rel="shortcut icon" href="/favicon.ico">
 	<link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" rel="stylesheet">
 	<link rel="stylesheet" type="text/css" href="jquery.mCustomScrollbar.css" media="all">
-	<link rel="stylesheet" type="text/css" href="style.css" media="all">
+	<link rel="stylesheet" type="text/css" href="style.css?v=20261116b" media="all">
 </head>
 <body ng-controller="SteamCtrl" ng-cloak>
 	<a class="corner topbutton" style="left: 25px;" href="../">&laquo; Hub</a>
@@ -33,7 +33,7 @@
 
 	<div id="container">
 		<div id="user-selection">
-			<a href="#" ng-click="deleteUsers()">
+			<a href="" ng-click="$event.preventDefault(); deleteUsers()">
 				<i class="left icon-trash icon-white" rel="tooltip" data-placement="left" data-original-title="Remove selected"></i>
 			</a>
 			<form id="addinput" class="input-prepend input-append form-horizontal" ng-submit="addUser()">
@@ -42,15 +42,15 @@
 				<button type="submit" class="btn"><i class="icon-user"></i> Add User</button>
 			</form>
 			<div ng-show="userError" role="status" aria-live="polite" style="color:#f88; font-size:12px; margin:4px 0;">[[userError]]</div>
-			<a href="#">
+			<a href="" ng-click="$event.preventDefault()">
 				<i style="margin-top: -10px" class="right icon-info-sign icon-white" rel="tooltip" data-placement="right"
 				data-original-title="This tool allows you to see the intersection of your and your friends' games, and filter them using flags. Red border means profile is private."></i>
 			</a>
 			<ul>
 				<li class="user [[userSelected(user.steamid)]] [[isPrivate(user.steamid)]]" ng-repeat="user in Users" fadey="500" draggable="true" ng-click="selectUser(user.steamid)">
-					<a href="#friendListModal" role="button" ng-click="showFriends(user.steamid,user.name)" data-toggle="modal"><i class="left icon-list" rel="tooltip" data-placement="top" data-original-title="Friends list"></i></a>
+					<button type="button" class="st-icon-btn left" ng-click="$event.stopPropagation(); showFriends(user.steamid,user.name)" aria-label="Friends list"><i class="icon-list" rel="tooltip" data-placement="top" data-original-title="Friends list"></i></button>
 					<p class="left name">[[user.name]]</p>
-					<a href="#" ng-click="removeUser(user.steamid)"><i class="icon-remove" rel="tooltip" data-placement="top" data-original-title="Remove"></i></a>
+					<a href="" ng-click="$event.preventDefault(); $event.stopPropagation(); removeUser(user.steamid)"><i class="icon-remove" rel="tooltip" data-placement="top" data-original-title="Remove"></i></a>
 					<img ng-src="[[user.avatar]]" alt="[[user.name]]'s Avatar" width="64" height="64" draggable="false"><br>
 				</li>
 			</ul>
@@ -102,9 +102,9 @@
 					style="margin: 5px 0 -5px 68px;">Export List</button>
 		</div>
 	</div>
-	<div class="modal hide fade" id="friendListModal" tabindex="-1" role="dialog">
+	<dialog id="friendListModal" class="st-friends-dialog" closedby="any" aria-labelledby="myModalLabel">
 		<div class="modal-header">
-			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+			<button type="button" class="close" ng-click="closeFriendsModal()" aria-label="Close friends dialog">&times;</button>
 			<h3 id="myModalLabel">[[selectedName]]'s Friends</h3>
 		</div>
 		<div class="modal-body nano">
@@ -126,13 +126,13 @@
 			</ul>
 		</div>
 		<div class="modal-footer">
-			<button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
-			<button class="btn btn-primary" ng-click="addFriends()" ng-disabled="selectedFriends.length==0">Add Selected</button>
+			<button type="button" class="btn" ng-click="closeFriendsModal()">Close</button>
+			<button type="button" class="btn btn-primary" ng-click="addFriends()" ng-disabled="selectedFriends.length==0">Add Selected</button>
 		</div>
-	</div>
+	</dialog>
 
-	<script type="text/javascript" src="../js/steamtools-config.js"></script>
-	<script type="text/javascript" src="steam.js"></script>
+	<script type="text/javascript" src="../js/steamtools-config.js?v=20261116b"></script>
+	<script type="text/javascript" src="steam.js?v=20261116b"></script>
 
 	<!-- Start of Google Analytics code -->
 	<script>
@@ -148,15 +148,12 @@
 	<!-- End of Google Analytics code -->
 
 	<!-- Start of StatCounter Code for Default Guide -->
-	<script type="text/javascript">
+	<script>
 		var sc_project=9905430;
 		var sc_invisible=1;
 		var sc_security="89ce89e8";
-		var scJsHost = "https://secure.";
-		document.write("<sc"+"ript type='text/javascript' src='" +
-		scJsHost+
-		"statcounter.com/counter/counter.js'></"+"script>");
 	</script>
+	<script async src="https://secure.statcounter.com/counter/counter.js"></script>
 	<noscript><div class="statcounter"><a title="create counter"
 	href="https://statcounter.com/free-hit-counter/"
 	target="_blank" rel="noopener noreferrer"><img class="statcounter"

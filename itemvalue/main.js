@@ -46,7 +46,7 @@ var CURRENCY_DATA = [
 angular.module('valueApp', ['ui.bootstrap'])
 .config(['$tooltipProvider', function($tooltipProvider){
 	$tooltipProvider.setTriggers({
-		'motaenter': 'mouseleave',
+		'mouseenter': 'mouseleave',
 		'click': 'click',
 		'focus': 'blur',
 		'show': 'mouseleave'
@@ -224,6 +224,9 @@ angular.module('valueApp', ['ui.bootstrap'])
 			$timeout(function() {
 				initTurnstile((attempt || 0) + 1);
 			}, 250);
+		} else {
+			$scope.status = 'Captcha widget was blocked or failed to load — click Import Inventory (no captcha) to load your items.';
+			$scope.showImportCta = true;
 		}
 	}
 	$timeout(function() { initTurnstile(0); }, 0);
@@ -332,7 +335,7 @@ angular.module('valueApp', ['ui.bootstrap'])
 	$scope.openImportModal = function() {
 		if (!window.SteamToolsImport) return;
 		cancelPendingRetry();
-		var idHint = /^\d{17}$/.test(String($scope.UserID || '').trim()) ? String($scope.UserID).trim() : '';
+		var idHint = String($scope.UserID || '').trim();
 		window.SteamToolsImport.openImportDialog({
 			mode: 'itemvalue',
 			appid: $scope.appid.model,
@@ -375,7 +378,12 @@ angular.module('valueApp', ['ui.bootstrap'])
 	};
 
 	$scope.loadItems = function(){
-		if (!$scope.UserID || $scope.UserID.trim() === "") return;
+		if (!$scope.UserID || $scope.UserID.trim() === "") {
+			$scope.status = "Enter your SteamID64, custom URL name, or Steam profile link first, or click Import Inventory.";
+			var idEl = document.getElementById('iv-steamid');
+			if (idEl) idEl.focus();
+			return;
+		}
 		if (!$scope.hasValidPass() && !$scope.turnstileToken) {
 			$scope.status = $scope.turnstileConfigured
 				? "Please complete the Turnstile check first, or click Import Inventory."
@@ -697,14 +705,21 @@ angular.module('valueApp', ['ui.bootstrap'])
 	if (window.localStorage.appid && $scope.apps.indexOf(window.localStorage.appid) !== -1) {
 		$scope.appid.model = window.localStorage.appid;
 	}
-	if (window.localStorage.useTable) $scope.useTable = JSON.parse(window.localStorage.useTable);
-	$scope.$watch('appid', function(){window.localStorage.appid = $scope.appid.model;});
+	if (window.localStorage.useTable) {
+		try {
+			$scope.useTable = JSON.parse(window.localStorage.useTable);
+		} catch (e) {
+			delete window.localStorage.useTable;
+		}
+	}
+	$scope.$watch('appid.model', function(){window.localStorage.appid = $scope.appid.model;});
 	$scope.$watch('useTable', function(){window.localStorage.useTable = $scope.useTable;});
 	$scope.$watch('flags.fee', function(){$scope.table.rows().invalidate();});
 	$scope.$watch('flags.dupes', function(){$scope.table.draw();});
-	$scope.$watch('flags.stack', function(old_value, new_value){
-		$scope.table.column(7).visible(new_value);
-		$scope.table.column(8).visible(old_value);
+	$scope.$watch('flags.stack', function(newValue){
+		var showStack = Boolean(newValue);
+		$scope.table.column(7).visible(!showStack);
+		$scope.table.column(8).visible(showStack);
 		$('#item_table').width("100%");
 		$scope.table.draw();
 	});
@@ -727,10 +742,16 @@ angular.module('valueApp', ['ui.bootstrap'])
 		var pos = hash.lastIndexOf("-");
 		if (pos >= 0) {
 			var name = hash.slice(0, pos);
+			try {
+				name = decodeURIComponent(name);
+			} catch (e) {
+				// Keep raw name if URI decoding fails
+			}
 			var appid = hash.slice(pos + 1);
 			if ($scope.apps.indexOf(appid) >= 0) {
 				$scope.UserID = name;
 				$scope.appid.model = appid;
+				$scope.status = "Complete the verification check and click Fetch to load " + $scope.UserID + ", or click Import Inventory.";
 			}
 		}
 	}

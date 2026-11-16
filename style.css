@@ -164,6 +164,7 @@ footer #affiliates a:hover {
 /* Caption Style 3 */
 .cs-style-3 figure {
 	overflow: hidden;
+	cursor: pointer;
 }
 
 .cs-style-3 figure div {
@@ -174,7 +175,8 @@ footer #affiliates a:hover {
 	transition: transform 0.4s;
 }
 
-.cs-style-3 figure:hover div {
+.cs-style-3 figure:hover div,
+.cs-style-3 figure:focus-within div {
 	-webkit-transform: translateY(-53px);
 	-moz-transform: translateY(-53px);
 	-ms-transform: translateY(-53px);
@@ -200,7 +202,8 @@ footer #affiliates a:hover {
 	backface-visibility: hidden;
 }
 
-.cs-style-3 figure:hover figcaption{
+.cs-style-3 figure:hover figcaption,
+.cs-style-3 figure:focus-within figcaption {
 	opacity: 1;
 	-webkit-transition: -webkit-transform 0.4s, opacity 0.1s;
 	-moz-transition: -moz-transform 0.4s, opacity 0.1s;

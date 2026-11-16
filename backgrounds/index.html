@@ -12,8 +12,8 @@
 	<title>Background Gallery</title>
 	<link rel="shortcut icon" href="/favicon.ico">
 	<link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.no-icons.min.css" rel="stylesheet">
-	<link href="angular.rangeSlider.css" rel="stylesheet">
-	<link href="../css/steamtools-import.css" rel="stylesheet">
+	<link href="angular.rangeSlider.css?v=20261116b" rel="stylesheet">
+	<link href="../css/steamtools-import.css?v=20261116b" rel="stylesheet">
 
 	<style>
 		body{text-align: center; padding-top: 10px; background-image: url(/img/bg.png);}
@@ -35,6 +35,7 @@
 			width: 256px;
 			height: 160px;
 			display: inline-block;
+			vertical-align: top;
 			content:' ';
 			cursor: pointer;
 		}
@@ -164,7 +165,7 @@
 <body ng-controller="BGCtrl" ng-cloak>
 	<a class="corner topbutton" style="left: 25px;" href="../">&laquo; Hub</a>
 	<div class="corner" style="right: 25px;">
-		<a target="_blank" href="https://twitter.com/toolssteam"><img src="/img/twitter.png" alt="Twitter" width="25" height="25"></a>
+		<a target="_blank" href="https://twitter.com/SteamTools"><img src="/img/twitter.png" alt="Twitter" width="25" height="25"></a>
 		<a target="_blank" href="https://steamcommunity.com/groups/steam_tools"><img src="/img/steam.png" alt="Steam Group" width="25" height="25"></a>
 		<a class="topbutton" id="feedback"  href="https://steamcommunity.com/groups/steam_tools">Feedback</a>
 		<a class="topbutton" id="donate" href="https://www.paypal.com/donate/?business=HLRYRKCXRYX7C">Donate</a>
@@ -226,10 +227,10 @@
 	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.6/angular.min.js"></script>
 	<script src="ng-infinite-scroll.min.js"></script>
 	<script src="angular.rangeSlider.js"></script>
-	<script src="../js/steamtools-config.js"></script>
-	<script src="../js/import-worker.js"></script>
-	<script src="../js/steamtools-import.js"></script>
-	<script src="main.js"></script>
+	<script src="../js/steamtools-config.js?v=20261116b"></script>
+	<script src="../js/import-worker.js?v=20261116b"></script>
+	<script src="../js/steamtools-import.js?v=20261116b"></script>
+	<script src="main.js?v=20261116b"></script>
 
 	<!-- Start of Google Analytics code -->
 	<script>
@@ -245,15 +246,12 @@
 	<!-- End of Google Analytics code -->
 
 	<!-- Start of StatCounter Code for Default Guide -->
-	<script type="text/javascript">
+	<script>
 		var sc_project=9905430;
 		var sc_invisible=1;
 		var sc_security="89ce89e8";
-		var scJsHost = "https://secure.";
-		document.write("<sc"+"ript type='text/javascript' src='" +
-		scJsHost+
-		"statcounter.com/counter/counter.js'></"+"script>");
 	</script>
+	<script async src="https://secure.statcounter.com/counter/counter.js"></script>
 	<noscript><div class="statcounter"><a title="create counter"
 	href="https://statcounter.com/free-hit-counter/"
 	target="_blank" rel="noopener noreferrer"><img class="statcounter"

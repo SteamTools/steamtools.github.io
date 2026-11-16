@@ -13,7 +13,7 @@
 
 
 	<link rel="shortcut icon" href="/favicon.ico">
-	<link rel="stylesheet" href="style.css">
+	<link rel="stylesheet" href="style.css?v=20261116b">
 </head>
 <body>
 	<div id="whitebg"></div>
@@ -62,7 +62,7 @@
 				<div class="c1">Trading Cards</div>
 				<figcaption>
 					<span>All the stats you could need about Steam trading card sets, kept up to date.</span>
-					<a href="cards" alt="Trading Cards">Check it out!</a>
+					<a href="cards/">Check it out!</a>
 				</figcaption>
 			</figure>
 		</li>
@@ -71,7 +71,7 @@
 				<div class="c2">Emoticons</div>
 				<figcaption>
 					<span>Easily browse, filter and sort an up to date list of Steam emoticons in one page.</span>
-					<a href="emoticons" alt="Emoticons">Check it out!</a>
+					<a href="emoticons/">Check it out!</a>
 				</figcaption>
 			</figure>
 		</li>
@@ -80,7 +80,7 @@
 				<div class="c3">Backgrounds</div>
 				<figcaption>
 					<span>Easily browse, filter and sort an up to date list of Steam backgrounds in one page.</span>
-					<a href="backgrounds" alt="Backgrounds">Check it out!</a>
+					<a href="backgrounds/">Check it out!</a>
 				</figcaption>
 			</figure>
 		</li>
@@ -89,7 +89,7 @@
 				<div class="c4">Mosaticon</div>
 				<figcaption>
 					<span>Generate a mosaic of your chosen image using the Steam emoticons you own.</span>
-					<a href="mosaticon" alt="Mosaticon">Check it out!</a>
+					<a href="mosaticon/">Check it out!</a>
 				</figcaption>
 			</figure>
 		</li>
@@ -98,7 +98,7 @@
 				<div class="c5">Games Filter</div>
 				<figcaption>
 					<span>View the intersection of user's Steam games and filter them by various categories.</span>
-					<a href="games" alt="Game Filter">Check it out!</a>
+					<a href="games/">Check it out!</a>
 				</figcaption>
 			</figure>
 		</li>
@@ -107,7 +107,7 @@
 				<div class="c6">Item Value Sorter</div>
 				<figcaption>
 					<span>Load your Steam Community items and sort them by market value or filter them by type.</span>
-					<a href="itemvalue" alt="Item Value">Check it out!</a>
+					<a href="itemvalue/">Check it out!</a>
 				</figcaption>
 			</figure>
 		</li>
@@ -150,21 +150,17 @@
 	<!-- End of Google Analytics code -->
 
 	<!-- Start of StatCounter Code for Default Guide -->
-	<script type="text/javascript">
+	<script>
 		var sc_project=9905430;
 		var sc_invisible=1;
 		var sc_security="89ce89e8";
-		var scJsHost = (("https:" == document.location.protocol) ?
-		"https://secure." : "http://www.");
-		document.write("<sc"+"ript type='text/javascript' src='" +
-		scJsHost+
-		"statcounter.com/counter/counter.js'></"+"script>");
 	</script>
+	<script async src="https://secure.statcounter.com/counter/counter.js"></script>
 	<noscript><div class="statcounter"><a title="create counter"
-	href="http://statcounter.com/free-hit-counter/"
-	target="_blank"><img class="statcounter"
-	src="http://c.statcounter.com/9905430/0/89ce89e8/1/"
-	alt="create counter"></a></div></noscript>
+	href="https://statcounter.com/free-hit-counter/"
+	target="_blank" rel="noopener noreferrer"><img class="statcounter"
+	src="https://c.statcounter.com/9905430/0/89ce89e8/1/"
+	alt="create counter" width="1" height="1"></a></div></noscript>
 	<!-- End of StatCounter Code for Default Guide -->
 
 	<script>
@@ -175,6 +171,18 @@
 		};
 
 		document.getElementById("year").innerHTML = new Date().getFullYear();
+
+		var grid = document.querySelector('.grid');
+		if (grid) {
+			grid.addEventListener('click', function(ev) {
+				if (ev.target && ev.target.closest && ev.target.closest('a')) return;
+				var fig = ev.target && ev.target.closest ? ev.target.closest('figure') : null;
+				var link = fig ? fig.querySelector('figcaption a') : null;
+				if (link && link.href) {
+					window.location.href = link.href;
+				}
+			});
+		}
 	</script>
 
 	<script type="application/ld+json">

@@ -220,10 +220,20 @@ th, td { white-space: nowrap; }
 }
 
 .status {
-	height: 20px;
+	min-height: 20px;
+	height: auto;
+	line-height: 1.3;
+	font-size: 8.5pt;
+	word-wrap: break-word;
 	margin-bottom: 8px;
 	color: #d9534f;
 	font-weight: bold;
+}
+
+.panel .button {
+	font-size: 8.5pt;
+	padding: 4px 6px;
+	white-space: normal;
 }
 
 input[type=checkbox] {

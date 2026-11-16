@@ -16,8 +16,8 @@
 	<link rel="shortcut icon" href="/favicon.ico">
 	<link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" rel="stylesheet">
 	<link rel="stylesheet" href="//cdn.datatables.net/plug-ins/725b2a2115b/integration/bootstrap/2/dataTables.bootstrap.css">
-	<link rel="stylesheet" href="style.css">
-	<link rel="stylesheet" href="../css/steamtools-import.css">
+	<link rel="stylesheet" href="style.css?v=20261116b">
+	<link rel="stylesheet" href="../css/steamtools-import.css?v=20261116b">
 	<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 </head>
 <body ng-controller="InvCtrl" ng-cloak>
@@ -40,7 +40,7 @@
 						autocorrect="off" autocapitalize="none" spellcheck="false"
 						placeholder="SteamID64, custom URL, or profile URL"
 						aria-invalid="false">
-					<button class="btn btn-inverse" type="submit" ng-disabled="isLoading || (!hasValidPass() && !turnstileToken)">
+					<button class="btn btn-inverse" type="submit" ng-disabled="isLoading">
 						<i class="icon-user icon-white"></i> Fetch</button>
 					<button class="btn btn-primary" type="button" ng-click="openImportModal()" style="margin-left:4px;">
 						<i class="icon-upload icon-white"></i> Import Inventory</button>
@@ -92,14 +92,13 @@
 					<span class="add-on" style="width: 60px">Currency</span>
 				</span>
 				<div class="input-group btn-group">
-					<div class="input-group-addon">Currency</div>
 					<div class="dropdown" dropdown>
-						<a class="btn btn-default" data-toggle="dropdown" href="#" dropdown-toggle>
+						<a class="btn btn-default" data-toggle="dropdown" href="" ng-click="$event.preventDefault()" dropdown-toggle>
 							{{ CDATA[curIndex].name }}
 						<b class="caret"></b></a>
 						<ul class="dropdown-menu" role="menu">
 							<li ng-repeat="currency in CDATA">
-								<a href="#" ng-click="setCurrency($index)">{{currency.name}}</a>
+								<a href="" ng-click="$event.preventDefault(); setCurrency($index)">{{currency.name}}</a>
 							</li>
 						</ul>
 					</div>
@@ -165,10 +164,10 @@
 	<script src="//cdnjs.cloudflare.com/ajax/libs/seedrandom/2.3.6/seedrandom.min.js"></script>
 	<script src="ui-bootstrap-custom-tpls-0.7.0.min.js"></script>
 	<script src="jquery.thumbhover.js"></script>
-	<script src="../js/steamtools-config.js"></script>
-	<script src="../js/import-worker.js"></script>
-	<script src="../js/steamtools-import.js"></script>
-	<script src="main.js"></script>
+	<script src="../js/steamtools-config.js?v=20261116b"></script>
+	<script src="../js/import-worker.js?v=20261116b"></script>
+	<script src="../js/steamtools-import.js?v=20261116b"></script>
+	<script src="main.js?v=20261116b"></script>
 
 	<div id="nn_skinl" class="adswitch_skin"></div>
 	<div id="nn_skinr" class="adswitch_skin"></div>
@@ -187,15 +186,12 @@
 	<!-- End of Google Analytics code -->
 
 	<!-- Start of StatCounter Code for Default Guide -->
-	<script type="text/javascript">
+	<script>
 		var sc_project=9905430;
 		var sc_invisible=1;
 		var sc_security="89ce89e8";
-		var scJsHost = "https://secure.";
-		document.write("<sc"+"ript type='text/javascript' src='" +
-		scJsHost+
-		"statcounter.com/counter/counter.js'></"+"script>");
 	</script>
+	<script async src="https://secure.statcounter.com/counter/counter.js"></script>
 	<noscript><div class="statcounter"><a title="create counter"
 	href="https://statcounter.com/free-hit-counter/"
 	target="_blank" rel="noopener noreferrer"><img class="statcounter"

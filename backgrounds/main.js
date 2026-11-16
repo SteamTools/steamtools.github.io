@@ -94,11 +94,11 @@ function($scope, $http, $location) {
 	$scope.loggedIn = false;
 	$scope.user_status = "Login or Import Inventory to filter owned items";
 	$scope.userLogin = function(steamid64) {
-		if (!/^\d{17}$/.test(String(steamid64 || '').trim())) {
-			$scope.user_status = "Invalid SteamID64 — please login or use Import Inventory.";
+		var cleanId = String(steamid64 || '').trim();
+		if (!cleanId) {
+			$scope.user_status = "Invalid SteamID — please login or use Import Inventory.";
 			return;
 		}
-		var cleanId = String(steamid64).trim();
 		$scope.loggedIn = false;
 		var url = CFG.API_BASE + "/FetchBackgrounds?id=" + encodeURIComponent(cleanId);
 		$http.get(url, {withCredentials: true}).success(function(data){
@@ -114,8 +114,9 @@ function($scope, $http, $location) {
 			for (var i = 0; i < data.items.length; i++) {
 				$scope.owned[data.items[i]] = true;
 			}
-		}).error(function(){
-			$scope.user_status = "Could not fetch inventory — try Import Inventory.";
+		}).error(function(errData){
+			$scope.user_status = (errData && errData.reason ? errData.reason : "Could not fetch inventory") +
+				" — try Import Inventory.";
 		});
 	};
 
@@ -192,9 +193,17 @@ function($scope, $http, $location) {
 
 		var url = CFG.API_BASE + "/FetchBackgroundImage?url=" + encodeURIComponent(btoa(b.url));
 		$http.get(url).success(function(data){
-			$scope.open(data, b.name);
+			var imgHash = typeof data === "string" ? data : (data && data.img);
+			if (imgHash) {
+				b.img = imgHash;
+				$scope.open(imgHash, b.name);
+			} else if (b.url) {
+				window.open($scope.BASE_URL + b.url, "_blank", "noopener,noreferrer");
+			}
 		}).error(function(){
-			console.log('Failed to load image for: ', b);
+			if (b.url) {
+				window.open($scope.BASE_URL + b.url, "_blank", "noopener,noreferrer");
+			}
 		});
 	};
 
@@ -227,9 +236,18 @@ function($scope, $http, $location) {
 		});
 
 		if (!("closedBy" in HTMLDialogElement.prototype)) {
-			dlg.addEventListener("click", function(ev) {
+			var downOutside = false;
+			var isOutside = function(ev) {
 				var rect = dlg.getBoundingClientRect();
-				if (ev.clientX < rect.left || ev.clientX > rect.right || ev.clientY < rect.top || ev.clientY > rect.bottom) {
+				return ev.clientX < rect.left || ev.clientX > rect.right || ev.clientY < rect.top || ev.clientY > rect.bottom;
+			};
+			dlg.addEventListener("pointerdown", function(ev) {
+				downOutside = isOutside(ev);
+			});
+			dlg.addEventListener("pointerup", function(ev) {
+				if (!downOutside) return;
+				downOutside = false;
+				if (isOutside(ev)) {
 					dlg.close("backdrop");
 				}
 			});

@@ -17,7 +17,7 @@
   (function detectCurrentScriptUrl() {
     try {
       if (root && root.document && root.document.currentScript && root.document.currentScript.src) {
-        WORKER_SCRIPT_URL = root.document.currentScript.src.replace(/steamtools-import\.js(\?.*)?$/i, 'import-worker.js');
+        WORKER_SCRIPT_URL = root.document.currentScript.src.replace(/steamtools-import\.js(\?.*)?$/i, 'import-worker.js$1');
       }
     } catch (e) {
       // Ignore in non-DOM environments
@@ -56,6 +56,105 @@
       // Fall back to canonical production origin
     }
     return 'https://steam.tools';
+  }
+
+  function parseSteamInput(raw) {
+    var val = String(raw || '').trim();
+    if (!val) {
+      return { raw: '', steamid64: '', vanity: '', invalid: '' };
+    }
+    if (/^\d{17}$/.test(val)) {
+      return { raw: val, steamid64: val, vanity: '', invalid: '' };
+    }
+    var profMatch = /steamcommunity\.com\/(?:profiles|openid\/id)\/(\d{17})/i.exec(val);
+    if (profMatch) {
+      return { raw: val, steamid64: profMatch[1], vanity: '', invalid: '' };
+    }
+    var sid2Match = /^STEAM_[0-5]:([01]):(\d+)$/i.exec(val);
+    if (sid2Match && typeof BigInt === 'function') {
+      var computed = (BigInt('76561197960265728') + BigInt(sid2Match[1]) + BigInt(sid2Match[2]) * BigInt(2)).toString();
+      return { raw: val, steamid64: computed, vanity: '', invalid: '' };
+    }
+    var vanityMatch = /steamcommunity\.com\/id\/([^/?#\s]+)/i.exec(val);
+    if (vanityMatch) {
+      var decodedVanity = vanityMatch[1];
+      try {
+        decodedVanity = decodeURIComponent(vanityMatch[1]);
+      } catch (e) {
+        // Keep raw match if URI decoding fails
+      }
+      return { raw: val, steamid64: '', vanity: decodedVanity, invalid: '' };
+    }
+    if (/^https?:\/\//i.test(val) || val.indexOf('/') !== -1) {
+      return {
+        raw: val,
+        steamid64: '',
+        vanity: '',
+        invalid: 'Paste a valid Steam profile URL (steamcommunity.com/id/... or /profiles/...) or custom URL name.'
+      };
+    }
+    if (/^[A-Za-z0-9_-]{2,64}$/.test(val)) {
+      return { raw: val, steamid64: '', vanity: val, invalid: '' };
+    }
+    return {
+      raw: val,
+      steamid64: '',
+      vanity: '',
+      invalid: 'Enter a 17-digit SteamID64, custom URL name, or Steam profile link.'
+    };
+  }
+
+  var _resolvedVanityCache = new Map();
+
+  function resolveToSteamId64(rawVal, fetchImpl) {
+    var parsed = parseSteamInput(rawVal);
+    if (!parsed.raw) {
+      return Promise.resolve({ ok: true, steamid64: '', vanity: '' });
+    }
+    if (parsed.steamid64) {
+      return Promise.resolve({ ok: true, steamid64: parsed.steamid64, vanity: '' });
+    }
+    if (parsed.invalid) {
+      return Promise.resolve({ ok: false, reason: parsed.invalid });
+    }
+    var cacheKey = parsed.vanity.toLowerCase();
+    var cached = _resolvedVanityCache.get(cacheKey);
+    if (cached) {
+      return Promise.resolve({ ok: true, steamid64: cached, vanity: parsed.vanity });
+    }
+    var f = fetchImpl || (root && typeof root.fetch === 'function' ? root.fetch.bind(root) : null);
+    if (!f) {
+      return Promise.resolve({
+        ok: false,
+        reason: 'Cannot resolve custom URLs here — enter your 17-digit SteamID64 directly.'
+      });
+    }
+    var apiBase = String(getConfig().API_BASE || 'https://api.steam.tools').replace(/\/+$/, '');
+    var url = apiBase + '/ResolveSteamId?id=' + encodeURIComponent(parsed.vanity);
+    return f(url).then(function (resp) {
+      return resp.json().catch(function () {
+        return null;
+      }).then(function (data) {
+        if (resp.ok && data && /^\d{17}$/.test(String(data.steamid64 || ''))) {
+          var sid = String(data.steamid64);
+          _resolvedVanityCache.set(cacheKey, sid);
+          return { ok: true, steamid64: sid, vanity: parsed.vanity };
+        }
+        var detailObj = (data && data.detail && typeof data.detail === 'object') ? data.detail : null;
+        var baseReason = (data && (data.reason || data.message)) ||
+          (detailObj && (detailObj.reason || detailObj.message)) ||
+          'Could not find that Steam custom URL.';
+        return {
+          ok: false,
+          reason: baseReason + ' (Steam login usernames differ from custom profile URLs — paste your steamcommunity.com/profiles/... link if needed.)'
+        };
+      });
+    }).catch(function () {
+      return {
+        ok: false,
+        reason: 'Failed to contact SteamTools resolver — enter your 17-digit SteamID64 or try again.'
+      };
+    });
   }
 
   function buildSteamInventoryUrl(steamId64, appid, contextid, lastAssetId) {
@@ -430,6 +529,7 @@
   }
 
   // ---- Shared Accessible <dialog> UI Controller ----
+  var DEFAULT_STEAMID_HINT = 'Accepts a 17-digit SteamID64, custom URL name (e.g. ehsankia), or steamcommunity.com profile URL.';
   var _dialogInstance = null;
 
   function ensureDialogDom() {
@@ -449,13 +549,13 @@
       '<div class="st-import-body">',
       '  <p class="st-import-subtitle" id="st-import-subtitle">Bypass rate limits cleanly without captchas by importing directly from your browser session.</p>',
       '  <div class="st-field-group">',
-      '    <label class="st-label" for="st-import-steamid">SteamID64 (optional for direct Steam inventory links)</label>',
+      '    <label class="st-label" for="st-import-steamid">SteamID64, Custom URL, or Profile Link (optional)</label>',
       '    <div class="st-field-row">',
-      '      <input type="text" id="st-import-steamid" class="st-input" style="max-width:260px" placeholder="7656119..." inputmode="numeric" autocorrect="off" autocapitalize="none" spellcheck="false" aria-invalid="false" aria-describedby="st-import-steamid-hint">',
+      '      <input type="text" id="st-import-steamid" class="st-input" style="max-width:300px" placeholder="7656119..., custom URL, or profile link" autocorrect="off" autocapitalize="none" spellcheck="false" aria-invalid="false" aria-describedby="st-import-steamid-hint" data-error="st-import-steamid-err">',
       '      <a id="st-open-steam-inv-link" class="st-btn" href="https://steamcommunity.com/my/inventory/" target="_blank" rel="noopener noreferrer">Open My Steam Inventory</a>',
       '    </div>',
-      '    <p class="st-hint" id="st-import-steamid-hint">Must be 17 digits (e.g. 76561198000000000) to generate paginated links below.</p>',
-      '    <p class="st-error-msg" id="st-import-steamid-err" hidden>Enter a valid 17-digit SteamID64 (digits only).</p>',
+      '    <p class="st-hint" id="st-import-steamid-hint">' + DEFAULT_STEAMID_HINT + '</p>',
+      '    <p class="st-error-msg" id="st-import-steamid-err" hidden></p>',
       '  </div>',
       '  <div class="st-import-tabs" role="tablist" aria-label="Import methods">',
       '    <button type="button" class="st-tab-btn" role="tab" id="st-tab-paste" aria-selected="true" aria-controls="st-panel-paste">Paste JSON</button>',
@@ -466,7 +566,8 @@
       '    <div class="st-field-group">',
       '      <label class="st-label" for="st-import-json-input" id="st-import-json-label">Steam Inventory or EmoticonList JSON</label>',
       '      <p class="st-hint" id="st-import-json-hint">Paste one or more JSON responses saved from Steam Community (CTRL+A then CTRL+C).</p>',
-      '      <textarea id="st-import-json-input" class="st-textarea" placeholder=\'{"assets":[...],"descriptions":[...],"more_items":0}\' autocorrect="off" autocapitalize="none" spellcheck="false" aria-invalid="false" aria-describedby="st-import-json-hint"></textarea>',
+      '      <p class="st-hint" id="st-emotes-direct-row" hidden>Tip for emotes: open <a href="https://steamcommunity.com/actions/EmoticonList" target="_blank" rel="noopener noreferrer" class="st-url-link">steamcommunity.com/actions/EmoticonList</a> while signed into Steam, copy all (CTRL+A, CTRL+C), and paste below.</p>',
+      '      <textarea id="st-import-json-input" class="st-textarea" placeholder=\'{"assets":[...],"descriptions":[...],"more_items":0}\' autocorrect="off" autocapitalize="none" spellcheck="false" aria-invalid="false" aria-describedby="st-import-json-hint" data-error="st-import-json-err"></textarea>',
       '      <p class="st-error-msg" id="st-import-json-err" hidden></p>',
       '      <div class="st-field-row">',
       '        <button type="button" class="st-btn st-btn-primary" id="st-parse-paste-btn">Parse &amp; Stage Page</button>',
@@ -522,11 +623,13 @@
       subtitle: dlg.querySelector('#st-import-subtitle'),
       closeBtn: dlg.querySelector('#st-import-close-btn'),
       steamIdInput: dlg.querySelector('#st-import-steamid'),
+      steamIdHint: dlg.querySelector('#st-import-steamid-hint'),
       steamIdErr: dlg.querySelector('#st-import-steamid-err'),
       openSteamInvLink: dlg.querySelector('#st-open-steam-inv-link'),
       tabs: Array.prototype.slice.call(dlg.querySelectorAll('.st-tab-btn')),
       panels: Array.prototype.slice.call(dlg.querySelectorAll('.st-tabpanel')),
       jsonLabel: dlg.querySelector('#st-import-json-label'),
+      emotesDirectRow: dlg.querySelector('#st-emotes-direct-row'),
       jsonInput: dlg.querySelector('#st-import-json-input'),
       jsonErr: dlg.querySelector('#st-import-json-err'),
       parsePasteBtn: dlg.querySelector('#st-parse-paste-btn'),
@@ -556,16 +659,19 @@
       popupRef: null,
       lastFocused: null,
       liveTimer: null,
-      downOutside: false
+      downOutside: false,
+      resolvedSteamId: '',
+      resolveSeq: 0
     };
 
-    function announce(msg) {
+    function announce(msg, delayMs) {
       if (state.liveTimer) {
         clearTimeout(state.liveTimer);
       }
+      els.liveRegion.textContent = '';
       state.liveTimer = setTimeout(function () {
         els.liveRegion.textContent = msg;
-      }, 60);
+      }, typeof delayMs === 'number' ? delayMs : 80);
     }
 
     function setBanner(kind, msg) {
@@ -613,16 +719,27 @@
       return mode + ':' + appid + ':' + ctx;
     }
 
+    function getEffectiveSteamId() {
+      if (/^\d{17}$/.test(state.resolvedSteamId)) {
+        return state.resolvedSteamId;
+      }
+      return parseSteamInput(els.steamIdInput.value).steamid64;
+    }
+
     function updateSteamLinks() {
       var opts = state.options || {};
       var appid = String(opts.appid || '753');
       var ctx = String(opts.contextid || getConfig().getContextId(appid));
-      var sid = normalizeSteamIdInput(els.steamIdInput.value);
+      var parsed = parseSteamInput(els.steamIdInput.value);
+      var sid = /^\d{17}$/.test(state.resolvedSteamId) ? state.resolvedSteamId : parsed.steamid64;
 
       if (sid) {
         els.openSteamInvLink.href = buildSteamInventoryUrl(sid, appid, ctx, null);
+      } else if (parsed.vanity) {
+        els.openSteamInvLink.href = 'https://steamcommunity.com/id/' +
+          encodeURIComponent(parsed.vanity) + '/inventory/#' + encodeURIComponent(appid);
       } else {
-        els.openSteamInvLink.href = 'https://steamcommunity.com/my/inventory/';
+        els.openSteamInvLink.href = 'https://steamcommunity.com/my/inventory/#' + encodeURIComponent(appid);
       }
 
       if (state.parsedResult && state.parsedResult.more_items && state.parsedResult.last_assetid && sid) {
@@ -632,11 +749,74 @@
         els.wizardNextRow.hidden = false;
       } else if (state.parsedResult && state.parsedResult.more_items && state.parsedResult.last_assetid) {
         els.wizardNextRow.hidden = false;
-        els.wizardNextLink.href = 'https://steamcommunity.com/my/inventory/';
-        els.wizardNextLink.textContent = 'Enter your 17-digit SteamID64 above to build next page link (start_assetid=' + state.parsedResult.last_assetid + ')';
+        els.wizardNextLink.href = parsed.vanity
+          ? ('https://steamcommunity.com/id/' + encodeURIComponent(parsed.vanity) + '/inventory/#' + encodeURIComponent(appid))
+          : ('https://steamcommunity.com/my/inventory/#' + encodeURIComponent(appid));
+        els.wizardNextLink.textContent = 'Enter your SteamID64 or custom URL above to build next page link (start_assetid=' + state.parsedResult.last_assetid + ')';
       } else {
         els.wizardNextRow.hidden = true;
       }
+    }
+
+    function resolveInputNow(announceOnError) {
+      var raw = els.steamIdInput.value;
+      var parsed = parseSteamInput(raw);
+      var seq = ++state.resolveSeq;
+
+      if (!parsed.raw) {
+        state.resolvedSteamId = '';
+        els.steamIdHint.textContent = DEFAULT_STEAMID_HINT;
+        setFieldError(els.steamIdInput, els.steamIdErr, 'st-import-steamid-hint', '');
+        updateSteamLinks();
+        return Promise.resolve({ ok: true, steamid64: '' });
+      }
+
+      if (parsed.steamid64) {
+        if (els.steamIdInput.value !== parsed.steamid64 && /steamcommunity\.com|^STEAM_/i.test(parsed.raw)) {
+          els.steamIdInput.value = parsed.steamid64;
+        }
+        state.resolvedSteamId = parsed.steamid64;
+        els.steamIdHint.textContent = DEFAULT_STEAMID_HINT;
+        setFieldError(els.steamIdInput, els.steamIdErr, 'st-import-steamid-hint', '');
+        updateSteamLinks();
+        return Promise.resolve({ ok: true, steamid64: parsed.steamid64 });
+      }
+
+      if (parsed.invalid) {
+        state.resolvedSteamId = '';
+        els.steamIdHint.textContent = DEFAULT_STEAMID_HINT;
+        setFieldError(els.steamIdInput, els.steamIdErr, 'st-import-steamid-hint', parsed.invalid);
+        if (announceOnError) {
+          announce(parsed.invalid, 500);
+        }
+        updateSteamLinks();
+        return Promise.resolve({ ok: false, reason: parsed.invalid });
+      }
+
+      state.resolvedSteamId = '';
+      els.steamIdHint.textContent = 'Resolving Steam profile "' + parsed.vanity + '"...';
+      setFieldError(els.steamIdInput, els.steamIdErr, 'st-import-steamid-hint', '');
+      updateSteamLinks();
+
+      return resolveToSteamId64(raw).then(function (res) {
+        if (seq !== state.resolveSeq) return res;
+        if (res && res.ok && res.steamid64) {
+          state.resolvedSteamId = res.steamid64;
+          setFieldError(els.steamIdInput, els.steamIdErr, 'st-import-steamid-hint', '');
+          els.steamIdHint.textContent = 'Resolved "' + parsed.vanity + '" to SteamID64 ' + res.steamid64 + '.';
+          updateSteamLinks();
+          return res;
+        }
+        var reason = (res && res.reason) || 'Could not resolve that Steam custom URL.';
+        state.resolvedSteamId = '';
+        els.steamIdHint.textContent = DEFAULT_STEAMID_HINT;
+        setFieldError(els.steamIdInput, els.steamIdErr, 'st-import-steamid-hint', reason);
+        if (announceOnError) {
+          announce(reason, 500);
+        }
+        updateSteamLinks();
+        return res;
+      });
     }
 
     function renderWizardState() {
@@ -681,13 +861,6 @@
       updateSteamLinks();
     }
 
-    function normalizeSteamIdInput(raw) {
-      var val = String(raw || '').trim();
-      var m = /\/profiles\/(\d{17})/.exec(val);
-      if (m) return m[1];
-      return val;
-    }
-
     function refreshBookmarklet() {
       var opts = state.options || {};
       var code = buildBookmarkletCode({
@@ -724,7 +897,7 @@
         saveImportSession({
           scopeKey: getScopeKey(),
           rawPages: state.rawPages,
-          steamId: normalizeSteamIdInput(els.steamIdInput.value),
+          steamId: getEffectiveSteamId() || String(els.steamIdInput.value || '').trim(),
           updatedAt: Date.now()
         });
         if (!result.isEmoticonList) {
@@ -806,24 +979,15 @@
     }
 
     els.steamIdInput.addEventListener('blur', function () {
-      var sid = normalizeSteamIdInput(els.steamIdInput.value);
-      if (sid !== els.steamIdInput.value) {
-        els.steamIdInput.value = sid;
-      }
-      if (sid && !/^\d{17}$/.test(sid)) {
-        setFieldError(els.steamIdInput, els.steamIdErr, 'st-import-steamid-hint', 'SteamID64 must be exactly 17 digits.');
-        announce('SteamID64 must be exactly 17 digits.');
-      } else {
-        setFieldError(els.steamIdInput, els.steamIdErr, 'st-import-steamid-hint', '');
-      }
-      updateSteamLinks();
+      resolveInputNow(true);
     });
 
     els.steamIdInput.addEventListener('input', function () {
-      var sid = normalizeSteamIdInput(els.steamIdInput.value);
-      if (!sid || /^\d{17}$/.test(sid)) {
-        setFieldError(els.steamIdInput, els.steamIdErr, 'st-import-steamid-hint', '');
-      }
+      state.resolveSeq++;
+      var parsed = parseSteamInput(els.steamIdInput.value);
+      state.resolvedSteamId = parsed.steamid64 || '';
+      els.steamIdHint.textContent = DEFAULT_STEAMID_HINT;
+      setFieldError(els.steamIdInput, els.steamIdErr, 'st-import-steamid-hint', '');
       updateSteamLinks();
     });
 
@@ -901,10 +1065,13 @@
     });
 
     els.openPopupBtn.addEventListener('click', function () {
-      var sid = normalizeSteamIdInput(els.steamIdInput.value);
-      var url = /^\d{17}$/.test(sid)
-        ? 'https://steamcommunity.com/profiles/' + sid + '/inventory/'
-        : 'https://steamcommunity.com/my/inventory/';
+      var parsed = parseSteamInput(els.steamIdInput.value);
+      var sid = /^\d{17}$/.test(state.resolvedSteamId) ? state.resolvedSteamId : parsed.steamid64;
+      var url = sid
+        ? 'https://steamcommunity.com/profiles/' + encodeURIComponent(sid) + '/inventory/'
+        : (parsed.vanity
+            ? 'https://steamcommunity.com/id/' + encodeURIComponent(parsed.vanity) + '/inventory/'
+            : 'https://steamcommunity.com/my/inventory/');
       // Open WITHOUT noopener so window.opener remains intact for same-session postMessage.
       state.popupRef = root.open(url, 'SteamToolsImportPopup', 'width=980,height=740,resizable=yes,scrollbars=yes');
       if (!state.popupRef) {
@@ -937,6 +1104,8 @@
 
       if (msg.steamid && /^\d{17}$/.test(String(msg.steamid))) {
         els.steamIdInput.value = String(msg.steamid);
+        state.resolvedSteamId = String(msg.steamid);
+        els.steamIdHint.textContent = DEFAULT_STEAMID_HINT;
       }
       selectTab(0);
       processIncomingInputs(msg.pages, false).then(function (parsed) {
@@ -963,9 +1132,11 @@
           ? 'Steam Inventory (753/6) or EmoticonList JSON'
           : 'Steam Inventory JSON';
         els.jsonInput.value = '';
-        if (state.options.steamId && /^\d{17}$/.test(String(state.options.steamId))) {
-          els.steamIdInput.value = String(state.options.steamId);
-        }
+        els.steamIdInput.value = state.options.steamId ? String(state.options.steamId).trim() : '';
+        state.resolvedSteamId = '';
+        state.resolveSeq++;
+        els.steamIdHint.textContent = DEFAULT_STEAMID_HINT;
+        els.emotesDirectRow.hidden = state.options.mode !== 'emotes';
         setFieldError(els.steamIdInput, els.steamIdErr, 'st-import-steamid-hint', '');
         setFieldError(els.jsonInput, els.jsonErr, 'st-import-json-hint', '');
         setBanner(null, '');
@@ -975,10 +1146,15 @@
 
         dlg.showModal();
 
+        if (els.steamIdInput.value) {
+          resolveInputNow(false);
+        }
+
         loadImportSession(getScopeKey()).then(function (saved) {
           if (saved && Array.isArray(saved.rawPages) && saved.rawPages.length > 0 && state.rawPages.length === 0) {
-            if (saved.steamId && !els.steamIdInput.value && /^\d{17}$/.test(saved.steamId)) {
-              els.steamIdInput.value = saved.steamId;
+            if (saved.steamId && !els.steamIdInput.value) {
+              els.steamIdInput.value = String(saved.steamId);
+              resolveInputNow(false);
             }
             processIncomingInputs(saved.rawPages, false);
           }
@@ -1008,6 +1184,8 @@
     parseInWorkerOrSync: parseInWorkerOrSync,
     valueInventoryClientSide: valueInventoryClientSide,
     clearPriceCache: clearPriceCache,
+    parseSteamInput: parseSteamInput,
+    resolveToSteamId64: resolveToSteamId64,
     buildBookmarkletCode: buildBookmarkletCode,
     buildBookmarkletHref: buildBookmarkletHref,
     buildSteamInventoryUrl: buildSteamInventoryUrl,

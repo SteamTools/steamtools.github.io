@@ -98,11 +98,11 @@ function($scope, $http, $location) {
 	$scope.loggedIn = false;
 	$scope.user_status = "Login or Import Inventory to filter owned items";
 	$scope.userLogin = function(steamid64) {
-		if (!/^\d{17}$/.test(String(steamid64 || '').trim())) {
-			$scope.user_status = "Invalid SteamID64 — please login or use Import Inventory.";
+		var cleanId = String(steamid64 || '').trim();
+		if (!cleanId) {
+			$scope.user_status = "Invalid SteamID — please login or use Import Inventory.";
 			return;
 		}
-		var cleanId = String(steamid64).trim();
 		$scope.loggedIn = false;
 		var url = CFG.API_BASE + "/FetchEmotes?id=" + encodeURIComponent(cleanId);
 		$http.get(url, {withCredentials: true}).success(function(data){
@@ -119,15 +119,16 @@ function($scope, $http, $location) {
 				var name = ":" + data.items[i] + ":";
 				$scope.owned[name] = true;
 			}
-		}).error(function(){
-			$scope.user_status = "Could not fetch inventory — try Import Inventory.";
+		}).error(function(errData){
+			$scope.user_status = (errData && errData.reason ? errData.reason : "Could not fetch inventory") +
+				" — try Import Inventory.";
 		});
 	};
 
 	$scope.openInventoryImporter = function() {
 		if (!window.SteamToolsImport) return;
 		window.SteamToolsImport.openImportDialog({
-			mode: 'cards',
+			mode: 'emotes',
 			appid: '753',
 			contextid: '6',
 			title: 'Import Steam Emoticons (753/6)',

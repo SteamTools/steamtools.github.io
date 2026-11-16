@@ -14,8 +14,8 @@
 	<link rel="shortcut icon" href="/favicon.ico">
 	<link href="bootstrap-2.1.0.min.css" rel="stylesheet">
 	<link href="hotkeys.min.css" rel="stylesheet">
-	<link rel="stylesheet" href="style.css">
-	<link rel="stylesheet" href="../css/steamtools-import.css">
+	<link rel="stylesheet" href="style.css?v=20261116b">
+	<link rel="stylesheet" href="../css/steamtools-import.css?v=20261116b">
 </head>
 <body ng-controller="mosaticonCtrl" ng-cloak>
 	<a class="corner topbutton" style="left: 25px;" href="../">&laquo; Hub</a>
@@ -31,7 +31,7 @@
 			<div style="margin: 10px"><b>Step one:</b> Load your emoticons</div>
 			<form id="addinput" class="input-prepend input-append form-horizontal" ng-submit="loadEmoticons()">
 				<label for="mos-userid" class="add-on" style="display:inline-block;margin-bottom:0;">SteamID</label>
-				<input id="mos-userid" class="span2" type="text" ng-model="UserID" placeholder="Leave blank to import or :emote:" autocorrect="off" autocapitalize="none" spellcheck="false">
+				<input id="mos-userid" style="width: 195px" type="text" ng-model="UserID" placeholder="SteamID, URL, :emote:, or blank" autocorrect="off" autocapitalize="none" spellcheck="false">
 				<button class="btn btn-inverse" type="submit">Load Emotes</button>
 			</form>
 			<div class="emotebox" ng-right-click="">
@@ -179,11 +179,11 @@
 	<script src="hotkeys.min.js"></script>
 	<script src="ui-bootstrap-tpls-0.12.0.min.js"></script>
 	<script src="kdTree.min.js"></script>
-	<script src="colors.js"></script>
-	<script src="../js/steamtools-config.js"></script>
-	<script src="../js/import-worker.js"></script>
-	<script src="../js/steamtools-import.js"></script>
-	<script src="main.js"></script>
+	<script src="colors.js?v=20261116b"></script>
+	<script src="../js/steamtools-config.js?v=20261116b"></script>
+	<script src="../js/import-worker.js?v=20261116b"></script>
+	<script src="../js/steamtools-import.js?v=20261116b"></script>
+	<script src="main.js?v=20261116b"></script>
 
 	<!-- Start of Google Analytics code -->
 	<script>
@@ -199,15 +199,12 @@
 	<!-- End of Google Analytics code -->
 
 	<!-- Start of StatCounter Code for Default Guide -->
-	<script type="text/javascript">
+	<script>
 		var sc_project=9905430;
 		var sc_invisible=1;
 		var sc_security="89ce89e8";
-		var scJsHost = "https://secure.";
-		document.write("<sc"+"ript type='text/javascript' src='" +
-		scJsHost+
-		"statcounter.com/counter/counter.js'></"+"script>");
 	</script>
+	<script async src="https://secure.statcounter.com/counter/counter.js"></script>
 	<noscript><div class="statcounter"><a title="create counter"
 	href="https://statcounter.com/free-hit-counter/"
 	target="_blank" rel="noopener noreferrer"><img class="statcounter"

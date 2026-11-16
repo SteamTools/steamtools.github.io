@@ -64,8 +64,8 @@ angular.module('cardApp', ['ui.bootstrap', 'normalizeForSearch'])
 		else return symbol + out;
 	};
 })
-.controller('CardCtrl', ['$scope', '$http', '$filter', '$compile', '$modal',
-function($scope, $http, $filter, $compile, $modal){
+.controller('CardCtrl', ['$scope', '$http', '$filter', '$compile', '$modal', '$timeout',
+function($scope, $http, $filter, $compile, $modal, $timeout){
 	var CFG = window.STEAMTOOLS_CONFIG;
 	$scope.CDATA = CURRENCY_DATA;
 	$scope.steamLoginUrl = CFG.getLoginUrl();
@@ -137,7 +137,11 @@ function($scope, $http, $filter, $compile, $modal){
 
 		$http.get(url, {withCredentials: true}).success(function(data){
 			if (!data || !data.success){
-				$scope.user_status = (data && data.reason) ? data.reason : "Unable to load profile.";
+				var sMsg = (data && data.reason) ? String(data.reason) : "Unable to load profile.";
+				if (data && data.help === 2) {
+					sMsg += " Try pasting your full Steam profile URL.";
+				}
+				$scope.user_status = sMsg + " Or use Import Inventory (753/6) below.";
 				$scope.userData = {'games': 1, 'cards': 1, 'badges': 1};
 				return;
 			}
@@ -164,8 +168,15 @@ function($scope, $http, $filter, $compile, $modal){
 			}
 
 			$scope.importUserData();
-		}).error(function(){
-			$scope.user_status = "Could not load Steam profile — use Import Inventory (753/6) below.";
+		}).error(function(errData){
+			var msg = (errData && errData.reason)
+				? String(errData.reason)
+				: "Could not load Steam profile.";
+			if (errData && errData.help === 2) {
+				msg += " Try pasting your full Steam profile URL.";
+			}
+			msg += " Or use Import Inventory (753/6) below.";
+			$scope.user_status = msg;
 			$scope.userData = {'games': 0, 'cards': 0, 'badges': 0};
 		});
 	};
@@ -192,7 +203,7 @@ function($scope, $http, $filter, $compile, $modal){
 
 	$scope.openInventoryImporter = function() {
 		if (!window.SteamToolsImport) return;
-		var idHint = /^\d{17}$/.test(String($scope.UserID || '').trim()) ? String($scope.UserID).trim() : '';
+		var idHint = ($scope.user && $scope.user.steamid64) || String($scope.UserID || '').trim();
 		window.SteamToolsImport.openImportDialog({
 			mode: 'cards',
 			appid: '753',
@@ -201,7 +212,7 @@ function($scope, $http, $filter, $compile, $modal){
 			title: 'Import Steam Inventory (753/6)',
 			subtitle: 'Computes card sets, foil cards, emotes, and backgrounds locally without backend calls.',
 			onImport: function(parsed) {
-				$scope.$applyAsync(function() {
+				$timeout(function() {
 					var prevUser = $scope.user && typeof $scope.user === 'object' ? $scope.user : {};
 					var cardsMap = parsed && parsed.cards ? parsed.cards : {};
 					var steamIdVal = (/^\d{17}$/.test(String(prevUser.steamid64 || '')))
@@ -391,11 +402,19 @@ function($scope, $http, $filter, $compile, $modal){
 	};
 
 	if (window.localStorage.setTypeConfig !== undefined) {
-		$scope.setType = JSON.parse(window.localStorage.setTypeConfig);
+		try {
+			$scope.setType = JSON.parse(window.localStorage.setTypeConfig);
+		} catch (e) {
+			delete window.localStorage.setTypeConfig;
+		}
 	}
 
 	if (window.localStorage.filtersConfig !== undefined) {
-		$scope.filters = JSON.parse(window.localStorage.filtersConfig);
+		try {
+			$scope.filters = JSON.parse(window.localStorage.filtersConfig);
+		} catch (e) {
+			delete window.localStorage.filtersConfig;
+		}
 	}
 
 	$scope.tableColumns = [
@@ -534,12 +553,12 @@ function($scope, $http, $filter, $compile, $modal){
 	var currencyMenuHTML = '<div class="input-group btn-group">' +
 '   <div class="input-group-addon">Currency</div>' +
 '   <div class="dropdown" dropdown>' +
-'       <a class="btn btn-default" data-toggle="dropdown" href="#" dropdown-toggle>' +
+'       <a class="btn btn-default" data-toggle="dropdown" href="" ng-click="$event.preventDefault()" dropdown-toggle>' +
 			'{{ CDATA[curIndex].name }}' +
 		'<b class="caret"></b></a>' +
 '       <ul class="dropdown-menu" role="menu">' +
 '           <li ng-repeat="currency in CDATA">' +
-'               <a href="#" ng-click="setCurrency($index)">{{currency.name}}</a>' +
+'               <a href="" ng-click="$event.preventDefault(); setCurrency($index)">{{currency.name}}</a>' +
 '           </li>' +
 '       </ul>' +
 '   </div>' +
@@ -562,8 +581,8 @@ function($scope, $http, $filter, $compile, $modal){
 		for (var i = 0; i < $scope.data.sets.length; i++) {
 			var set = $scope.data.sets[i];
 			set.clean_game = $filter('normalizeForSearch')(set.game);
-			if (set.normal !== null) $scope.rows.push(new Set(set, false));
-			if (set.foil !== null) $scope.rows.push(new Set(set, true));
+			if (set.normal !== null) $scope.rows.push(new CardSet(set, false));
+			if (set.foil !== null) $scope.rows.push(new CardSet(set, true));
 			$scope.nameToAppid[set.clean_game] = set.appid;
 			$scope.appidToSet[set.appid] = set;
 		}
@@ -610,7 +629,7 @@ function($scope, $http, $filter, $compile, $modal){
 		$scope.userLogin($scope.UserID);
 	} else {
 		CFG.checkAuthSession($http).then(function(auth) {
-			$scope.$applyAsync(function() {
+			$timeout(function() {
 				if (auth && auth.authenticated && auth.steamid) {
 					$scope.UserID = auth.steamid;
 					$scope.userLogin($scope.UserID);
@@ -618,15 +637,15 @@ function($scope, $http, $filter, $compile, $modal){
 					$scope.UserID = window.localStorage.lastUser;
 					$scope.userLogin($scope.UserID);
 				}
-			});
+			}, 0);
 		});
 	}
 
 }]);
 
 
-// Set class holding all the information about a set
-function Set(data, isFoil) {
+// CardSet class holding all the information about a set
+function CardSet(data, isFoil) {
 	var info = isFoil ? data.foil : data.normal;
 	this.appid = data.appid;
 	this.game = data.game + (isFoil ? " (Foil)" : "");

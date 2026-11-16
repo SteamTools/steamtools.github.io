@@ -162,7 +162,7 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 
 	$scope.loadInventory = function() {
 		if (!window.SteamToolsImport) return;
-		var idHint = /^\d{17}$/.test(String($scope.UserID || '').trim()) ? String($scope.UserID).trim() : '';
+		var idHint = String($scope.UserID || '').trim();
 		window.SteamToolsImport.openImportDialog({
 			mode: 'emotes',
 			appid: '753',
@@ -195,6 +195,9 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 				? window.SteamToolsImport.sanitizeEmoteName(u.slice(1, -1))
 				: u.slice(1, -1);
 			if (!cleanName) return;
+			if ($scope.emoticons.some(function(ex) { return ex.name === cleanName; })) {
+				return;
+			}
 			var activeGen = loadGeneration;
 			$scope.toProcess += 1;
 			var emote = {'name': cleanName};
@@ -204,9 +207,39 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 			loadEmoteColorsCatalog().then(function(catalog) {
 				$scope.getEmoticonColor(emote, catalog, activeGen);
 			});
-		} else {
-			// Empty or SteamID input opens the accessible Import dialog directly.
+		} else if (!u) {
 			$scope.loadInventory();
+		} else {
+			$scope.status = "Loading emoticons...";
+			$http.get(CFG.API_BASE + '/FetchEmotes?id=' + encodeURIComponent(u), { withCredentials: true })
+				.then(function(resp) {
+					var data = resp && resp.data;
+					if (data && data.success && Array.isArray(data.items)) {
+						localStorage.lastUser = u;
+						$scope.loadEmotes(data.items);
+						return;
+					}
+					var reason = (data && data.reason) || "Could not load emoticons.";
+					if (data && (data.error === 'private_or_unavailable' || data.error === 'rate_limited')) {
+						$scope.status = reason + " Use the Import dialog to load directly.";
+						$scope.loadInventory();
+					} else {
+						$scope.status = reason + (data && data.help === 2
+							? " Try your Steam custom URL or full profile link, or leave blank to import JSON."
+							: "");
+					}
+				}, function(errResp) {
+					var d = errResp && errResp.data;
+					var reason = (d && d.reason) || "Could not load emoticons.";
+					if (errResp && (errResp.status === 403 || errResp.status === 429 || errResp.status === 503)) {
+						$scope.status = reason + " Use the Import dialog to load directly.";
+						$scope.loadInventory();
+					} else {
+						$scope.status = reason + (d && d.help === 2
+							? " Try your Steam custom URL or full profile link, or leave blank to import JSON."
+							: "");
+					}
+				});
 		}
 	};
 
@@ -409,7 +442,7 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 	};
 
 	$scope.updateUpscale = function() {
-		if ($scope.blankLoaded)	return;
+		if ($scope.blankLoaded || !$scope.imageLoaded || !$scope.originalCvs.width) return;
 
 		var ratio = $scope.originalCvs.height / $scope.originalCvs.width;
 		$scope.q = parseInt($scope.quality, 10);

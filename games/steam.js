@@ -70,9 +70,19 @@ if (!localStorage.users){
 	updateLS();
 }
 else{
-	users    = JSON.parse(localStorage.users);
-	ids      = JSON.parse(localStorage.ids);
-	privates = JSON.parse(localStorage.privates);
+	try {
+		users    = JSON.parse(localStorage.users);
+		ids      = JSON.parse(localStorage.ids);
+		privates = JSON.parse(localStorage.privates);
+		if (!Array.isArray(users) || !Array.isArray(ids) || !Array.isArray(privates)) {
+			throw new Error('Invalid localStorage format');
+		}
+	} catch (e) {
+		users   = [];
+		ids     = [];
+		privates= [];
+		updateLS();
+	}
 }
 
 //Preload image
@@ -162,9 +172,14 @@ function SteamCtrl($scope, $http){
 		$scope.Users.push( {"name": "Loading","avatar":"img/loading.gif"} );
 		fetchGamesInfo({ user: query }).then(function(data) {
 			appendUsers(data);
-		}, function() {
+		}, function(err) {
 			$scope.Users = users.slice();
-			$scope.userError = "Failed to load user profile.";
+			var body = err && err.data;
+			var msg = (body && body.reason) ? body.reason : "Failed to load user profile.";
+			if (body && body.help === 2) {
+				msg += " Try pasting your Steam custom URL or full profile link.";
+			}
+			$scope.userError = msg;
 		});
 	};
 
@@ -203,11 +218,22 @@ function SteamCtrl($scope, $http){
 		$scope.friendStatus = 1;
 		$scope.selectedName = name;
 		$scope.Friends = [];
+		var dlg = document.getElementById('friendListModal');
+		if (dlg && typeof dlg.showModal === 'function' && !dlg.open) {
+			dlg.showModal();
+		}
 		fetchGamesInfo({ friends: userid }).then(function(data) {
 			appendFriends(data);
 		}, function() {
 			$scope.friendStatus = 2;
 		});
+	};
+
+	$scope.closeFriendsModal = function() {
+		var dlg = document.getElementById('friendListModal');
+		if (dlg && dlg.open) {
+			dlg.close();
+		}
 	};
 
 	$scope.selectFriend = function (steamid){
@@ -416,5 +442,28 @@ function SteamCtrl($scope, $http){
 $(document).ready(function () {
 	if ($("[rel=tooltip]").length) {
 		$("[rel=tooltip]").tooltip();
+	}
+	var friendsDialog = document.getElementById('friendListModal');
+	if (friendsDialog) {
+		friendsDialog.addEventListener('close', function () {
+			friendsDialog.returnValue = '';
+		});
+		if (!('closedBy' in HTMLDialogElement.prototype)) {
+			var downOutside = false;
+			var isOutside = function (ev) {
+				var rect = friendsDialog.getBoundingClientRect();
+				return ev.clientX < rect.left || ev.clientX > rect.right || ev.clientY < rect.top || ev.clientY > rect.bottom;
+			};
+			friendsDialog.addEventListener('pointerdown', function (ev) {
+				downOutside = isOutside(ev);
+			});
+			friendsDialog.addEventListener('pointerup', function (ev) {
+				if (!downOutside) return;
+				downOutside = false;
+				if (isOutside(ev)) {
+					friendsDialog.close();
+				}
+			});
+		}
 	}
 });

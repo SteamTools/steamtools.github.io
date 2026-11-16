@@ -52,6 +52,10 @@ dialog.st-import-dialog::backdrop {
   box-sizing: border-box;
 }
 
+.st-import-dialog [hidden] {
+  display: none !important;
+}
+
 .st-import-header {
   display: flex;
   align-items: center;
@@ -170,38 +174,45 @@ dialog.st-import-dialog::backdrop {
   color: #a9b5c2;
 }
 
-.st-input,
-.st-textarea {
+.st-import-dialog input.st-input,
+.st-import-dialog textarea.st-textarea {
   width: 100%;
-  background: #12161b;
+  height: auto;
+  min-height: 38px;
+  line-height: 1.4;
+  margin: 0;
+  background-color: #12161b;
   color: #f4f7fa;
   border: 1px solid #44505e;
   border-radius: 5px;
   padding: 8px 10px;
   font-family: inherit;
   font-size: 13px;
+  box-shadow: none;
 }
 
-.st-textarea {
+.st-import-dialog textarea.st-textarea {
   min-height: 130px;
   resize: vertical;
   font-family: Consolas, "Liberation Mono", Menlo, monospace;
   font-size: 12px;
 }
 
-.st-input:focus-visible,
-.st-textarea:focus-visible {
+.st-import-dialog input.st-input:focus,
+.st-import-dialog textarea.st-textarea:focus,
+.st-import-dialog input.st-input:focus-visible,
+.st-import-dialog textarea.st-textarea:focus-visible {
   border-color: #6ea8fe;
   outline: 2px solid rgba(110, 168, 254, 0.35);
   outline-offset: 0;
+  box-shadow: none;
 }
 
-.st-input:user-invalid,
-.st-textarea:user-invalid,
-.st-input.st-is-invalid,
-.st-textarea.st-is-invalid {
+.st-import-dialog input.st-input:is(:user-invalid, .st-is-invalid),
+.st-import-dialog textarea.st-textarea:is(:user-invalid, .st-is-invalid) {
   border-color: #f16d69;
-  background: #231517;
+  background-color: #231517;
+  color: #ffdce0;
 }
 
 .st-error-msg {
@@ -360,57 +371,74 @@ dialog.st-import-dialog::backdrop {
   color: #ffc2bf;
 }
 
-.st-btn {
+.st-import-dialog .st-btn,
+.st-import-dialog a.st-btn {
   appearance: none;
   border-radius: 5px;
   padding: 7px 13px;
   font-size: 13px;
   font-weight: 500;
+  line-height: 1.4;
+  min-height: 36px;
+  margin: 0;
   cursor: pointer;
   border: 1px solid #495462;
-  background: #2a333e;
+  background-color: #2a333e;
   color: #f4f7fa;
   text-decoration: none;
+  text-shadow: none;
+  box-shadow: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
 }
 
-.st-btn:hover {
-  background: #36414f;
+.st-import-dialog .st-btn:hover,
+.st-import-dialog a.st-btn:hover,
+.st-import-dialog .st-btn:focus,
+.st-import-dialog a.st-btn:focus {
+  background-color: #36414f;
   color: #ffffff;
   text-decoration: none;
 }
 
-.st-btn:focus-visible {
+.st-import-dialog .st-btn:focus-visible,
+.st-import-dialog a.st-btn:focus-visible {
   outline: 2px solid #6ea8fe;
   outline-offset: 2px;
 }
 
-.st-btn:disabled {
+.st-import-dialog .st-btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
 
-.st-btn-primary {
-  background: #1b6ec2;
+.st-import-dialog .st-btn-primary,
+.st-import-dialog a.st-btn-primary {
+  background-color: #1b6ec2;
   border-color: #3f91e8;
   color: #ffffff;
 }
 
-.st-btn-primary:hover:not(:disabled) {
-  background: #175ea6;
+.st-import-dialog .st-btn-primary:hover:not(:disabled),
+.st-import-dialog a.st-btn-primary:hover,
+.st-import-dialog .st-btn-primary:focus:not(:disabled),
+.st-import-dialog a.st-btn-primary:focus {
+  background-color: #175ea6;
+  color: #ffffff;
 }
 
-.st-btn-danger {
-  background: #5b2626;
+.st-import-dialog .st-btn-danger {
+  background-color: #5b2626;
   border-color: #8f4040;
   color: #ffdede;
 }
 
-.st-btn-danger:hover:not(:disabled) {
-  background: #733030;
+.st-import-dialog .st-btn-danger:hover:not(:disabled),
+.st-import-dialog .st-btn-danger:focus:not(:disabled) {
+  background-color: #733030;
+  color: #ffffff;
 }
 
 .st-import-footer {

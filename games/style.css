@@ -227,3 +227,52 @@ a:hover > .game {
 .label {
 	cursor: pointer;
 }
+
+.st-icon-btn {
+	background: transparent;
+	border: 0;
+	padding: 0;
+	margin: 10px 0 0;
+	line-height: 1;
+	opacity: 0.35;
+	cursor: pointer;
+	display: inline-flex;
+}
+
+.st-icon-btn:hover,
+.st-icon-btn:focus-visible {
+	opacity: 0.75;
+}
+
+dialog.st-friends-dialog {
+	margin: auto;
+	padding: 0;
+	border: 1px solid #666;
+	border-radius: 8px;
+	background: #eee;
+	color: #222;
+	width: min(560px, calc(100vw - 24px));
+	max-height: calc(100vh - 40px);
+	box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+}
+
+dialog.st-friends-dialog[open] {
+	display: flex;
+	flex-direction: column;
+}
+
+dialog.st-friends-dialog:modal {
+	overscroll-behavior: contain;
+}
+
+dialog.st-friends-dialog::backdrop {
+	background: rgba(0, 0, 0, 0.72);
+	overflow: hidden;
+	overscroll-behavior: contain;
+}
+
+.st-friends-dialog .modal-body {
+	max-height: 60vh;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+}
