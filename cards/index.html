@@ -190,12 +190,13 @@
 			<h3 class="modal-title">Level Cost Calculator</h3>
 		</div>
 		<div class="modal-body" style="text-align: center; padding: 10px 0">
-			<div id="levelInfo">
+			<div id="levelInfo" ng-hide="graphLoaded">
 				This does not count non-card badges, and is a rough approximation using the current set prices loaded.
-				The max level will be very innacurate since infinite level badges (sale badges) are not included.
+				The max level will be very inaccurate since infinite level badges (sale badges) are not included.
 				If you are logged in, the tool will also look at the badges you own and your current level/XP.
 				Click "Load Data" below to compute and display the graph.
 			</div>
+			<div id="graph" style="width:100%; min-height:1px;"></div>
 			<div ng-if="userLoaded && userData.badges>2 && graphLoaded" style="font-weight: bold; font-size: 11pt;">
 				Level {{user.level}} ({{user.xp}} XP) with {{user.badge_count}} badges from {{user.badge_unique}} sets.
 			</div>
@@ -211,14 +212,14 @@
 			<h3 class="modal-title">Game List Importer</h3>
 		</div>
 		<div class="modal-body" style="text-align: center; padding: 10px 0">
-			<div ng-show="loadedGames.length == 0" id="levelInfo">
+			<div ng-show="loadedGames.length == 0">
 				Enter the list of games you want to import in the box below (either by name or appid),
 				one per line, and click <b>Import</b>.
 			</div>
 			<div ng-show="loadedGames.length == 0" style="margin: 10px 200px">
 				<textarea class="form-control" ng-model="gameListInput" rows="20"></textarea>
 			</div>
-			<div ng-show="loadedGames.length > 0" id="levelInfo">
+			<div ng-show="loadedGames.length > 0">
 				<h4>Loaded games:</h4>
 				<div ng-repeat="game in loadedGames">{{game}}</div>
 			</div>

@@ -196,7 +196,14 @@ function($scope, $http, $filter, $compile, $modal, $timeout){
 		if (!$scope.user || $scope.user.badges === null || $scope.user.badges === undefined) {
 			$scope.userData.badges = 0;
 		}
-		$scope.user = Object.assign({}, $scope.user || {}, {games: games});
+		var prevUser = $scope.user && typeof $scope.user === 'object' ? $scope.user : {};
+		var parsedLvl = Number(prevUser.level);
+		var parsedXp = Number(prevUser.xp);
+		$scope.user = Object.assign({}, prevUser, {
+			games: games,
+			level: Number.isFinite(parsedLvl) ? Math.max(0, Math.floor(parsedLvl)) : 0,
+			xp: Number.isFinite(parsedXp) ? Math.max(0, Math.floor(parsedXp)) : 0
+		});
 
 		$scope.importUserData();
 	};
@@ -219,10 +226,14 @@ function($scope, $http, $filter, $compile, $modal, $timeout){
 						? prevUser.steamid64
 						: (/^\d{17}$/.test(String($scope.UserID || '').trim()) ? String($scope.UserID).trim() : '');
 
+					var prevLvl = Number(prevUser.level);
+					var prevXp = Number(prevUser.xp);
 					$scope.user = {
 						steamid64: steamIdVal,
 						games: prevUser.games || null,
 						badges: prevUser.badges || null,
+						level: Number.isFinite(prevLvl) ? Math.max(0, Math.floor(prevLvl)) : 0,
+						xp: Number.isFinite(prevXp) ? Math.max(0, Math.floor(prevXp)) : 0,
 						cards: cardsMap,
 						emote_count: parsed.emote_count || 0,
 						bg_count: parsed.bg_count || 0
@@ -659,10 +670,10 @@ function CardSet(data, isFoil) {
 	else {
 		var v1 = this.price_avg;
 		var v2 = this.booster_avg;
-		var game = encodeURIComponent(this.game).replace(/'/g, "%27");
+		var baseGame = encodeURIComponent(data.game).replace(/'/g, "%27");
 		var booster_link = "https://steamcommunity.com/market/listings/753/";
-		booster_link += data.appid + "-" + game + "%20Booster%20Pack";
-		this.booster_eff = [booster_link, (v1 - v2) / v1];
+		booster_link += data.appid + "-" + baseGame + "%20Booster%20Pack";
+		this.booster_eff = [booster_link, v1 > 0 ? (v1 - v2) / v1 : 0];
 	}
 
 	this.emotes_avg = parseFloat(data.emotes_avg);
@@ -759,7 +770,8 @@ var LevelCalcCtrl = function($scope, $modalInstance) {
 
 		for (i = 0; i < mainScope.rows.length; i++) {
 			row = mainScope.rows[i];
-			price = row.price_set;
+			price = Number(row.price_set);
+			if (!Number.isFinite(price) || price <= 0) continue;
 
 			c = row.foil ? 1 : 5;
 			for (j = 0; j < c - row.badge_lvl; j++)
@@ -768,52 +780,45 @@ var LevelCalcCtrl = function($scope, $modalInstance) {
 
 		var loaded = mainScope.userLoaded;
 		var user = mainScope.user;
+		var rawLevel = (loaded && user) ? Number(user.level) : 0;
+		var startLevel = Number.isFinite(rawLevel) ? Math.max(0, Math.floor(rawLevel)) : 0;
 
-		set_prices.sort();
-		set_prices.reverse();
+		set_prices.sort(function(a, b) { return b - a; });
 
 		var cumCost = [];
 		var cumBadge = [];
-		var total = 0.01;
+		var total = 0;
 		var badges = 0;
-		var level = (loaded ? user.level : 0) + 1;
+		var level = startLevel + 1;
 
-		if (loaded) {
-			for (i = 0; i < user.level; i++) {
-				cumCost.push(0);
-				cumBadge.push(0);
-			}
+		for (i = 0; i <= startLevel; i++) {
+			cumCost.push(null);
+			cumBadge.push(0);
 		}
 
 		while (true) {
-			cumCost.push(Math.round(total * 100) / 100);
-			cumBadge.push(badges);
-
 			needed = Math.ceil(level / 10);
-			if (needed > set_prices.length) break;
+			if (!Number.isFinite(needed) || needed <= 0 || needed > set_prices.length) break;
 
 			for (i = 0; i < needed; i++)
 				total += set_prices.pop();
 
 			badges += needed;
+			cumCost.push(Math.max(0.01, Math.round(total * 100) / 100));
+			cumBadge.push(badges);
 			level++;
 		}
 
-
-		var graphHTML = '<div id="graph" style="width:100%; height:400px;"></div>';
-		$("#levelInfo").after(graphHTML);
-		$("#levelInfo").remove();
-
-		$("#graph").highcharts({
+		$("#graph").css("height", "400px").highcharts({
 			chart: {type: 'area'},
 			legend: {enabled: false},
 			title: {text: null},
 			xAxis: {
-				min: (loaded ? user.level : 0) + 1,
+				min: startLevel + 1,
 				title: {text: 'Target Level'}
 			},
 			yAxis: {
-				min: 1,
+				min: 0.01,
 				labels: {
 					formatter: function() {
 						return mainScope.formatCurrency(this.value, 'display');
