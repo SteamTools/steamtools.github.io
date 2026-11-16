@@ -181,3 +181,38 @@ test('CFG manifest caching, API failover, CSV formula escaping, and gallery v2 u
   assert.strictEqual(priced.items.length, 1);
   assert.strictEqual(priced.items[0].price, 0.45);
 });
+
+test('Angular ng-app and ng-controller match main JS modules across all apps', () => {
+  const apps = [
+    ['backgrounds/index.html', 'backgrounds/main.js'],
+    ['cards/index.html', 'cards/main.js'],
+    ['emoticons/index.html', 'emoticons/main.js'],
+    ['games/index.html', 'games/steam.js'],
+    ['itemvalue/index.html', 'itemvalue/main.js'],
+    ['mosaticon/index.html', 'mosaticon/main.js']
+  ];
+  for (const [htmlRel, jsRel] of apps) {
+    const html = fs.readFileSync(path.join(REPO_ROOT, htmlRel), 'utf8');
+    const js = fs.readFileSync(path.join(REPO_ROOT, jsRel), 'utf8');
+    const appMatch = /\bng-app=(["'])([A-Za-z0-9_.-]+)\1/.exec(html);
+    const ctrlMatch = /\bng-controller=(["'])([A-Za-z0-9_.-]+)\1/.exec(html);
+    assert.ok(appMatch, `${htmlRel} missing ng-app`);
+    assert.ok(ctrlMatch, `${htmlRel} missing ng-controller`);
+    const modMatches = Array.from(js.matchAll(/angular\.module\(\s*(['"])([A-Za-z0-9_.-]+)\1/g));
+    assert.strictEqual(
+      modMatches.length,
+      1,
+      `${jsRel} should declare exactly 1 angular.module, found ${modMatches.length}`
+    );
+    assert.strictEqual(
+      modMatches[0][2],
+      appMatch[2],
+      `${jsRel} angular.module('${modMatches[0][2]}') must match ${htmlRel} ng-app="${appMatch[2]}"`
+    );
+    const ctrlDeclared =
+      js.includes(`.controller('${ctrlMatch[2]}'`) ||
+      js.includes(`.controller("${ctrlMatch[2]}"`) ||
+      new RegExp(`function\\s+${ctrlMatch[2]}\\s*\\(`).test(js);
+    assert.ok(ctrlDeclared, `${jsRel} missing controller ${ctrlMatch[2]}`);
+  }
+});

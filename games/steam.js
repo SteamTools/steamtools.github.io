@@ -518,7 +518,8 @@ function SteamCtrl($scope, $http){
 	};
 
 	$scope.getGameName = function(appid) {
-		return ($scope.gameData && $scope.gameData[appid]) ? $scope.gameData[appid].name : String(appid);
+		var e = $scope.gameData && $scope.gameData[appid];
+		return (e && e.name) ? e.name : ('App ' + String(appid));
 	};
 
 	function gamesLoaded(){

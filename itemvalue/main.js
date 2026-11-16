@@ -1,6 +1,14 @@
 /* global angular */
 /* global $ */
 
+function netPriceAfterFee(priceUsd) {
+	var grossCents = Math.round((Number(priceUsd) || 0) * 100);
+	if (grossCents <= 0) return 0;
+	var steamFee = Math.max(1, Math.floor(grossCents / 11.5));
+	var pubFee = Math.max(1, Math.floor(grossCents / 23));
+	return Math.max(0, grossCents - steamFee - pubFee) / 100;
+}
+
 angular.module('valueApp', ['ui.bootstrap'])
 .config(['$tooltipProvider', function($tooltipProvider){
 	$tooltipProvider.setTriggers({
@@ -25,15 +33,6 @@ angular.module('valueApp', ['ui.bootstrap'])
 		}
 	};
 })
-function netPriceAfterFee(priceUsd) {
-	var grossCents = Math.round((Number(priceUsd) || 0) * 100);
-	if (grossCents <= 0) return 0;
-	var steamFee = Math.max(1, Math.floor(grossCents / 11.5));
-	var pubFee = Math.max(1, Math.floor(grossCents / 23));
-	return Math.max(0, grossCents - steamFee - pubFee) / 100;
-}
-
-angular.module('InvApp', ['ui.bootstrap'])
 .filter('sumByKey', function() {
 	return function(data, key, mult, fee) {
 		if (data === undefined || key === undefined) {
