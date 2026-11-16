@@ -122,7 +122,23 @@ function SteamCtrl($scope, $http){
 			}
 		}
 		$scope.gameData = data;
+		if ($scope.fullGameList.length > 0) {
+			applyFlags($scope.f, [], $scope);
+		}
 	});
+
+	function addPrivate(steamid) {
+		if (steamid && privates.indexOf(steamid) === -1) {
+			privates.push(steamid);
+		}
+	}
+
+	function removePrivate(steamid) {
+		var pIdx = privates.indexOf(steamid);
+		if (pIdx !== -1) {
+			privates.splice(pIdx, 1);
+		}
+	}
 
 	function fetchGamesInfo(params) {
 		return $http.get(GAMES_INFO_URL, { params: params }).then(function(resp) {
@@ -143,23 +159,34 @@ function SteamCtrl($scope, $http){
 	$scope.$watch('f', applyFlags, true);
 
 	function applyFlags(f,o,s){
-		if (s.fullGameList.length > 0){
-			s.gameList = s.fullGameList;
-			var flags = [];
-			for (var k in f)
-				if (f.hasOwnProperty(k) && f[k]===1)
-					flags.push(k);
-
-			var newList = [];
-			for (var i=0; i<s.gameList.length; i++){
-				if (s.gameData.hasOwnProperty(s.gameList[i])){
-					var res = subtract(flags, s.gameData[ s.gameList[i] ].flags );
-					if (res.length === 0)
-						newList.push( s.gameList[i] );
-				}
-			}
-			s.gameList = newList;
+		if (!s.fullGameList || s.fullGameList.length === 0) {
+			s.gameList = [];
+			return;
 		}
+		var flags = [];
+		for (var k in f)
+			if (f.hasOwnProperty(k) && f[k] === 1)
+				flags.push(k);
+
+		if (flags.length === 0) {
+			s.gameList = s.fullGameList.slice();
+			return;
+		}
+		if (!s.gameData) {
+			s.gameList = [];
+			return;
+		}
+
+		var newList = [];
+		for (var i = 0; i < s.fullGameList.length; i++){
+			var appid = s.fullGameList[i];
+			if (s.gameData.hasOwnProperty(appid)){
+				var res = subtract(flags, s.gameData[appid].flags || []);
+				if (res.length === 0)
+					newList.push(appid);
+			}
+		}
+		s.gameList = newList;
 	}
 
 	$scope.addUser = function(){
@@ -187,14 +214,14 @@ function SteamCtrl($scope, $http){
 		this.destroy(function() {
 			var index = ids.indexOf(userid);
 			if (index !== -1){
-				if (privates.indexOf(userid) !== -1)
-					privates.splice(privates.indexOf(userid), 1);
+				removePrivate(userid);
 				ids.splice(index,1);
 				users.splice(index,1);
 				$scope.Users = users.slice();
 				updateLS();
 				index = $scope.selectedUsers.indexOf(userid);
-				$scope.selectedUsers.splice(index,1);
+				if (index !== -1)
+					$scope.selectedUsers.splice(index,1);
 			}
 		});
 	};
@@ -270,8 +297,11 @@ function SteamCtrl($scope, $http){
 		for (var i=0; i<$scope.selectedUsers.length; i++){
 			var steamid = $scope.selectedUsers[i];
 			var index = ids.indexOf(steamid);
-			ids.splice(index,1);
-			users.splice(index,1);
+			if (index !== -1) {
+				ids.splice(index,1);
+				users.splice(index,1);
+			}
+			removePrivate(steamid);
 		}
 		$scope.selectedUsers = [];
 		$scope.Users = users.slice();
@@ -283,6 +313,11 @@ function SteamCtrl($scope, $http){
 		$scope.userError = "";
 		$scope.fullGameList = [];
 		$scope.selectedUsers = subtract( $scope.selectedUsers, privates );
+		if ($scope.selectedUsers.length === 0) {
+			$scope.gameStatus = 1;
+			$scope.userError = "No users with public game libraries selected.";
+			return;
+		}
 		for (var i=0; i<$scope.selectedUsers.length ; i++){
 			var steamid = $scope.selectedUsers[i];
 			if (!steamid || steamid === undefined) return;
@@ -309,8 +344,7 @@ function SteamCtrl($scope, $http){
 		for (var i = 0; i < $scope.gameList.length; i++) {
 			var appid = $scope.gameList[i];
 			var e = $scope.gameData && $scope.gameData[appid];
-			if (e === undefined) break;
-			results.push(e.name);
+			results.push((e && e.name) ? e.name : String(appid));
 		}
 		results.sort();
 
@@ -327,6 +361,9 @@ function SteamCtrl($scope, $http){
 	};
 
 	function gamesLoaded(){
+		if ($scope.selectedUsers.length === 0) {
+			return false;
+		}
 		for (var i=0; i<$scope.selectedUsers.length ; i++){
 			var steamid = $scope.selectedUsers[i];
 			if (!games.hasOwnProperty(steamid))
@@ -354,8 +391,17 @@ function SteamCtrl($scope, $http){
 			return;
 		}
 		if (data.hasOwnProperty("private")){
-			privates.push(data.steamid);
+			addPrivate(data.steamid);
+			var sIdx = $scope.selectedUsers.indexOf(data.steamid);
+			if (sIdx !== -1) {
+				$scope.selectedUsers.splice(sIdx, 1);
+			}
 			updateLS();
+			if ($scope.selectedUsers.length === 0) {
+				$scope.gameStatus = 1;
+				$scope.userError = "Selected profile's game list is private.";
+				return;
+			}
 		}
 		else
 			games[data.steamid] = data.games;
@@ -366,13 +412,8 @@ function SteamCtrl($scope, $http){
 
 
 	function appendFriends(data){
-		$scope.selectedUsers = [];
 		if (!data || data.hasOwnProperty("private") || !data.response || !data.response.players){
 			$scope.friendStatus = 3;
-			if (data && data.steamid) {
-				privates.push( data.steamid );
-				updateLS();
-			}
 		}
 		else{
 			var players = data.response.players;
@@ -398,7 +439,9 @@ function SteamCtrl($scope, $http){
 			for (var i in players){
 				if (players.hasOwnProperty(i)){
 					if (players[i].communityvisibilitystate !== 3)
-						privates.push(players[i].steamid);
+						addPrivate(players[i].steamid);
+					else
+						removePrivate(players[i].steamid);
 
 					if (players[i].steamid === undefined)
 						continue;
