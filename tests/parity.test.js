@@ -69,6 +69,12 @@ test('quoteSteamKey and fnv1a32Hex2 match Python parity vectors', () => {
   assert.strictEqual(W.quoteSteamKey('580-Test~Emote_1'), '580-Test%7EEmote_1');
   assert.strictEqual(W.fnv1a32(''), 0x811c9dc5);
   assert.strictEqual(W.fnv1a32Hex2('753001-Sample%20Card').length, 2);
+  assert.strictEqual(W.fnv1a32Hex64('Mann%20Co.%20Supply%20Crate%20Key').length, 2);
+  assert.strictEqual(
+    W.fnv1a32Hex64('753/440-Dustbowl'),
+    require('../js/steamtools-config.js').fnv1a32Hex64('753/440-Dustbowl')
+  );
+  assert.ok(parseInt(W.fnv1a32Hex64('test'), 16) < 64);
 });
 
 test('parseInventoryPayload stacks amounts, deduplicates assetids, and disambiguates 753 backgrounds', () => {
@@ -180,6 +186,42 @@ test('CFG manifest caching, API failover, CSV formula escaping, and gallery v2 u
   );
   assert.strictEqual(priced.items.length, 1);
   assert.strictEqual(priced.items[0].price, 0.45);
+
+  // 440 sharded valuation fetches value/440/<hex64>.json and falls back to value/440.json only on 404.
+  IMP.clearPriceCache();
+  const qk440 = W.quoteSteamKey('Mann Co. Supply Crate Key');
+  const hx440 = W.fnv1a32Hex64(qk440);
+  const priced440 = await IMP.priceServerItemValuePayload(
+    [{ market_hash_name: 'Mann Co. Supply Crate Key', count: 2, marketable: true }],
+    '440',
+    {
+      config: CFG,
+      fetchImpl: async (url) => {
+        if (url.endsWith('/manifest.json')) return { ok: false, status: 404, json: async () => ({}) };
+        if (url.endsWith('/value/440/' + hx440 + '.json')) return { ok: true, status: 200, json: async () => ({ [qk440]: 215 }) };
+        throw new Error('Unexpected fetch ' + url);
+      }
+    }
+  );
+  assert.strictEqual(priced440.items[0].price, 2.15);
+  assert.strictEqual(priced440.usedBucketFallback, false);
+
+  IMP.clearPriceCache();
+  const priced440Fallback = await IMP.priceServerItemValuePayload(
+    [{ market_hash_name: 'Mann Co. Supply Crate Key', count: 1, marketable: true }],
+    '440',
+    {
+      config: CFG,
+      fetchImpl: async (url) => {
+        if (url.endsWith('/manifest.json')) return { ok: false, status: 404, json: async () => ({}) };
+        if (url.endsWith('/value/440/' + hx440 + '.json')) return { ok: false, status: 404, json: async () => ({}) };
+        if (url.endsWith('/value/440.json')) return { ok: true, status: 200, json: async () => ({ [qk440]: 220 }) };
+        throw new Error('Unexpected fetch ' + url);
+      }
+    }
+  );
+  assert.strictEqual(priced440Fallback.items[0].price, 2.2);
+  assert.strictEqual(priced440Fallback.usedBucketFallback, true);
 });
 
 test('Angular ng-app and ng-controller match main JS modules across all apps', () => {
@@ -276,4 +318,117 @@ test('classifySteamIdPaste and attachSteamIdPasteGuard block JSON/oversized past
   });
   assert.strictEqual(preventedLong, true);
   assert.strictEqual(oversizedCount, 1);
+});
+
+test('Wave 2 unpackGalleryV3, unpackSetDataV2, unpackItemValueV2, shards manifest SWR, and slim_pages', async () => {
+  const { CFG, W, lStore } = createMockEnv();
+
+  // 1. unpackGalleryV3 parity + sha8 mismatch rejection
+  const catV3 = {
+    v: 3,
+    sha8: 'abcd1234',
+    games: [['440', 'TF2'], ['570', 'Dota 2']],
+    dates: { '440': 1400000000 },
+    items: [
+      [':hi:', 0, 0, [1, 2, 3], (12 << 16) | (34 << 8) | 56],
+      ['Nebula', 1, 1, [4, 5, 6], (78 << 16) | (90 << 8) | 123],
+      [':dup:', 0, 2, null, (1 << 16) | (2 << 8) | 3, 'imghash']
+    ]
+  };
+  const pxV3 = { v: 3, sha8: 'abcd1234', p: [12, 150, null] };
+  const unpackedV3 = CFG.unpackGalleryV3(catV3, pxV3);
+  assert.deepStrictEqual(unpackedV3.dates, { '440': 1400000000 });
+  assert.deepStrictEqual(unpackedV3.items[0], {
+    name: ':hi:',
+    price: '0.12',
+    game: 'TF2',
+    url: '753/440-%3Ahi%3A',
+    hls: [12, 34, 56],
+    pos: [1, 2, 3]
+  });
+  assert.strictEqual(unpackedV3.items[1].url, '753/570-Nebula%20%28Profile%20Background%29');
+  assert.strictEqual(unpackedV3.items[2].url, '753/440-%3Adup%3A%20%28Emoticon%29');
+  assert.strictEqual(unpackedV3.items[2].price, null);
+  assert.strictEqual(unpackedV3.items[2].img, 'imghash');
+  assert.strictEqual(CFG.unpackGalleryV3(catV3, { v: 3, sha8: 'different', p: [12, 150, null] }), null);
+
+  // 2. unpackSetDataV2 parity
+  const unpackedSd = CFG.unpackSetDataV2({
+    v: 2,
+    time: 123,
+    data_median_age: 45,
+    game_count: 1,
+    card_count: 5,
+    emote_count: 2,
+    bg_count: 1,
+    totals: { normal: '1.00', foil: '5.00', combined: '10.00' },
+    rows: [[440, 'TF2', 5, 1400000000, 1, 10, 8, 5, 10, 2, 1, [5, 100, 20, 2, 99], null]]
+  });
+  assert.strictEqual(unpackedSd.sets[0].appid, '440');
+  assert.strictEqual(unpackedSd.sets[0].f2p, true);
+  assert.strictEqual(unpackedSd.sets[0].bprice, '0.08');
+  assert.strictEqual(unpackedSd.sets[0].normal.price, '1.00');
+  assert.strictEqual(unpackedSd.sets[0].foil, null);
+
+  // 3. unpackItemValueV2 parity
+  const ivItems = CFG.unpackItemValueV2({
+    v: 2,
+    appid: '753',
+    strings: ['292929', 'D2D2D2', 'TF2', 'card'],
+    rows: [['Card A', '440-Card A', 'ico1', 2, 45, 1, 0, 1, -1, -1, -1, -1, 2, 3]]
+  });
+  assert.strictEqual(ivItems.length, 1);
+  assert.strictEqual(ivItems[0].quoted_key, '440-Card%20A');
+  assert.strictEqual(ivItems[0].url, '753/440-Card%20A');
+  assert.strictEqual(ivItems[0].price, '0.45');
+  assert.strictEqual(ivItems[0].bucket, CFG.fnv1a32Hex256('440-Card%20A'));
+
+  // 4. Compact shards manifest resolution + localStorage SWR
+  const arr64 = new Array(64).fill('');
+  arr64[10] = 'deadbeef';
+  let manifestFetches = 0;
+  const resolvedUrl = await CFG.resolveDatasetUrl('data/emote_colors/0a.json', {
+    forceRefresh: true,
+    cdnBase: 'https://cdn.example',
+    fetchImpl: async () => {
+      manifestFetches++;
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          version: 1,
+          shards: { 'data/emote_colors': arr64 },
+          datasets: {}
+        })
+      };
+    }
+  });
+  assert.strictEqual(resolvedUrl, 'https://cdn.example/v/deadbeef/data/emote_colors/0a.json');
+  assert.strictEqual(manifestFetches, 1);
+  assert.ok(lStore.has('st_manifest_v2:https://cdn.example'));
+
+  // 5. slimSteamPageForStorage lossless parity
+  const rawPage = {
+    success: 1,
+    total_inventory_count: 1,
+    assets: [{ assetid: '10', classid: '20', instanceid: '0', amount: '2', contextid: '6' }],
+    descriptions: [{
+      appid: 753,
+      classid: '20',
+      instanceid: '0',
+      marketable: 1,
+      name: ':cool:',
+      market_hash_name: '440-:cool:',
+      icon_url: 'ico',
+      descriptions: [{ value: '<p>Huge bloat HTML lore</p>' }],
+      actions: [{ link: 'https://example.com', name: 'Inspect' }],
+      tags: [{ category: 'item_class', localized_tag_name: 'Emoticon' }, { category: 'Game', localized_tag_name: 'TF2' }]
+    }]
+  };
+  const origParsed = W.parseInventoryPayload([rawPage], { appid: '753' });
+  const slimmedParsed = W.parseInventoryPayload(origParsed.slim_pages, { appid: '753' });
+  assert.strictEqual(origParsed.slim_pages[0].descriptions[0].descriptions, undefined);
+  assert.strictEqual(origParsed.slim_pages[0].descriptions[0].actions, undefined);
+  assert.deepStrictEqual(slimmedParsed.items, origParsed.items);
+  assert.deepStrictEqual(slimmedParsed.emoticons, origParsed.emoticons);
 });

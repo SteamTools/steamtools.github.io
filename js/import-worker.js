@@ -110,6 +110,10 @@
     return (fnv1a32(quotedKey) >>> 0).toString(16).padStart(8, '0').slice(0, 2);
   }
 
+  function fnv1a32Hex64(key) {
+    return ((fnv1a32(key) & 0x3f) >>> 0).toString(16).padStart(2, '0');
+  }
+
   /**
    * Parity alignment: missing or non-numeric amount -> 1; numeric "0" -> 0.
    */
@@ -511,7 +515,9 @@
       market_hash_name: hashName,
       name: desc.market_name || desc.name || hashName,
       quoted_key: quotedKey,
-      bucket: effectiveAppId === '753' ? fnv1a32Hex2(quotedKey) : null,
+      bucket: effectiveAppId === '753'
+        ? fnv1a32Hex2(quotedKey)
+        : (effectiveAppId === '440' ? fnv1a32Hex64(quotedKey) : null),
       url: effectiveAppId + '/' + quotedKey,
       bg: sanitizeHexColor(desc.background_color, '292929'),
       color: sanitizeHexColor(desc.name_color, 'D2D2D2'),
@@ -700,6 +706,102 @@
     };
   }
 
+  var _SLIM_TAG_KEYS = [
+    'category',
+    'localized_category_name',
+    'lcn',
+    'internal_name',
+    'localized_tag_name',
+    'ltn',
+    'color'
+  ];
+
+  function slimSteamPageForStorage(page) {
+    var u = unwrapPageObject(page);
+    if (!u || typeof u !== 'object') return u;
+
+    var outAssets = [];
+    var rawAssets = Array.isArray(u.assets) ? u.assets : null;
+    if (rawAssets) {
+      for (var i = 0; i < rawAssets.length; i++) {
+        var a = rawAssets[i];
+        if (!a || !a.classid) continue;
+        var sa = {
+          assetid: a.assetid !== undefined ? a.assetid : a.id,
+          classid: a.classid,
+          instanceid: a.instanceid !== undefined ? a.instanceid : '0',
+          amount: a.amount !== undefined ? a.amount : '1'
+        };
+        if (a.appid !== undefined) sa.appid = a.appid;
+        outAssets.push(sa);
+      }
+    } else if (u.rgInventory && typeof u.rgInventory === 'object') {
+      var akeys = Object.keys(u.rgInventory);
+      for (var ak = 0; ak < akeys.length; ak++) {
+        var ra = u.rgInventory[akeys[ak]];
+        if (!ra || !ra.classid) continue;
+        var rsa = {
+          assetid: ra.id !== undefined ? ra.id : (ra.assetid !== undefined ? ra.assetid : akeys[ak]),
+          classid: ra.classid,
+          instanceid: ra.instanceid !== undefined ? ra.instanceid : '0',
+          amount: ra.amount !== undefined ? ra.amount : '1'
+        };
+        if (ra.appid !== undefined) rsa.appid = ra.appid;
+        outAssets.push(rsa);
+      }
+    }
+
+    var outDescs = [];
+    var rawDescs = [];
+    if (Array.isArray(u.descriptions)) {
+      rawDescs = u.descriptions;
+    } else if (u.rgDescriptions && typeof u.rgDescriptions === 'object') {
+      var dkeys = Object.keys(u.rgDescriptions);
+      for (var dk = 0; dk < dkeys.length; dk++) {
+        rawDescs.push(u.rgDescriptions[dkeys[dk]]);
+      }
+    }
+    var descKeys = [
+      'appid', 'classid', 'instanceid', 'marketable', 'name', 'market_name',
+      'market_hash_name', 'type', 'icon_url', 'icon_url_large',
+      'background_color', 'name_color'
+    ];
+    for (var j = 0; j < rawDescs.length; j++) {
+      var d = rawDescs[j];
+      if (!d || !d.classid) continue;
+      var sd = {};
+      for (var kf = 0; kf < descKeys.length; kf++) {
+        var keyName = descKeys[kf];
+        if (d[keyName] !== undefined) sd[keyName] = d[keyName];
+      }
+      if (Array.isArray(d.tags)) {
+        var stags = [];
+        for (var t = 0; t < d.tags.length; t++) {
+          var tag = d.tags[t];
+          if (!tag || typeof tag !== 'object') continue;
+          var stag = {};
+          for (var tk = 0; tk < _SLIM_TAG_KEYS.length; tk++) {
+            var tkey = _SLIM_TAG_KEYS[tk];
+            if (tag[tkey] !== undefined) stag[tkey] = tag[tkey];
+          }
+          stags.push(stag);
+        }
+        sd.tags = stags;
+      }
+      outDescs.push(sd);
+    }
+
+    var outPage = {
+      success: 1,
+      assets: outAssets,
+      descriptions: outDescs
+    };
+    if (u.total_inventory_count !== undefined) outPage.total_inventory_count = u.total_inventory_count;
+    if (u.more_items !== undefined) outPage.more_items = u.more_items;
+    if (u.last_assetid !== undefined) outPage.last_assetid = u.last_assetid;
+    return outPage;
+  }
+
   function parseInventoryPayload(payload, options) {
     var opts = options || {};
     var mode = opts.mode || 'auto';
@@ -732,6 +834,11 @@
     var valued = buildItemValueItems(merged, targetAppId);
     var community = buildCommunitySummary(merged);
 
+    var slimPages = new Array(normalized.pages.length);
+    for (var sp = 0; sp < normalized.pages.length; sp++) {
+      slimPages[sp] = slimSteamPageForStorage(normalized.pages[sp]);
+    }
+
     return {
       kind: 'steam_inventory',
       isEmoticonList: false,
@@ -749,7 +856,8 @@
       bg_count: community.bg_count,
       emoticons: community.emoticons,
       backgrounds: community.backgrounds,
-      background_urls: community.background_urls
+      background_urls: community.background_urls,
+      slim_pages: slimPages
     };
   }
 
@@ -757,12 +865,14 @@
     quoteSteamKey: quoteSteamKey,
     fnv1a32: fnv1a32,
     fnv1a32Hex2: fnv1a32Hex2,
+    fnv1a32Hex64: fnv1a32Hex64,
     parseAssetAmount: parseAssetAmount,
     sanitizeEmoteName: sanitizeEmoteName,
     normalizeRawInputs: normalizeRawInputs,
     mergeSteamPages: mergeSteamPages,
     buildItemValueItems: buildItemValueItems,
     buildCommunitySummary: buildCommunitySummary,
+    slimSteamPageForStorage: slimSteamPageForStorage,
     parseInventoryPayload: parseInventoryPayload
   };
 });

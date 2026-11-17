@@ -12,6 +12,7 @@ function($scope, $http, $location, $filter, $timeout) {
 	$scope.curIndex = typeof CFG.getSavedCurIndex === 'function' ? CFG.getSavedCurIndex() : 0;
 	var sortedSource = [];
 	var rangeFilterTimer = null;
+	var _bgImgShardPromises = Object.create(null);
 
 	function getInitialNumLines() {
 		return Math.max(20, Math.ceil(window.innerHeight / 160) + 4);
@@ -170,19 +171,57 @@ function($scope, $http, $location, $filter, $timeout) {
 		$scope.$applyAsync(applyFilterFromSorted);
 	};
 
-	var loadBgGallery = function() {
-		return CFG.getDatasetJson($http, 'data/bg_v2.json').then(function(doc) {
-			if (doc && doc.v === 2 && Array.isArray(doc.items) && typeof CFG.unpackGalleryV2 === 'function') {
-				return CFG.unpackGalleryV2(doc);
+	var applyLoadedDates = function(datesData) {
+		if (!datesData || typeof datesData !== 'object') return;
+		$scope.dates = datesData;
+		$scope.genDates();
+		applyFilterAndSort();
+	};
+
+	var loadBgGalleryV3 = function(forceRefresh) {
+		var opts = forceRefresh ? { forceRefresh: true } : undefined;
+		return Promise.all([
+			CFG.getDatasetJson($http, 'data/bg_catalog_v3.json', opts),
+			CFG.getDatasetJson($http, 'data/bg_prices_v3.json', opts)
+		]).then(function(pair) {
+			var unpacked = (typeof CFG.unpackGalleryV3 === 'function')
+				? CFG.unpackGalleryV3(pair[0], pair[1])
+				: null;
+			if (!unpacked) {
+				var err = new Error('Background v3 sha8 mismatch or invalid schema');
+				err.shouldRetryFresh = !forceRefresh;
+				throw err;
 			}
-			if (Array.isArray(doc)) return doc;
-			return CFG.getDatasetJson($http, 'data/bg.json');
-		}, function() {
-			return CFG.getDatasetJson($http, 'data/bg.json');
+			return unpacked;
 		});
 	};
 
-	loadBgGallery().then(function(data){
+	var loadBgGallery = function() {
+		return loadBgGalleryV3(false).catch(function(err) {
+			if (err && err.shouldRetryFresh) {
+				return loadBgGalleryV3(true);
+			}
+			throw err;
+		}).catch(function() {
+			return CFG.getDatasetJson($http, 'data/bg_v2.json').then(function(doc) {
+				if (doc && doc.v === 2 && Array.isArray(doc.items) && typeof CFG.unpackGalleryV2 === 'function') {
+					return { items: CFG.unpackGalleryV2(doc), dates: null };
+				}
+				if (Array.isArray(doc)) return { items: doc, dates: null };
+				return CFG.getDatasetJson($http, 'data/bg.json').then(function(arr) {
+					return { items: arr, dates: null };
+				});
+			}, function() {
+				return CFG.getDatasetJson($http, 'data/bg.json').then(function(arr) {
+					return { items: arr, dates: null };
+				});
+			});
+		});
+	};
+
+	loadBgGallery().then(function(result){
+		var data = Array.isArray(result) ? result : (result && result.items);
+		var embeddedDates = result && !Array.isArray(result) ? result.dates : null;
 		$scope.$applyAsync(function() {
 			if (!Array.isArray(data)) return;
 			var maxPrice = 0;
@@ -207,18 +246,19 @@ function($scope, $http, $location, $filter, $timeout) {
 
 			$scope.limits.maxPrice = maxPrice;
 			$scope.bg = data;
+			if (embeddedDates && typeof embeddedDates === 'object') {
+				$scope.dates = embeddedDates;
+			}
 			$scope.genDates();
 			applyFilterAndSort();
 		});
-	}, function(){});
-
-	CFG.getDatasetJson($http, 'data/dates.json').then(function(data){
-		$scope.$applyAsync(function() {
-			if (!data || typeof data !== 'object') return;
-			$scope.dates = data;
-			$scope.genDates();
-			applyFilterAndSort();
-		});
+		if (!embeddedDates) {
+			CFG.getDatasetJson($http, 'data/dates.json').then(function(datesData){
+				$scope.$applyAsync(function() {
+					applyLoadedDates(datesData);
+				});
+			}, function(){});
+		}
 	}, function(){});
 
 	$scope.owned = {};
@@ -320,7 +360,7 @@ function($scope, $http, $location, $filter, $timeout) {
 
 	$scope.getStyle = function(p){
 		if (!p || p.length < 3) return {};
-		var url = CFG.CDN_BASE + "/backgrounds/" + p[0] + ".jpg?v3";
+		var url = CFG.CDN_BASE + "/backgrounds/" + p[0] + ".webp?v4";
 		var style = {
 			backgroundImage: "url(" + url + ")",
 			backgroundPosition: (p[1] * -256) + "px " + (p[2] * -160) + "px"
@@ -348,16 +388,7 @@ function($scope, $http, $location, $filter, $timeout) {
 		}
 	};
 
-	$scope.load = function(b, e) {
-		if (e && e.target && e.target.tagName === "A")
-			return;
-		if (!b) return;
-
-		if (b.img) {
-			$scope.open(b.img, b.name);
-			return;
-		}
-
+	function fetchBgImageApi(b) {
 		var path = "/FetchBackgroundImage?url=" + encodeURIComponent(b.url);
 		var reqPromise = typeof CFG.httpRequestWithFailover === 'function'
 			? CFG.httpRequestWithFailover($http, path, { method: 'GET' })
@@ -378,6 +409,38 @@ function($scope, $http, $location, $filter, $timeout) {
 				window.open($scope.BASE_URL + b.url, "_blank", "noopener,noreferrer");
 			}
 		});
+	}
+
+	$scope.load = function(b, e) {
+		if (e && e.target && e.target.tagName === "A")
+			return;
+		if (!b) return;
+
+		if (b.img) {
+			$scope.open(b.img, b.name);
+			return;
+		}
+
+		if (b.url && typeof CFG.fnv1a32Hex64 === 'function' && typeof CFG.getDatasetJson === 'function') {
+			var hex2 = CFG.fnv1a32Hex64(b.url);
+			if (!_bgImgShardPromises[hex2]) {
+				_bgImgShardPromises[hex2] = CFG.getDatasetJson($http, 'data/bg_images/' + hex2 + '.json')
+					.catch(function() { return null; });
+			}
+			_bgImgShardPromises[hex2].then(function(shard) {
+				if (shard && typeof shard[b.url] === 'string' && shard[b.url]) {
+					$scope.$applyAsync(function() {
+						b.img = shard[b.url];
+						$scope.open(b.img, b.name);
+					});
+					return;
+				}
+				fetchBgImageApi(b);
+			});
+			return;
+		}
+
+		fetchBgImageApi(b);
 	};
 
 	$scope.open = function(u, title){

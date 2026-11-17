@@ -219,13 +219,13 @@
     return 'javascript:' + encodeURI(buildBookmarkletCode(options));
   }
 
-  // ---- CDN Valuation with FNV-1a 753 Buckets & Explicit HTTP 404 Fallback ----
+  // ---- CDN Valuation with FNV-1a 753/440 Buckets & Explicit HTTP 404 Fallback ----
   var _priceFileCache = new Map();
-  var _753MonolithPromise = null;
+  var _monolithPromises = Object.create(null);
 
   function clearPriceCache() {
     _priceFileCache.clear();
-    _753MonolithPromise = null;
+    _monolithPromises = Object.create(null);
   }
 
   function fetchJsonStrict(url, fetchImpl) {
@@ -271,13 +271,15 @@
     return fetchJsonStrict(fallbackUrl, fetchImpl);
   }
 
-  function fetch753Monolith(cdnBase, fetchImpl) {
-    if (_753MonolithPromise) return _753MonolithPromise;
-    _753MonolithPromise = fetchDatasetViaConfig('value/753.json', cdnBase, fetchImpl).catch(function (err) {
-      _753MonolithPromise = null;
+  function fetchAppMonolith(appStr, cdnBase, fetchImpl) {
+    var cacheKey = cdnBase + ':' + appStr;
+    if (_monolithPromises[cacheKey]) return _monolithPromises[cacheKey];
+    var p = fetchDatasetViaConfig('value/' + encodeURIComponent(appStr) + '.json', cdnBase, fetchImpl).catch(function (err) {
+      delete _monolithPromises[cacheKey];
       throw err;
     });
-    return _753MonolithPromise;
+    _monolithPromises[cacheKey] = p;
+    return p;
   }
 
   function runWithConcurrency(tasks, limit, fn) {
@@ -337,25 +339,29 @@
       return valued;
     }
 
-    if (appStr !== '753' || cfg.USE_753_BUCKETS === false) {
+    var useShards = (appStr === '753' && cfg.USE_753_BUCKETS !== false) ||
+      (appStr === '440' && cfg.USE_440_BUCKETS !== false);
+    if (!useShards) {
       return fetchDatasetViaConfig('value/' + encodeURIComponent(appStr) + '.json', cdnBase, fetchImpl)
         .then(function (priceMap) {
           return {
             items: applyPriceLookup(priceMap),
-            usedBucketFallback: appStr === '753',
+            usedBucketFallback: appStr === '753' || appStr === '440',
             bucketsFetched: []
           };
         });
     }
 
+    var bucketFn = appStr === '753' ? workerMod.fnv1a32Hex2 : workerMod.fnv1a32Hex64;
+    var monolithThreshold = appStr === '753' ? 96 : 24;
     var bucketSet = Object.create(null);
     for (var i = 0; i < list.length; i++) {
-      var b = list[i].bucket || workerMod.fnv1a32Hex2(list[i].quoted_key);
+      var b = list[i].bucket || bucketFn(list[i].quoted_key);
       bucketSet[b] = true;
     }
     var buckets = Object.keys(bucketSet).sort();
-    if (buckets.length > 96) {
-      return fetch753Monolith(cdnBase, fetchImpl).then(function (monolith) {
+    if (buckets.length > monolithThreshold) {
+      return fetchAppMonolith(appStr, cdnBase, fetchImpl).then(function (monolith) {
         return {
           items: applyPriceLookup(monolith),
           usedBucketFallback: true,
@@ -366,7 +372,7 @@
     var mergedPrices = Object.create(null);
 
     return runWithConcurrency(buckets, 8, function (hex2) {
-      return fetchDatasetViaConfig('value/753/' + hex2 + '.json', cdnBase, fetchImpl).then(function (map) {
+      return fetchDatasetViaConfig('value/' + appStr + '/' + hex2 + '.json', cdnBase, fetchImpl).then(function (map) {
         return { hex2: hex2, map: map };
       });
     }).then(function (entries) {
@@ -385,9 +391,9 @@
         bucketsFetched: buckets
       };
     }).catch(function (err) {
-      // Strictly fall back to value/753.json ONLY when bucket file returns 404.
+      // Strictly fall back to value/{appid}.json ONLY when bucket file returns 404.
       if (err && err.status === 404) {
-        return fetch753Monolith(cdnBase, fetchImpl).then(function (monolith) {
+        return fetchAppMonolith(appStr, cdnBase, fetchImpl).then(function (monolith) {
           return {
             items: applyPriceLookup(monolith),
             usedBucketFallback: true,
@@ -400,19 +406,24 @@
   }
 
   function priceServerItemValuePayload(items, appid, options) {
+    var appStr = String(appid || '753');
     var list = Array.isArray(items) ? items : [];
     var normalized = new Array(list.length);
     for (var i = 0; i < list.length; i++) {
       var it = list[i] || {};
       var qk = it.quoted_key || workerMod.quoteSteamKey(it.market_hash_name || it.name || '');
-      var bucket = it.bucket || (String(appid || '753') === '753' && qk ? workerMod.fnv1a32Hex2(qk) : undefined);
+      var bucket = it.bucket || (
+        qk
+          ? (appStr === '753' ? workerMod.fnv1a32Hex2(qk) : (appStr === '440' ? workerMod.fnv1a32Hex64(qk) : undefined))
+          : undefined
+      );
       normalized[i] = bucket
         ? Object.assign({}, it, { quoted_key: qk, bucket: bucket })
         : Object.assign({}, it, { quoted_key: qk });
     }
     return valueInventoryClientSide(
       normalized,
-      appid,
+      appStr,
       Object.assign({}, options || {}, { requirePriceMatch: true })
     );
   }
@@ -984,8 +995,9 @@
           renderWizardState();
           return result;
         }
-        state.rawPages = payloadList;
-        state.parsedPages = parsedList;
+        var pagesForStorage = Array.isArray(result.slim_pages) ? result.slim_pages : payloadList;
+        state.rawPages = pagesForStorage;
+        state.parsedPages = pagesForStorage;
         state.parsedResult = result;
         state.restoredSession = isRestored;
         renderWizardState();
@@ -1480,6 +1492,7 @@
     quoteSteamKey: workerMod.quoteSteamKey,
     fnv1a32: workerMod.fnv1a32,
     fnv1a32Hex2: workerMod.fnv1a32Hex2,
+    fnv1a32Hex64: workerMod.fnv1a32Hex64,
     parseAssetAmount: workerMod.parseAssetAmount,
     sanitizeEmoteName: workerMod.sanitizeEmoteName,
     parseInventoryPayload: workerMod.parseInventoryPayload,

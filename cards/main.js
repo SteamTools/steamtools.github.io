@@ -98,7 +98,7 @@ function($scope, $http, $filter, $compile, $modal, $timeout){
 		$scope.userData = {'games': 2, 'cards': 2, 'badges': 2};
 		$scope.user_status = "";
 
-		var path = "/UserInfo?id=" + encodeURIComponent(steamid.trim());
+		var path = "/UserInfo?id=" + encodeURIComponent(steamid.trim()) + "&slim=1";
 		var reqPromise = typeof CFG.httpRequestWithFailover === 'function'
 			? CFG.httpRequestWithFailover($http, path, { method: 'GET', withCredentials: true })
 			: $http.get(CFG.API_BASE + path, { withCredentials: true });
@@ -582,7 +582,20 @@ function($scope, $http, $filter, $compile, $modal, $timeout){
 		$scope.tableSettings.oLanguage.sEmptyTable = error;
 		$scope.table.draw();
 	};
-	CFG.getDatasetJson($http, 'data/set_data.json').then(function(data){
+	var loadSetDataV2OrLegacy = function() {
+		return CFG.getDatasetJson($http, 'data/set_data_v2.json').then(function(doc) {
+			var unpacked = (typeof CFG.unpackSetDataV2 === 'function')
+				? CFG.unpackSetDataV2(doc)
+				: doc;
+			if (unpacked && Array.isArray(unpacked.sets)) {
+				return unpacked;
+			}
+			return CFG.getDatasetJson($http, 'data/set_data.json');
+		}, function() {
+			return CFG.getDatasetJson($http, 'data/set_data.json');
+		});
+	};
+	loadSetDataV2OrLegacy().then(function(data){
 		$timeout(function() {
 			if (!data || !Array.isArray(data.sets)) {
 				showSetDataError();

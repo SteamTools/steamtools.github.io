@@ -502,7 +502,7 @@ function SteamCtrl($scope, $http){
 			var steamid = $scope.selectedUsers[i];
 			if (!steamid || steamid === undefined) return;
 			if (!games.hasOwnProperty(steamid)) {
-				fetchGamesInfo({ games: steamid }).then(function(data) {
+				fetchGamesInfo({ owned: steamid }).then(function(data) {
 					safeApply(function() {
 						appendGames(data);
 					});
@@ -592,8 +592,20 @@ function SteamCtrl($scope, $http){
 				return;
 			}
 		}
-		else
+		else {
+			if (data.apps && typeof data.apps === 'object') {
+				var appKeys = Object.keys(data.apps);
+				for (var ak = 0; ak < appKeys.length; ak++) {
+					var aid = appKeys[ak];
+					var rawVal = data.apps[aid];
+					var appName = Array.isArray(rawVal) ? rawVal[0] : rawVal;
+					if (appName) {
+						_knownAppNames[aid] = normalizeGameName(String(appName));
+					}
+				}
+			}
 			games[data.steamid] = data.games;
+		}
 
 		if (gamesLoaded())
 			filterGames();

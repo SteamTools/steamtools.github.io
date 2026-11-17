@@ -329,7 +329,7 @@ angular.module('valueApp', ['ui.bootstrap'])
 							var msg = "Imported " + valued.items.length + " unique market item(s) across " +
 								parsed.page_count + " page(s)";
 							if (valued.usedBucketFallback) {
-								msg += " (using fallback value/753.json)";
+								msg += " (using fallback value/" + targetApp + ".json)";
 							}
 							msg += ".";
 							renderValuedItems(valued.items, targetApp, { statusMessage: msg });
@@ -399,7 +399,7 @@ angular.module('valueApp', ['ui.bootstrap'])
 		$scope.status = "Loading...";
 		clearHelpBox();
 
-		var path = '/ItemValue?i=1&id=' + encodeURIComponent(user) +
+		var path = '/ItemValue?i=1&v=2&id=' + encodeURIComponent(user) +
 			'&app=' + encodeURIComponent(appid);
 		if (huge) {
 			path += '&huge=1';
@@ -494,6 +494,9 @@ angular.module('valueApp', ['ui.bootstrap'])
 
 			if (data.name) {
 				document.location.hash = '/' + encodeURIComponent(String(data.name)) + "-" + $scope.appid.model;
+			}
+			if (!Array.isArray(data.items) && data.items_v2 && typeof CFG.unpackItemValueV2 === 'function') {
+				data.items = CFG.unpackItemValueV2(data.items_v2, appid);
 			}
 			if (data.unpriced && window.SteamToolsImport && typeof window.SteamToolsImport.priceServerItemValuePayload === 'function') {
 				$scope.isLoading = true;

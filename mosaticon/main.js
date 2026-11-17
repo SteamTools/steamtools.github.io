@@ -133,6 +133,21 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 		});
 	}
 
+	function b64ToBytes42(b64) {
+		if (typeof b64 !== 'string' || !b64) return null;
+		try {
+			var bin = atob(b64);
+			if (bin.length !== 42) return null;
+			var arr = new Array(42);
+			for (var i = 0; i < 42; i++) {
+				arr[i] = bin.charCodeAt(i) & 0xFF;
+			}
+			return arr;
+		} catch (e) {
+			return null;
+		}
+	}
+
 	function loadEmoteColorsCatalog() {
 		if (_emoteCatalogPromise) return _emoteCatalogPromise;
 		_emoteCatalogPromise = CFG.getDatasetJson($http, 'data/emote_colors.json').then(function(body) {
@@ -144,6 +159,110 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 			return null;
 		});
 		return _emoteCatalogPromise;
+	}
+
+	function cacheColorMapToIdb(colorMap, resolvedOut) {
+		if (!colorMap || typeof colorMap !== 'object') return;
+		var keys = Object.keys(colorMap);
+		for (var i = 0; i < keys.length; i++) {
+			var k = keys[i];
+			var b64 = colorMap[k];
+			if (typeof b64 === 'string' && b64) {
+				resolvedOut[k] = b64;
+				var bytes42 = b64ToBytes42(b64);
+				if (bytes42) {
+					idbPutEmoteBytes(k, bytes42);
+				}
+			}
+		}
+	}
+
+	function resolveEmoteColorsForNames(namesList, inlineColors) {
+		var resolved = Object.create(null);
+		cacheColorMapToIdb(inlineColors, resolved);
+
+		var remaining = [];
+		for (var i = 0; i < namesList.length; i++) {
+			var name = namesList[i];
+			if (name && !Object.prototype.hasOwnProperty.call(resolved, name)) {
+				remaining.push(name);
+			}
+		}
+		if (remaining.length === 0) {
+			return Promise.resolve(resolved);
+		}
+
+		return Promise.all(remaining.map(function(n) {
+			return idbGetEmoteBytes(n).then(function(bytes) {
+				return bytes ? null : n;
+			});
+		})).then(function(missResults) {
+			var stillMissing = [];
+			for (var m = 0; m < missResults.length; m++) {
+				if (missResults[m]) stillMissing.push(missResults[m]);
+			}
+			if (stillMissing.length === 0) {
+				return resolved;
+			}
+
+			var seenShards = Object.create(null);
+			var shardList = [];
+			if (typeof CFG.fnv1a32Hex64 === 'function') {
+				for (var s = 0; s < stillMissing.length; s++) {
+					var hx = CFG.fnv1a32Hex64(stillMissing[s]);
+					if (!seenShards[hx]) {
+						seenShards[hx] = true;
+						shardList.push(hx);
+					}
+				}
+			}
+
+			if (shardList.length > 0 && shardList.length <= 8) {
+				return Promise.all(shardList.map(function(hex2) {
+					return CFG.getDatasetJson($http, 'data/emote_colors/' + hex2 + '.json').catch(function() {
+						return null;
+					});
+				})).then(function(shardDocs) {
+					var anyShardOk = false;
+					for (var j = 0; j < shardDocs.length; j++) {
+						var doc = shardDocs[j];
+						if (doc && typeof doc === 'object') {
+							anyShardOk = true;
+							cacheColorMapToIdb(doc, resolved);
+						}
+					}
+					if (anyShardOk) {
+						return resolved;
+					}
+					return loadEmoteColorsCatalog().then(function(monolith) {
+						return monolith || resolved;
+					});
+				});
+			}
+
+			var apiReq = typeof CFG.httpRequestWithFailover === 'function'
+				? CFG.httpRequestWithFailover($http, '/v1/emote-colors', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					data: { names: stillMissing.slice(0, 2000) }
+				})
+				: $http.post(CFG.API_BASE + '/v1/emote-colors', { names: stillMissing.slice(0, 2000) });
+
+			return apiReq.then(function(resp) {
+				var body = resp && resp.data;
+				if (body && body.colors && typeof body.colors === 'object') {
+					cacheColorMapToIdb(body.colors, resolved);
+					return resolved;
+				}
+				return loadEmoteColorsCatalog().then(function(monolith) {
+					return monolith || resolved;
+				});
+			}, function() {
+				return loadEmoteColorsCatalog().then(function(monolith) {
+					return monolith || resolved;
+				});
+			});
+		});
 	}
 
 	function applyDecodedVectors(e, vecs) {
@@ -238,7 +357,7 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 			emote.nsize = emote.name.length;
 			emote.disable = false;
 			emote.used = false;
-			loadEmoteColorsCatalog().then(function(catalog) {
+			resolveEmoteColorsForNames([cleanName], null).then(function(catalog) {
 				$scope.getEmoticonColor(emote, catalog, activeGen);
 			});
 		} else if (!u) {
@@ -254,7 +373,7 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 					var data = resp && resp.data;
 					if (data && data.success && Array.isArray(data.items)) {
 						localStorage.lastUser = u;
-						$scope.loadEmotes(data.items);
+						$scope.loadEmotes(data.items, data.colors);
 						return;
 					}
 					var reason = (data && data.reason) || "Could not load emoticons.";
@@ -284,7 +403,7 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 		}
 	};
 
-	$scope.loadEmotes = function(emotes) {
+	$scope.loadEmotes = function(emotes, inlineColors) {
 		var gen = ++loadGeneration;
 		var seen = Object.create(null);
 		var cleanEmotes = [];
@@ -318,7 +437,7 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 		}
 
 		$scope.status = "Processing...";
-		loadEmoteColorsCatalog().then(function(catalog) {
+		resolveEmoteColorsForNames(cleanEmotes, inlineColors).then(function(catalog) {
 			if (gen !== loadGeneration) return;
 			for (var i = 0; i < cleanEmotes.length; i++) {
 				var emote = {'name': cleanEmotes[i], 'index': i};

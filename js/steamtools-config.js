@@ -20,7 +20,8 @@
     AUTH_BASE: 'https://api.steam.tools',
     GAMES_API_BASE: 'https://api.steam.tools',
     TURNSTILE_SITEKEY: '0x4AAAAAAGCoBDnjdhsVPpPB',
-    USE_753_BUCKETS: true
+    USE_753_BUCKETS: true,
+    USE_440_BUCKETS: true
   };
 
   var TOP_6_APPS = [
@@ -334,6 +335,73 @@
       .replace(/'/g, '&#39;');
   }
 
+  var _cfgTextEncoder = typeof TextEncoder === 'function' ? new TextEncoder() : null;
+
+  function _cfgUtf8Bytes(str) {
+    var s = String(str === null || str === undefined ? '' : str);
+    if (_cfgTextEncoder) {
+      try {
+        return _cfgTextEncoder.encode(s);
+      } catch (e) {}
+    }
+    var bytes = [];
+    for (var i = 0; i < s.length; i++) {
+      var code = s.charCodeAt(i);
+      if (code < 0x80) {
+        bytes.push(code);
+      } else if (code < 0x800) {
+        bytes.push(0xc0 | (code >> 6), 0x80 | (code & 0x3f));
+      } else if (code < 0xd800 || code >= 0xe000) {
+        bytes.push(0xe0 | (code >> 12), 0x80 | ((code >> 6) & 0x3f), 0x80 | (code & 0x3f));
+      } else {
+        i++;
+        code = 0x10000 + (((code & 0x3ff) << 10) | (s.charCodeAt(i) & 0x3ff));
+        bytes.push(
+          0xf0 | (code >> 18),
+          0x80 | ((code >> 12) & 0x3f),
+          0x80 | ((code >> 6) & 0x3f),
+          0x80 | (code & 0x3f)
+        );
+      }
+    }
+    return bytes;
+  }
+
+  function fnv1a32(str) {
+    var bytes = _cfgUtf8Bytes(str);
+    var h = 0x811c9dc5;
+    for (var i = 0; i < bytes.length; i++) {
+      h = Math.imul(h ^ bytes[i], 0x01000193) >>> 0;
+    }
+    return h >>> 0;
+  }
+
+  function fnv1a32Hex64(key) {
+    return ((fnv1a32(key) & 0x3f) >>> 0).toString(16).padStart(2, '0');
+  }
+
+  function fnv1a32Hex256(key) {
+    return ((fnv1a32(key) & 0xff) >>> 0).toString(16).padStart(2, '0');
+  }
+
+  function encodeURIComponentSafe(str) {
+    var s = String(str === null || str === undefined ? '' : str);
+    try {
+      return encodeURIComponent(s);
+    } catch (e) {
+      var sanitized = s.replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF]/g, '\uFFFD');
+      return encodeURIComponent(sanitized);
+    }
+  }
+
+  function quoteSteamKey(str) {
+    return encodeURIComponentSafe(str)
+      .replace(/%2F/g, '/')
+      .replace(/[!'()*~]/g, function (c) {
+        return '%' + c.charCodeAt(0).toString(16).toUpperCase();
+      });
+  }
+
   function unpackGalleryV2(doc) {
     if (Array.isArray(doc)) {
       return doc;
@@ -368,10 +436,162 @@
     return out;
   }
 
+  function unpackGalleryV3(catalogDoc, pricesDoc) {
+    if (
+      !catalogDoc || catalogDoc.v !== 3 || !Array.isArray(catalogDoc.items) ||
+      !pricesDoc || pricesDoc.v !== 3 || !Array.isArray(pricesDoc.p) ||
+      catalogDoc.items.length !== pricesDoc.p.length
+    ) {
+      return null;
+    }
+    if (catalogDoc.sha8 && pricesDoc.sha8 && catalogDoc.sha8 !== pricesDoc.sha8) {
+      return null;
+    }
+    var games = Array.isArray(catalogDoc.games) ? catalogDoc.games : [];
+    var rows = catalogDoc.items;
+    var pList = pricesDoc.p;
+    var out = new Array(rows.length);
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      var gPair = (typeof r[1] === 'number' && r[1] >= 0 && r[1] < games.length) ? games[r[1]] : null;
+      var appid = Array.isArray(gPair) ? String(gPair[0] || '753') : '753';
+      var gameName = Array.isArray(gPair) ? String(gPair[1] || '') : String(gPair || '');
+      var name = String(r[0] === null || r[0] === undefined ? '' : r[0]);
+      var urlField = r[2];
+      var fullUrl;
+      if (urlField === 0) {
+        fullUrl = '753/' + appid + '-' + quoteSteamKey(name);
+      } else if (urlField === 1) {
+        fullUrl = '753/' + appid + '-' + quoteSteamKey(name + ' (Profile Background)');
+      } else if (urlField === 2) {
+        fullUrl = '753/' + appid + '-' + quoteSteamKey(name + ' (Emoticon)');
+      } else {
+        var rawUrl = String(urlField || '');
+        fullUrl = (rawUrl && rawUrl.indexOf('/') === -1) ? ('753/' + rawUrl) : rawUrl;
+      }
+      var ph = Number(r[4]) || 0;
+      var hls = [(ph >>> 16) & 255, (ph >>> 8) & 255, ph & 255];
+      var cents = pList[i];
+      var priceStr = (cents === null || cents === undefined) ? null : (Number(cents) / 100).toFixed(2);
+      var item = {
+        name: r[0],
+        price: priceStr,
+        game: gameName,
+        url: fullUrl,
+        hls: hls
+      };
+      if (Array.isArray(r[3])) {
+        item.pos = r[3];
+      }
+      if (r.length > 5 && r[5]) {
+        item.img = r[5];
+      }
+      out[i] = item;
+    }
+    var datesObj = (catalogDoc.dates && typeof catalogDoc.dates === 'object') ? catalogDoc.dates : null;
+    return { items: out, dates: datesObj };
+  }
+
+  function _unpackSetSideV2(side) {
+    if (!Array.isArray(side) || side.length < 5) return null;
+    return {
+      count: Number(side[0]) || 0,
+      price: (Number(side[1]) / 100).toFixed(2),
+      avg: (Number(side[2]) / 100).toFixed(2),
+      std: (Number(side[3]) / 100).toFixed(2),
+      quantity: Number(side[4]) || 0
+    };
+  }
+
+  function unpackSetDataV2(doc) {
+    if (doc && Array.isArray(doc.sets)) {
+      return doc;
+    }
+    if (!doc || doc.v !== 2 || !Array.isArray(doc.rows)) {
+      return null;
+    }
+    var rows = doc.rows;
+    var sets = new Array(rows.length);
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      sets[i] = {
+        appid: String(r[0]),
+        game: r[1],
+        true_count: r[2],
+        added: r[3],
+        f2p: Boolean(r[4]),
+        discount: (Number(r[5] || 0) / 100).toFixed(2),
+        bprice: (r[6] === null || r[6] === undefined) ? null : (Number(r[6]) / 100).toFixed(2),
+        emotes_avg: (Number(r[7] || 0) / 100).toFixed(2),
+        bgs_avg: (Number(r[8] || 0) / 100).toFixed(2),
+        emotes_count: r[9] || 0,
+        bgs_count: r[10] || 0,
+        normal: _unpackSetSideV2(r[11]),
+        foil: _unpackSetSideV2(r[12])
+      };
+    }
+    return {
+      time: doc.time,
+      data_median_age: doc.data_median_age,
+      game_count: doc.game_count,
+      card_count: doc.card_count,
+      emote_count: doc.emote_count,
+      bg_count: doc.bg_count,
+      totals: doc.totals,
+      sets: sets
+    };
+  }
+
+  function unpackItemValueV2(v2Doc, fallbackAppid) {
+    if (!v2Doc || v2Doc.v !== 2 || !Array.isArray(v2Doc.rows)) {
+      return null;
+    }
+    var appidStr = String(v2Doc.appid || fallbackAppid || '753');
+    var strings = Array.isArray(v2Doc.strings) ? v2Doc.strings : [];
+    var rows = v2Doc.rows;
+    var out = new Array(rows.length);
+    var getStr = function (idx) {
+      return (typeof idx === 'number' && idx >= 0 && idx < strings.length) ? strings[idx] : null;
+    };
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      var name = r[0];
+      var hashName = r[1] === 0 ? name : String(r[1] || name || '');
+      var qk = quoteSteamKey(hashName);
+      var item = {
+        bg: getStr(r[6]),
+        color: getStr(r[7]),
+        name: name,
+        market_hash_name: hashName,
+        quoted_key: qk,
+        marketable: Boolean(r[5]),
+        price: (Number(r[4] || 0) / 100).toFixed(2),
+        count: Number(r[3]) || 0,
+        url: appidStr + '/' + qk,
+        icon: r[2] || null,
+        rarity: getStr(r[8]),
+        rcolor: getStr(r[9]),
+        quality: getStr(r[10]),
+        qcolor: getStr(r[11])
+      };
+      if (appidStr === '753') {
+        item.bucket = fnv1a32Hex256(qk);
+        item.game = getStr(r[12]);
+        item.type = getStr(r[13]);
+      } else if (appidStr === '322330') {
+        item.type = getStr(r[13]);
+      }
+      out[i] = item;
+    }
+    return out;
+  }
+
   var _currencyPromise = null;
   var _manifestCache = Object.create(null);
   var _manifestPromises = Object.create(null);
-  var MANIFEST_TTL_MS = 300000;
+  var MANIFEST_FRESH_MS = 300000;
+  var MANIFEST_SWR_MS = 21600000;
+  var MANIFEST_STORAGE_PREFIX = 'st_manifest_v2:';
   var API_PRIMARY_STORAGE_KEY = 'st_api_primary';
 
   function isPoolApiBase(base) {
@@ -653,39 +873,40 @@
     return Promise.reject(new Error('No HTTP client available.'));
   }
 
-  function getManifest(options) {
-    var opts = options || {};
-    var cdnBase = trimTrailingSlashes(opts.cdnBase || config.CDN_BASE);
-    if (!opts.forceRefresh) {
-      var mem = _manifestCache[cdnBase];
-      if (mem && (Date.now() - mem.ts) < MANIFEST_TTL_MS) {
-        return Promise.resolve(mem.data);
-      }
-      try {
-        if (root && root.sessionStorage) {
-          var raw = root.sessionStorage.getItem('st_manifest_v1:' + cdnBase);
-          if (raw) {
-            var parsed = JSON.parse(raw);
-            if (parsed && parsed.ts && (Date.now() - parsed.ts) < MANIFEST_TTL_MS && parsed.data && parsed.data.datasets) {
-              _manifestCache[cdnBase] = parsed;
-              return Promise.resolve(parsed.data);
-            }
+  function _isValidManifestDoc(data) {
+    return Boolean(data && typeof data === 'object' && (data.datasets || data.shards));
+  }
+
+  function _readStoredManifest(cdnBase) {
+    try {
+      if (root && root.localStorage) {
+        var raw = root.localStorage.getItem(MANIFEST_STORAGE_PREFIX + cdnBase);
+        if (raw) {
+          var parsed = JSON.parse(raw);
+          if (parsed && parsed.ts && _isValidManifestDoc(parsed.data)) {
+            return parsed;
           }
         }
-      } catch (e) {}
-    }
+      }
+    } catch (e) {}
+    return null;
+  }
 
+  function _writeStoredManifest(cdnBase, rec) {
+    _manifestCache[cdnBase] = rec;
+    try {
+      if (root && root.localStorage) {
+        root.localStorage.setItem(MANIFEST_STORAGE_PREFIX + cdnBase, JSON.stringify(rec));
+      }
+    } catch (e) {}
+  }
+
+  function _fetchManifestNetwork(cdnBase, opts) {
     if (_manifestPromises[cdnBase]) return _manifestPromises[cdnBase];
     var p = fetchRawJson(cdnBase + '/manifest.json', opts).then(function (data) {
       delete _manifestPromises[cdnBase];
-      if (data && typeof data === 'object' && data.datasets) {
-        var rec = { ts: Date.now(), data: data };
-        _manifestCache[cdnBase] = rec;
-        try {
-          if (root && root.sessionStorage) {
-            root.sessionStorage.setItem('st_manifest_v1:' + cdnBase, JSON.stringify(rec));
-          }
-        } catch (e) {}
+      if (_isValidManifestDoc(data)) {
+        _writeStoredManifest(cdnBase, { ts: Date.now(), data: data });
         return data;
       }
       return null;
@@ -697,6 +918,57 @@
     return p;
   }
 
+  function getManifest(options) {
+    var opts = options || {};
+    var cdnBase = trimTrailingSlashes(opts.cdnBase || config.CDN_BASE);
+    if (!opts.forceRefresh) {
+      var now = Date.now();
+      var mem = _manifestCache[cdnBase];
+      if (mem && _isValidManifestDoc(mem.data)) {
+        var memAge = now - mem.ts;
+        if (memAge < MANIFEST_FRESH_MS) {
+          return Promise.resolve(mem.data);
+        }
+        if (memAge < MANIFEST_SWR_MS) {
+          _fetchManifestNetwork(cdnBase, opts).catch(function () {});
+          return Promise.resolve(mem.data);
+        }
+      }
+      var stored = _readStoredManifest(cdnBase);
+      if (stored) {
+        _manifestCache[cdnBase] = stored;
+        var storedAge = now - stored.ts;
+        if (storedAge < MANIFEST_FRESH_MS) {
+          return Promise.resolve(stored.data);
+        }
+        if (storedAge < MANIFEST_SWR_MS) {
+          _fetchManifestNetwork(cdnBase, opts).catch(function () {});
+          return Promise.resolve(stored.data);
+        }
+      }
+    }
+    return _fetchManifestNetwork(cdnBase, opts);
+  }
+
+  function _resolveShardPathFromManifest(manifest, cleanKey) {
+    if (!manifest || !manifest.shards || !cleanKey.endsWith('.json')) {
+      return null;
+    }
+    var lastSlash = cleanKey.lastIndexOf('/');
+    if (lastSlash <= 0) return null;
+    var prefix = cleanKey.slice(0, lastSlash);
+    var hexPart = cleanKey.slice(lastSlash + 1, -5);
+    if (!/^[0-9a-fA-F]{2}$/.test(hexPart)) return null;
+    var shaList = manifest.shards[prefix];
+    if (!Array.isArray(shaList)) return null;
+    var idx = parseInt(hexPart, 16);
+    var sha8 = shaList[idx];
+    if (typeof sha8 === 'string' && sha8) {
+      return 'v/' + sha8 + '/' + cleanKey;
+    }
+    return null;
+  }
+
   function resolveDatasetUrl(logicalKey, options) {
     var opts = options || {};
     var cleanKey = String(logicalKey || '').replace(/^\/+/, '');
@@ -705,6 +977,9 @@
     return getManifest(opts).then(function (manifest) {
       var entry = manifest && manifest.datasets && manifest.datasets[cleanKey];
       var rel = entry && (entry.v_key || entry.path);
+      if (typeof rel !== 'string' || !rel.trim()) {
+        rel = _resolveShardPathFromManifest(manifest, cleanKey);
+      }
       if (typeof rel === 'string' && rel.trim()) {
         return cdnBase + '/' + rel.trim().replace(/^\/+/, '');
       }
@@ -1117,6 +1392,7 @@
     config.GAMES_API_BASE = resolveUrlSetting('st_games_api_base', config.API_BASE || DEFAULTS.GAMES_API_BASE);
     config.TURNSTILE_SITEKEY = resolveSitekey();
     config.USE_753_BUCKETS = resolveBooleanSetting('st_use_753_buckets', DEFAULTS.USE_753_BUCKETS);
+    config.USE_440_BUCKETS = resolveBooleanSetting('st_use_440_buckets', DEFAULTS.USE_440_BUCKETS);
     return config;
   }
 
@@ -1134,9 +1410,14 @@
     GAMES_API_BASE: DEFAULTS.GAMES_API_BASE,
     TURNSTILE_SITEKEY: DEFAULTS.TURNSTILE_SITEKEY,
     USE_753_BUCKETS: DEFAULTS.USE_753_BUCKETS,
+    USE_440_BUCKETS: DEFAULTS.USE_440_BUCKETS,
     isTrustedOriginUrl: isTrustedOriginUrl,
     isTurnstileConfigured: isTurnstileConfigured,
     getContextId: getContextId,
+    fnv1a32: fnv1a32,
+    fnv1a32Hex64: fnv1a32Hex64,
+    fnv1a32Hex256: fnv1a32Hex256,
+    quoteSteamKey: quoteSteamKey,
     getApiCandidates: getApiCandidates,
     httpRequestWithFailover: httpRequestWithFailover,
     fetchJsonWithFailover: fetchJsonWithFailover,
@@ -1157,6 +1438,9 @@
     escapeCsvFormula: escapeCsvFormula,
     escapeHtml: escapeHtml,
     unpackGalleryV2: unpackGalleryV2,
+    unpackGalleryV3: unpackGalleryV3,
+    unpackSetDataV2: unpackSetDataV2,
+    unpackItemValueV2: unpackItemValueV2,
     normalizeSteamAssetUrl: normalizeSteamAssetUrl,
     isInAppWebview: isInAppWebview,
     mountWebviewNotice: mountWebviewNotice,

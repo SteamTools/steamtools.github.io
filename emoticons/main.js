@@ -162,19 +162,57 @@ function($scope, $http, $location, $filter, $timeout) {
 		$scope.$applyAsync(applyFilterFromSorted);
 	};
 
-	var loadEmoteGallery = function() {
-		return CFG.getDatasetJson($http, 'data/emote_v2.json').then(function(doc) {
-			if (doc && doc.v === 2 && Array.isArray(doc.items) && typeof CFG.unpackGalleryV2 === 'function') {
-				return CFG.unpackGalleryV2(doc);
+	var applyLoadedDates = function(datesData) {
+		if (!datesData || typeof datesData !== 'object') return;
+		$scope.dates = datesData;
+		$scope.genDates();
+		applyFilterAndSort();
+	};
+
+	var loadEmoteGalleryV3 = function(forceRefresh) {
+		var opts = forceRefresh ? { forceRefresh: true } : undefined;
+		return Promise.all([
+			CFG.getDatasetJson($http, 'data/emote_catalog_v3.json', opts),
+			CFG.getDatasetJson($http, 'data/emote_prices_v3.json', opts)
+		]).then(function(pair) {
+			var unpacked = (typeof CFG.unpackGalleryV3 === 'function')
+				? CFG.unpackGalleryV3(pair[0], pair[1])
+				: null;
+			if (!unpacked) {
+				var err = new Error('Emote v3 sha8 mismatch or invalid schema');
+				err.shouldRetryFresh = !forceRefresh;
+				throw err;
 			}
-			if (Array.isArray(doc)) return doc;
-			return CFG.getDatasetJson($http, 'data/emote.json');
-		}, function() {
-			return CFG.getDatasetJson($http, 'data/emote.json');
+			return unpacked;
 		});
 	};
 
-	loadEmoteGallery().then(function(data){
+	var loadEmoteGallery = function() {
+		return loadEmoteGalleryV3(false).catch(function(err) {
+			if (err && err.shouldRetryFresh) {
+				return loadEmoteGalleryV3(true);
+			}
+			throw err;
+		}).catch(function() {
+			return CFG.getDatasetJson($http, 'data/emote_v2.json').then(function(doc) {
+				if (doc && doc.v === 2 && Array.isArray(doc.items) && typeof CFG.unpackGalleryV2 === 'function') {
+					return { items: CFG.unpackGalleryV2(doc), dates: null };
+				}
+				if (Array.isArray(doc)) return { items: doc, dates: null };
+				return CFG.getDatasetJson($http, 'data/emote.json').then(function(arr) {
+					return { items: arr, dates: null };
+				});
+			}, function() {
+				return CFG.getDatasetJson($http, 'data/emote.json').then(function(arr) {
+					return { items: arr, dates: null };
+				});
+			});
+		});
+	};
+
+	loadEmoteGallery().then(function(result){
+		var data = Array.isArray(result) ? result : (result && result.items);
+		var embeddedDates = result && !Array.isArray(result) ? result.dates : null;
 		$scope.$applyAsync(function() {
 			if (!Array.isArray(data)) return;
 			var maxPrice = 0;
@@ -200,18 +238,19 @@ function($scope, $http, $location, $filter, $timeout) {
 
 			$scope.limits.maxPrice = maxPrice;
 			$scope.emotes = data;
+			if (embeddedDates && typeof embeddedDates === 'object') {
+				$scope.dates = embeddedDates;
+			}
 			$scope.genDates();
 			applyFilterAndSort();
 		});
-	}, function(){});
-
-	CFG.getDatasetJson($http, 'data/dates.json').then(function(data){
-		$scope.$applyAsync(function() {
-			if (!data || typeof data !== 'object') return;
-			$scope.dates = data;
-			$scope.genDates();
-			applyFilterAndSort();
-		});
+		if (!embeddedDates) {
+			CFG.getDatasetJson($http, 'data/dates.json').then(function(datesData){
+				$scope.$applyAsync(function() {
+					applyLoadedDates(datesData);
+				});
+			}, function(){});
+		}
 	}, function(){});
 
 	$scope.owned = {};
@@ -328,13 +367,13 @@ function($scope, $http, $location, $filter, $timeout) {
 		var style;
 		if ($scope.small){
 			style = {
-				backgroundImage: "url(" + url + "s.png?v3)",
+				backgroundImage: "url(" + url + "s.webp?v4)",
 				backgroundPosition: (p[1] * -20) + "px " + (p[2] * -20) + "px"
 			};
 		}
 		else{
 			style = {
-				backgroundImage: "url(" + url + ".png?v3)",
+				backgroundImage: "url(" + url + ".webp?v4)",
 				backgroundPosition: (p[1] * -64) + "px " + (p[2] * -64) + "px"
 			};
 		}
