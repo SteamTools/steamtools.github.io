@@ -264,12 +264,24 @@
 
     function visitValue(val) {
       if (val === null || val === undefined) {
-        throw new Error('Steam returned empty/null JSON. Your inventory may be private or rate-limited.');
+        throw new Error('Steam returned "null" — sign into steamcommunity.com in this browser (or set your Steam Inventory privacy to Public), then open the Raw JSON button again.');
       }
       if (typeof val === 'string') {
         var trimmed = val.replace(/^\uFEFF/, '').trim();
         if (!trimmed) return;
+        if (trimmed === 'null') {
+          throw new Error('Steam returned "null" — sign into steamcommunity.com in this browser (or set your Steam Inventory privacy to Public), then open the Raw JSON button again.');
+        }
+        if (trimmed.charAt(0) === '<' || /^<!doctype\s+html|^<(?:html|head|body|script|div|meta|title)\b/i.test(trimmed)) {
+          if (/login|sign\s*in/i.test(trimmed.slice(0, 2500))) {
+            throw new Error('You copied a Steam Sign-In web page (HTML) instead of raw JSON. Sign into steamcommunity.com in this browser first, then click "Open Raw JSON".');
+          }
+          throw new Error('You copied a Steam web page (HTML) instead of raw JSON data. Use the "Open Raw JSON" button in Step 2 so Steam opens raw data.');
+        }
         if (trimmed.charAt(0) !== '{' && trimmed.charAt(0) !== '[') {
+          if (/^(?:success|assets|descriptions|rgInventory|total_inventory_count)\s*:\s*/m.test(trimmed)) {
+            throw new Error('Firefox copied formatted tree text instead of raw JSON. Click the "Raw Data" tab at the top-left of the Firefox page, then press Ctrl+A and Ctrl+C again.');
+          }
           if (mode === 'emotes' || /:[A-Za-z0-9_.-]+:/.test(trimmed)) {
             var plain = extractTextPlainEmotes(trimmed);
             if (plain.length > 0) {
@@ -278,7 +290,7 @@
               return;
             }
           }
-          throw new Error('Input is not valid Steam inventory JSON.');
+          throw new Error('Input is not valid Steam inventory JSON (expected raw data starting with {"assets":[...]} or [{"name":...}]).');
         }
         var parsedChunks = splitConcatenatedJson(trimmed);
         for (var i = 0; i < parsedChunks.length; i++) {
@@ -354,17 +366,54 @@
     };
   }
 
+  function getAssetIdentifier(asset) {
+    if (!asset || typeof asset !== 'object') return null;
+    if (asset.assetid !== undefined && asset.assetid !== null) return String(asset.assetid);
+    if (asset.id !== undefined && asset.id !== null) return String(asset.id);
+    return null;
+  }
+
   function mergeSteamPages(pages) {
     var seenAssetIds = Object.create(null);
+    var seenPageFingerprints = Object.create(null);
+    var duplicatePagesIgnored = 0;
+    var uniquePages = [];
     var mergedAssets = [];
     var descMap = Object.create(null);
     var descByClass = Object.create(null);
-    var lastPage = pages[pages.length - 1] || {};
+    var lastPage = {};
     var totalInventoryCount = 0;
     var detectedAppId = null;
 
     for (var p = 0; p < pages.length; p++) {
       var page = unwrapPageObject(pages[p]) || {};
+
+      var rawAssets = [];
+      if (Array.isArray(page.assets)) {
+        rawAssets = page.assets;
+      } else if (page.rgInventory && typeof page.rgInventory === 'object') {
+        var ikeys = Object.keys(page.rgInventory);
+        for (var ik = 0; ik < ikeys.length; ik++) {
+          rawAssets.push(page.rgInventory[ikeys[ik]]);
+        }
+      }
+
+      if (rawAssets.length > 0) {
+        var firstAid = getAssetIdentifier(rawAssets[0]);
+        var lastAid = getAssetIdentifier(rawAssets[rawAssets.length - 1]);
+        if (firstAid !== null && lastAid !== null) {
+          var fp = firstAid + ':' + lastAid + ':' + rawAssets.length;
+          if (seenPageFingerprints[fp]) {
+            duplicatePagesIgnored++;
+            continue;
+          }
+          seenPageFingerprints[fp] = true;
+        }
+      }
+
+      uniquePages.push(pages[p]);
+      lastPage = page;
+
       if (typeof page.total_inventory_count === 'number' && page.total_inventory_count > totalInventoryCount) {
         totalInventoryCount = page.total_inventory_count;
       }
@@ -391,16 +440,6 @@
         }
         if (!detectedAppId && desc.appid !== undefined && desc.appid !== null) {
           detectedAppId = String(desc.appid);
-        }
-      }
-
-      var rawAssets = [];
-      if (Array.isArray(page.assets)) {
-        rawAssets = page.assets;
-      } else if (page.rgInventory && typeof page.rgInventory === 'object') {
-        var ikeys = Object.keys(page.rgInventory);
-        for (var ik = 0; ik < ikeys.length; ik++) {
-          rawAssets.push(page.rgInventory[ikeys[ik]]);
         }
       }
 
@@ -436,7 +475,9 @@
       more_items: moreItems,
       last_assetid: lastAssetId,
       total_inventory_count: totalInventoryCount || mergedAssets.length,
-      page_count: pages.length,
+      page_count: pages.length - duplicatePagesIgnored,
+      duplicate_pages_ignored: duplicatePagesIgnored,
+      unique_pages: uniquePages,
       detected_appid: detectedAppId
     };
   }
@@ -813,6 +854,8 @@
         isEmoticonList: true,
         isEmptyArray: normalized.sawEmptyArray,
         page_count: 0,
+        duplicate_pages_ignored: 0,
+        card_set_count: 0,
         asset_count: normalized.emotes.length,
         total_inventory_count: normalized.emotes.length,
         more_items: false,
@@ -834,9 +877,10 @@
     var valued = buildItemValueItems(merged, targetAppId);
     var community = buildCommunitySummary(merged);
 
-    var slimPages = new Array(normalized.pages.length);
-    for (var sp = 0; sp < normalized.pages.length; sp++) {
-      slimPages[sp] = slimSteamPageForStorage(normalized.pages[sp]);
+    var uniquePages = merged.unique_pages || normalized.pages;
+    var slimPages = new Array(uniquePages.length);
+    for (var sp = 0; sp < uniquePages.length; sp++) {
+      slimPages[sp] = slimSteamPageForStorage(uniquePages[sp]);
     }
 
     return {
@@ -844,6 +888,8 @@
       isEmoticonList: false,
       isEmptyArray: false,
       page_count: merged.page_count,
+      duplicate_pages_ignored: merged.duplicate_pages_ignored || 0,
+      card_set_count: Object.keys(community.cards).length,
       asset_count: merged.assets.length,
       total_inventory_count: merged.total_inventory_count,
       more_items: merged.more_items,

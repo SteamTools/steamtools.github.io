@@ -261,14 +261,20 @@ test('Angular ng-app and ng-controller match main JS modules across all apps', (
 
 test('bookmarklet stays under 2 KB and supports standalone tabs and /inventory/ paths', () => {
   const { IMP } = createMockEnv();
-  const code = IMP.buildBookmarkletCode({ appid: '753', contextid: '6' });
-  const href = IMP.buildBookmarkletHref({ appid: '753', contextid: '6' });
-  assert.ok(href.startsWith('javascript:'), 'bookmarklet href must start with javascript:');
-  assert.ok(href.length < 2048, `Expected bookmarklet href < 2048 bytes, got ${href.length}`);
-  assert.ok(!code.includes('Launch from SteamTools Import first.'), 'bookmarklet should work in standalone tabs');
-  assert.ok(code.includes('navigator.clipboard.writeText') && code.includes('Blob('), 'standalone fallback must offer copy + save');
-  assert.ok(code.includes('pathname.split'), 'bookmarklet should extract SteamID64 from /profiles/ or /inventory/ paths');
-  new Function(code);
+  for (const opts of [
+    { appid: '753', contextid: '6' },
+    { appid: '730', contextid: '2', lockApp: false }
+  ]) {
+    const code = IMP.buildBookmarkletCode(opts);
+    const href = IMP.buildBookmarkletHref(opts);
+    assert.ok(href.startsWith('javascript:'), 'bookmarklet href must start with javascript:');
+    assert.ok(href.length < 2048, `Expected bookmarklet href < 2048 bytes (lockApp=${opts.lockApp}), got ${href.length}`);
+    assert.ok(!code.includes('Launch from SteamTools Import first.'), 'bookmarklet should work in standalone tabs');
+    assert.ok(code.includes('navigator.clipboard.writeText') && code.includes('Blob('), 'standalone fallback must offer copy + save');
+    assert.ok(code.includes('pathname.split'), 'bookmarklet should extract SteamID64 from /profiles/ or /inventory/ paths');
+    assert.ok(code.includes('50k cap'), 'bookmarklet should flag partial 25-page 50k cap');
+    new Function(code);
+  }
 });
 
 test('classifySteamIdPaste and attachSteamIdPasteGuard block JSON/oversized pastes without mutating input', () => {
@@ -431,4 +437,415 @@ test('Wave 2 unpackGalleryV3, unpackSetDataV2, unpackItemValueV2, shards manifes
   assert.strictEqual(origParsed.slim_pages[0].descriptions[0].actions, undefined);
   assert.deepStrictEqual(slimmedParsed.items, origParsed.items);
   assert.deepStrictEqual(slimmedParsed.emoticons, origParsed.emoticons);
+});
+
+test('import-worker gives actionable validation errors and deduplicates repeated pages', () => {
+  const { W } = createMockEnv();
+
+  assert.throws(() => W.parseInventoryPayload('null', { appid: '753' }), /Steam returned "null".*steamcommunity\.com/i);
+  assert.throws(() => W.parseInventoryPayload('<!DOCTYPE html><html><title>Sign In</title></html>', { appid: '753' }), /Sign-In web page/i);
+  assert.throws(() => W.parseInventoryPayload('<html><body><div>Inventory</div></body></html>', { appid: '753' }), /Steam web page \(HTML\)/i);
+  assert.throws(() => W.parseInventoryPayload('success: 1\nassets:\n  0:\n    assetid: "1"', { appid: '753' }), /Firefox.*Raw Data/i);
+
+  const page1 = {
+    success: 1,
+    total_inventory_count: 2,
+    more_items: 1,
+    last_assetid: '101',
+    assets: [{ assetid: '101', classid: 'c1', instanceid: '0', amount: '1' }],
+    descriptions: [{
+      appid: 753,
+      classid: 'c1',
+      instanceid: '0',
+      marketable: 1,
+      name: 'Alpha Card',
+      type: 'Trading Card',
+      market_hash_name: '440-Alpha Card',
+      tags: [
+        { category: 'item_class', internal_name: 'item_class_2', localized_tag_name: 'Trading Card' },
+        { category: 'Game', internal_name: 'app_440', localized_tag_name: 'TF2' },
+        { category: 'cardborder', internal_name: 'cardborder_0', localized_tag_name: 'Normal' }
+      ]
+    }]
+  };
+  const page2 = {
+    success: 1,
+    total_inventory_count: 2,
+    more_items: 0,
+    assets: [{ assetid: '102', classid: 'c2', instanceid: '0', amount: '1' }],
+    descriptions: [{
+      appid: 753,
+      classid: 'c2',
+      instanceid: '0',
+      marketable: 1,
+      name: 'Beta Card',
+      type: 'Trading Card',
+      market_hash_name: '570-Beta Card',
+      tags: [
+        { category: 'item_class', internal_name: 'item_class_2', localized_tag_name: 'Trading Card' },
+        { category: 'Game', internal_name: 'app_570', localized_tag_name: 'Dota 2' },
+        { category: 'cardborder', internal_name: 'cardborder_0', localized_tag_name: 'Normal' }
+      ]
+    }]
+  };
+
+  const duped = W.parseInventoryPayload([page1, page1], { appid: '753', mode: 'cards' });
+  assert.strictEqual(duped.page_count, 1);
+  assert.strictEqual(duped.duplicate_pages_ignored, 1);
+  assert.strictEqual(duped.asset_count, 1);
+  assert.strictEqual(duped.slim_pages.length, 1);
+  assert.strictEqual(duped.card_set_count, 1);
+
+  const distinct = W.parseInventoryPayload([page1, page2], { appid: '753', mode: 'cards' });
+  assert.strictEqual(distinct.page_count, 2);
+  assert.strictEqual(distinct.duplicate_pages_ignored, 0);
+  assert.strictEqual(distinct.asset_count, 2);
+  assert.strictEqual(distinct.card_set_count, 2);
+});
+
+function createMiniDomEnv() {
+  function StubClassList(el) {
+    this._el = el;
+    this._set = new Set();
+  }
+  StubClassList.prototype = {
+    _sync(str) {
+      this._set = new Set(String(str || '').trim().split(/\s+/).filter(Boolean));
+    },
+    add(...names) {
+      for (const n of names) if (n) this._set.add(n);
+      this._el._attrs.class = Array.from(this._set).join(' ');
+    },
+    remove(...names) {
+      for (const n of names) this._set.delete(n);
+      this._el._attrs.class = Array.from(this._set).join(' ');
+    },
+    contains(n) {
+      return this._set.has(n);
+    }
+  };
+
+  function StubElement(tag) {
+    this.tagName = String(tag || 'div').toUpperCase();
+    this.children = [];
+    this.parentNode = null;
+    this._attrs = Object.create(null);
+    this._listeners = Object.create(null);
+    this.style = {};
+    this.classList = new StubClassList(this);
+    this.hidden = false;
+    this.disabled = false;
+    this.open = false;
+    this.value = '';
+    this.returnValue = '';
+    this.files = [];
+    this.rows = 0;
+    this._text = '';
+  }
+  Object.defineProperty(StubElement.prototype, 'id', {
+    get() { return this._attrs.id || ''; },
+    set(v) { this._attrs.id = String(v); }
+  });
+  Object.defineProperty(StubElement.prototype, 'className', {
+    get() { return this._attrs.class || ''; },
+    set(v) {
+      this._attrs.class = String(v);
+      this.classList._sync(v);
+    }
+  });
+  Object.defineProperty(StubElement.prototype, 'href', {
+    get() { return this._attrs.href || ''; },
+    set(v) { this._attrs.href = String(v); }
+  });
+  Object.defineProperty(StubElement.prototype, 'textContent', {
+    get() { return this._text; },
+    set(v) { this._text = String(v === null || v === undefined ? '' : v); }
+  });
+  Object.defineProperty(StubElement.prototype, 'options', {
+    get() { return this.children.filter((c) => c.tagName === 'OPTION'); }
+  });
+  StubElement.prototype.appendChild = function (child) {
+    if (child.parentNode) {
+      const idx = child.parentNode.children.indexOf(child);
+      if (idx !== -1) child.parentNode.children.splice(idx, 1);
+    }
+    child.parentNode = this;
+    this.children.push(child);
+    return child;
+  };
+  StubElement.prototype.setAttribute = function (k, v) {
+    const lk = String(k).toLowerCase();
+    this._attrs[lk] = String(v);
+    if (lk === 'class') this.classList._sync(v);
+    if (lk === 'value') this.value = String(v);
+    if (lk === 'hidden') this.hidden = true;
+    if (lk === 'disabled') this.disabled = true;
+  };
+  StubElement.prototype.getAttribute = function (k) {
+    const lk = String(k).toLowerCase();
+    return Object.prototype.hasOwnProperty.call(this._attrs, lk) ? this._attrs[lk] : null;
+  };
+  StubElement.prototype.removeAttribute = function (k) {
+    const lk = String(k).toLowerCase();
+    delete this._attrs[lk];
+    if (lk === 'hidden') this.hidden = false;
+    if (lk === 'disabled') this.disabled = false;
+  };
+  StubElement.prototype.addEventListener = function (type, fn) {
+    if (!this._listeners[type]) this._listeners[type] = [];
+    this._listeners[type].push(fn);
+  };
+  StubElement.prototype.dispatchEvent = function (ev) {
+    ev.target = ev.target || this;
+    ev.preventDefault = ev.preventDefault || (() => { ev.defaultPrevented = true; });
+    const list = this._listeners[ev.type] || [];
+    for (const fn of list) fn.call(this, ev);
+  };
+  StubElement.prototype.click = function () {
+    this.dispatchEvent({ type: 'click', button: 0 });
+  };
+  StubElement.prototype.focus = function () {
+    doc.activeElement = this;
+  };
+  StubElement.prototype.showModal = function () {
+    this.open = true;
+  };
+  StubElement.prototype.close = function (rv) {
+    if (rv !== undefined) this.returnValue = String(rv);
+    this.open = false;
+    this.dispatchEvent({ type: 'close' });
+  };
+  StubElement.prototype.querySelectorAll = function (sel) {
+    const out = [];
+    const wantId = sel.startsWith('#') ? sel.slice(1) : null;
+    const wantClass = sel.startsWith('.') ? sel.slice(1) : null;
+    (function walk(node) {
+      for (const ch of node.children) {
+        if ((wantId && ch.id === wantId) || (wantClass && ch.classList.contains(wantClass))) {
+          out.push(ch);
+        }
+        walk(ch);
+      }
+    })(this);
+    return out;
+  };
+  StubElement.prototype.querySelector = function (sel) {
+    return this.querySelectorAll(sel)[0] || null;
+  };
+  Object.defineProperty(StubElement.prototype, 'innerHTML', {
+    get() { return ''; },
+    set(html) {
+      this.children = [];
+      const stack = [this];
+      const tagRe = /<\/?([A-Za-z0-9-]+)([^>]*)>/g;
+      const voidTags = new Set(['input', 'br', 'hr', 'img', 'meta', 'link']);
+      let m;
+      while ((m = tagRe.exec(String(html))) !== null) {
+        const full = m[0];
+        const tag = m[1].toLowerCase();
+        const attrText = m[2] || '';
+        if (full.startsWith('</')) {
+          if (stack.length > 1 && stack[stack.length - 1].tagName.toLowerCase() === tag) {
+            stack.pop();
+          }
+          continue;
+        }
+        const el = new StubElement(tag);
+        const attrRe = /([A-Za-z0-9:-]+)(?:=(?:"([^"]*)"|'([^']*)'|([^\s/>]+)))?/g;
+        let am;
+        while ((am = attrRe.exec(attrText)) !== null) {
+          el.setAttribute(am[1], am[2] ?? am[3] ?? am[4] ?? '');
+        }
+        stack[stack.length - 1].appendChild(el);
+        if (!voidTags.has(tag) && !full.endsWith('/>')) {
+          stack.push(el);
+        }
+      }
+    }
+  });
+
+  const body = new StubElement('body');
+  const winListeners = Object.create(null);
+  const openedUrls = [];
+  const doc = {
+    cookie: '',
+    body,
+    activeElement: null,
+    createElement: (t) => new StubElement(t),
+    addEventListener: () => {}
+  };
+  const base = createMockEnv();
+  global.document = doc;
+  global.HTMLDialogElement = function () {};
+  global.open = (url) => {
+    openedUrls.push(String(url));
+    return { closed: false, document: { body: { style: {} } }, location: {}, close: () => {} };
+  };
+  let coarsePointer = false;
+  global.matchMedia = () => ({ matches: coarsePointer });
+  global.addEventListener = (type, fn) => {
+    if (!winListeners[type]) winListeners[type] = [];
+    winListeners[type].push(fn);
+  };
+  Object.defineProperty(global, 'navigator', {
+    value: {
+      userAgent: 'Mozilla/5.0',
+      clipboard: { writeText: () => Promise.resolve() }
+    },
+    configurable: true
+  });
+  delete require.cache[require.resolve('../js/steamtools-import.js')];
+  const IMP = require('../js/steamtools-import.js');
+  return {
+    ...base,
+    IMP,
+    doc,
+    openedUrls,
+    setCoarsePointer: (v) => { coarsePointer = Boolean(v); },
+    getDialog: () => doc.body.querySelector('#st-import-dialog')
+  };
+}
+
+test('openImportDialog Option B: zero-ID emotes, allowEmptyEmotes, deterministic raw link, multi-page append after restore, and method memory', async () => {
+  const env = createMiniDomEnv();
+  const { IMP, doc, openedUrls, lStore } = env;
+
+  // 1. Emotes mode: 0-ID EmoticonList fast path + allowEmptyEmotes enabling Apply on []
+  let importedResult = null;
+  IMP.openImportDialog({
+    mode: 'emotes',
+    appid: '753',
+    contextid: '6',
+    allowEmptyEmotes: true,
+    onImport: (res) => { importedResult = res; }
+  });
+  const dlg = env.getDialog();
+  assert.ok(dlg && dlg.open, 'dialog should open');
+  assert.strictEqual(dlg.querySelector('#st-emote-fast-section').hidden, false);
+  assert.strictEqual(dlg.querySelector('#st-paste-step-num').textContent, '2');
+  assert.strictEqual(doc.activeElement.id, 'st-open-emotelist-btn');
+
+  dlg.querySelector('#st-open-emotelist-btn').click();
+  assert.strictEqual(openedUrls[openedUrls.length - 1], 'https://steamcommunity.com/actions/EmoticonList');
+
+  dlg.dispatchEvent({
+    type: 'paste',
+    target: dlg,
+    clipboardData: { getData: () => '[]' }
+  });
+  await new Promise((r) => setTimeout(r, 10));
+  const applyBtn = dlg.querySelector('#st-apply-btn');
+  assert.strictEqual(applyBtn.disabled, false);
+  assert.strictEqual(applyBtn.textContent, 'Load 6 Default Steam Emotes');
+  applyBtn.click();
+  assert.ok(importedResult && importedResult.isEmptyArray);
+  assert.strictEqual(dlg.returnValue, '', 'dialog close listener must reset returnValue');
+
+  // 2. Backgrounds mode: deterministic Raw JSON button & accessible aria-invalid/describedby
+  IMP.openImportDialog({ mode: 'backgrounds', appid: '753', contextid: '6' });
+  const sidInput = dlg.querySelector('#st-import-steamid');
+  const rawBtn = dlg.querySelector('#st-open-steam-inv-btn');
+  assert.strictEqual(sidInput.getAttribute('aria-invalid'), 'false');
+  assert.ok(!(sidInput.getAttribute('aria-describedby') || '').includes('st-import-steamid-err'));
+  assert.strictEqual(rawBtn.disabled, true, 'Raw JSON button must stay disabled when SteamID is empty');
+
+  sidInput.value = '76561197976086060';
+  sidInput.dispatchEvent({ type: 'input' });
+  assert.strictEqual(rawBtn.disabled, false);
+  assert.strictEqual(dlg.querySelector('#st-resolved-chip').hidden, false);
+  rawBtn.click();
+  assert.strictEqual(
+    openedUrls[openedUrls.length - 1],
+    'https://steamcommunity.com/inventory/76561197976086060/753/6?l=english&count=2000'
+  );
+
+  // Wrong app (CS2 730) should block Backgrounds Apply
+  dlg.dispatchEvent({
+    type: 'paste',
+    target: dlg,
+    clipboardData: {
+      getData: () => JSON.stringify({
+        success: 1,
+        assets: [{ assetid: '1', classid: 'c1', instanceid: '0', amount: '1', appid: 730 }],
+        descriptions: [{ appid: 730, classid: 'c1', instanceid: '0', name: 'AK-47', market_hash_name: 'AK-47', marketable: 1 }]
+      })
+    }
+  });
+  await new Promise((r) => setTimeout(r, 10));
+  assert.strictEqual(applyBtn.disabled, true);
+  dlg.close('cancel');
+
+  // 3. Restored multi-page session MUST append Page 2 rather than overwriting Page 1, and pass steamid64 back
+  const sid = '76561197976086060';
+  const scopeKey = 'cards:753:6:' + sid;
+  const page1 = {
+    success: 1,
+    total_inventory_count: 2,
+    more_items: 1,
+    last_assetid: '101',
+    assets: [{ assetid: '101', classid: 'c1', instanceid: '0', amount: '1' }],
+    descriptions: [{
+      appid: 753, classid: 'c1', instanceid: '0', marketable: 1, name: 'Card 1', type: 'Trading Card',
+      market_hash_name: '440-Card 1',
+      tags: [
+        { category: 'item_class', internal_name: 'item_class_2', localized_tag_name: 'Trading Card' },
+        { category: 'Game', internal_name: 'app_440', localized_tag_name: 'TF2' },
+        { category: 'cardborder', internal_name: 'cardborder_0', localized_tag_name: 'Normal' }
+      ]
+    }]
+  };
+  const page2 = {
+    success: 1,
+    total_inventory_count: 2,
+    more_items: 0,
+    assets: [{ assetid: '102', classid: 'c2', instanceid: '0', amount: '1' }],
+    descriptions: [{
+      appid: 753, classid: 'c2', instanceid: '0', marketable: 1, name: 'Card 2', type: 'Trading Card',
+      market_hash_name: '570-Card 2',
+      tags: [
+        { category: 'item_class', internal_name: 'item_class_2', localized_tag_name: 'Trading Card' },
+        { category: 'Game', internal_name: 'app_570', localized_tag_name: 'Dota 2' },
+        { category: 'cardborder', internal_name: 'cardborder_0', localized_tag_name: 'Normal' }
+      ]
+    }]
+  };
+  await IMP.saveImportSession({ scopeKey, rawPages: [page1], steamId: sid, updatedAt: Date.now() });
+
+  let multiResult = null;
+  IMP.openImportDialog({
+    mode: 'cards',
+    appid: '753',
+    contextid: '6',
+    steamId: sid,
+    onImport: (res) => { multiResult = res; }
+  });
+  await new Promise((r) => setTimeout(r, 20));
+  assert.strictEqual(dlg.querySelector('#st-wizard-next-btn').disabled, false);
+
+  dlg.dispatchEvent({
+    type: 'paste',
+    target: dlg,
+    clipboardData: { getData: () => JSON.stringify(page2) }
+  });
+  await new Promise((r) => setTimeout(r, 20));
+  applyBtn.click();
+  assert.strictEqual(multiResult.page_count, 2, 'Page 2 must append to restored Page 1 instead of overwriting');
+  assert.strictEqual(multiResult.asset_count, 2);
+  assert.strictEqual(multiResult.steamid64, sid);
+
+  // 4. Method memory & copy-button rule: copy never disables button; bookmarklet remembered on desktop, paste on mobile
+  lStore.set('st_import_method', 'bookmarklet');
+  env.setCoarsePointer(false);
+  IMP.openImportDialog({ mode: 'itemvalue', appid: '730', lockApp: false });
+  assert.strictEqual(dlg.querySelector('#st-tab-bookmarklet').getAttribute('aria-selected'), 'true');
+  const copyBmBtn = dlg.querySelector('#st-copy-bm-btn');
+  copyBmBtn.click();
+  await new Promise((r) => setTimeout(r, 10));
+  assert.strictEqual(copyBmBtn.disabled, false, 'copy button must never disable while showing feedback');
+  dlg.close('cancel');
+
+  env.setCoarsePointer(true);
+  IMP.openImportDialog({ mode: 'itemvalue', appid: '730', lockApp: false });
+  assert.strictEqual(dlg.querySelector('#st-tab-paste').getAttribute('aria-selected'), 'true');
+  dlg.close('cancel');
 });

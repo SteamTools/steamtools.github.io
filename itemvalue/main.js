@@ -363,15 +363,19 @@ angular.module('valueApp', ['ui.bootstrap'])
 		window.SteamToolsImport.openImportDialog({
 			mode: 'itemvalue',
 			appid: $scope.appid.model,
+			lockApp: false,
 			steamId: idHint,
 			initialJson: typeof initialJson === 'string' ? initialJson : undefined,
 			title: 'Import Inventory for ' + ($scope.typeMap[$scope.appid.model] || 'Steam'),
-			subtitle: 'Zero captcha & zero server rate limits — prices come directly from SteamTools CDN.',
+			subtitle: 'Load and price your Steam items locally in your browser — no captchas or rate limits.',
 			onImport: function(parsed) {
 				var targetApp = $scope.apps.indexOf(parsed.detected_appid) !== -1
 					? parsed.detected_appid
 					: $scope.appid.model;
 				$scope.$applyAsync(function() {
+					if (parsed && parsed.steamid64 && !String($scope.UserID || '').trim()) {
+						$scope.UserID = parsed.steamid64;
+					}
 					$scope.appid.model = targetApp;
 					$scope.isLoading = true;
 					$scope.showImportCta = false;
@@ -384,11 +388,7 @@ angular.module('valueApp', ['ui.bootstrap'])
 						$scope.$applyAsync(function() {
 							$scope.isLoading = false;
 							var msg = "Imported " + valued.items.length + " unique market item(s) across " +
-								parsed.page_count + " page(s)";
-							if (valued.usedBucketFallback) {
-								msg += " (using fallback value/" + targetApp + ".json)";
-							}
-							msg += ".";
+								parsed.page_count + " page(s).";
 							renderValuedItems(valued.items, targetApp, { statusMessage: msg });
 						});
 					})

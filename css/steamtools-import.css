@@ -67,11 +67,39 @@ dialog.st-import-dialog::backdrop {
   border-radius: 8px 8px 0 0;
 }
 
+.st-import-title-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
 .st-import-title {
   margin: 0;
   font-size: 17px;
   font-weight: 600;
   color: #ffffff;
+}
+
+.st-import-dialog select.st-app-select {
+  appearance: auto;
+  height: 30px;
+  width: auto;
+  margin: 0;
+  padding: 3px 8px;
+  background-color: #161b21;
+  color: #edf2f7;
+  border: 1px solid #495462;
+  border-radius: 5px;
+  font-size: 12.5px;
+  line-height: 1.3;
+  cursor: pointer;
+}
+
+.st-import-dialog select.st-app-select:focus-visible {
+  outline: 2px solid #6ea8fe;
+  outline-offset: 1px;
 }
 
 .st-import-close {
@@ -527,4 +555,303 @@ dialog.st-import-dialog::backdrop {
 
 .st-url-link:hover {
   color: #a6d5ff !important;
+}
+
+/* Option B Guided Stepper, Chips, Smart Drop Card, Progress & Bookmarklet Polish */
+.st-step-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.st-step-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.st-step-paste {
+  margin-top: 12px;
+}
+
+.st-step-num {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: #23384d;
+  border: 1px solid #3f6d99;
+  color: #cfe6ff;
+  font-size: 12.5px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+
+.st-step-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.st-step-title {
+  font-weight: 600;
+  font-size: 13.5px;
+  color: #f4f7fa;
+  line-height: 1.35;
+}
+
+.st-step-title label {
+  margin: 0;
+  font-weight: 600;
+  font-size: 13.5px;
+  color: #f4f7fa;
+  cursor: pointer;
+}
+
+.st-step-status {
+  font-size: 12px;
+  color: #a9b5c2;
+}
+
+.st-import-dialog input.st-steamid-input {
+  max-width: 340px;
+  flex: 1 1 230px;
+}
+
+.st-resolved-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #172f20;
+  border: 1px solid #388150;
+  color: #b7f5cb;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: Consolas, "Liberation Mono", Menlo, monospace;
+}
+
+.st-import-dialog .st-link-btn {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  color: #7cc0ff;
+  font: inherit;
+  font-size: inherit;
+  font-weight: 500;
+  text-decoration: underline;
+  cursor: pointer;
+  display: inline;
+  text-align: left;
+}
+
+.st-import-dialog .st-link-btn:hover,
+.st-import-dialog .st-link-btn:focus-visible {
+  color: #b8dcff;
+}
+
+.st-import-dialog .st-link-btn:focus-visible {
+  outline: 2px solid #6ea8fe;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.st-import-dialog code {
+  background: #11161c;
+  border: 1px solid #313a45;
+  border-radius: 3px;
+  padding: 1px 5px;
+  color: #dbe7f3;
+  font-size: 11.5px;
+}
+
+.st-smart-dropcard {
+  border: 2px dashed #445364;
+  border-radius: 7px;
+  padding: 14px;
+  background: #161b21;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.st-smart-dropcard.is-dragover {
+  border-color: #5ca8ff;
+  background: #182534;
+}
+
+.st-smart-dropcard-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.st-smart-dropcard label.st-btn {
+  margin: 0;
+}
+
+.st-import-dialog input[type="file"]:focus-visible + label.st-btn {
+  outline: 2px solid #6ea8fe;
+  outline-offset: 2px;
+}
+
+.st-drop-subhint {
+  max-width: 460px;
+}
+
+.st-manual-details,
+.st-alt-source-details,
+.st-bm-fallback {
+  margin-top: 4px;
+}
+
+.st-alt-source-details {
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: #171c22;
+  border: 1px solid #303944;
+}
+
+.st-alt-source-slot {
+  margin-top: 10px;
+}
+
+.st-manual-details > summary,
+.st-alt-source-details > summary,
+.st-bm-fallback > summary {
+  cursor: pointer;
+  color: #93c5fd;
+  font-size: 12.5px;
+  font-weight: 500;
+  user-select: none;
+}
+
+.st-manual-details > summary:focus-visible,
+.st-alt-source-details > summary:focus-visible,
+.st-bm-fallback > summary:focus-visible {
+  outline: 2px solid #6ea8fe;
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+.st-manual-details .st-field-group {
+  margin-top: 8px;
+}
+
+.st-wizard-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.st-wizard-pct {
+  font-size: 12px;
+  font-weight: 600;
+  color: #93c5fd;
+  white-space: nowrap;
+}
+
+.st-progress-track {
+  width: 100%;
+  height: 7px;
+  border-radius: 999px;
+  background: #12171d;
+  border: 1px solid #2e4055;
+  overflow: hidden;
+}
+
+.st-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #2563eb, #38bdf8);
+  transition: width 0.2s ease;
+}
+
+.st-wizard-actions {
+  margin-top: 2px;
+  justify-content: space-between;
+}
+
+.st-listen-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 5px;
+  background: #16261d;
+  border: 1px solid #2e5d3e;
+  color: #bcefd0;
+  font-size: 12.5px;
+}
+
+.st-listen-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.22);
+}
+
+.st-bm-steps {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  color: #dbe4ee;
+}
+
+.st-bm-steps li {
+  line-height: 1.5;
+}
+
+.st-bm-copy-row {
+  padding-top: 2px;
+}
+
+.st-import-dialog textarea.st-bookmarklet-readonly {
+  min-height: 78px;
+  margin-top: 6px;
+  color: #cbd5e1;
+  background-color: #101419;
+}
+
+@media (max-width: 560px) {
+  .st-import-header,
+  .st-import-body,
+  .st-import-footer {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .st-import-dialog .st-steamid-input {
+    max-width: none;
+    flex-basis: 100%;
+  }
+
+  .st-step-row {
+    gap: 8px;
+  }
+
+  .st-wizard-actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }

@@ -15,8 +15,8 @@
 	<link rel="shortcut icon" href="/favicon.ico">
 	<link href="bootstrap-2.1.0.min.css" rel="stylesheet">
 	<link href="hotkeys.min.css" rel="stylesheet">
-	<link rel="stylesheet" href="style.css?v=20261118a">
-	<link rel="stylesheet" href="../css/steamtools-import.css?v=20261118a">
+	<link rel="stylesheet" href="style.css?v=20261118b">
+	<link rel="stylesheet" href="../css/steamtools-import.css?v=20261118b">
 </head>
 <body ng-controller="mosaticonCtrl" ng-cloak>
 	<a class="corner topbutton" style="left: 25px;" href="../">&laquo; Hub</a>
@@ -33,14 +33,17 @@
 			<form id="addinput" class="mos-form-row form-horizontal" ng-submit="loadEmoticons()">
 				<div class="input-prepend input-append" style="margin-bottom:0;">
 					<label for="mos-userid" class="add-on" style="display:inline-block;margin-bottom:0;">SteamID</label>
-					<input id="mos-userid" style="width: 155px" maxlength="256" type="text" ng-model="UserID" placeholder="SteamID, URL, :emote:, or blank" autocorrect="off" autocapitalize="none" spellcheck="false">
+					<input id="mos-userid" style="width: 155px" maxlength="256" type="text" ng-model="UserID" placeholder="SteamID, custom URL, or :emote:" autocorrect="off" autocapitalize="none" spellcheck="false">
 					<button class="btn btn-inverse" type="submit">Load Emotes</button>
 				</div>
-				<button class="btn" type="button" ng-click="loadInventory()" title="Instant Local Import (works for private/large inventories & saves API quota)">Import…</button>
+				<button class="btn" type="button" ng-click="loadInventory()" title="Instant Local Import (works for private/large inventories & saves API quota)">Import Emotes…</button>
 			</form>
 			<div class="emotebox" ng-right-click="">
 				<span id="error" role="status" aria-live="polite" aria-atomic="true">{{status}}</span>
 				<div id="help"></div>
+				<div ng-show="showImportCta" style="margin: 6px 0;">
+					<button type="button" class="btn btn-small btn-primary" ng-click="loadInventory()">Import Emotes from Steam</button>
+				</div>
 				<span style="color: white" ng-if="!status">{{emoticons.length}} emoticon(s) loaded<br></span>
 				<div ng-show="emoticons.length > 0 && !status">
 					<span style="color: #999">(left click to select / right click to disable)</span>
@@ -113,7 +116,7 @@
 		</div>
 		<div id="preview" ng-show="processedEmotes && emoticons.length > 0">
 			<div>
-				<button class="btn btn-inverse action-btn" ng-click="importMenu()">Import</button>
+				<button class="btn btn-inverse action-btn" ng-click="importMenu()" title="Import mosaic text">Import</button>
 				<button class="btn btn-inverse action-btn" ng-click="exportMosaic()">Export</button>
 			</div>
 			<div ng-show="imageLoaded" style="margin-top: 4px;">
@@ -192,11 +195,11 @@
 	<script src="hotkeys.min.js"></script>
 	<script src="ui-bootstrap-tpls-0.12.0.min.js"></script>
 	<script src="kdTree.min.js"></script>
-	<script src="colors.js?v=20261118a"></script>
-	<script src="../js/steamtools-config.js?v=20261118a"></script>
-	<script src="../js/import-worker.js?v=20261118a"></script>
-	<script src="../js/steamtools-import.js?v=20261118a"></script>
-	<script src="main.js?v=20261118a"></script>
+	<script src="colors.js?v=20261118b"></script>
+	<script src="../js/steamtools-config.js?v=20261118b"></script>
+	<script src="../js/import-worker.js?v=20261118b"></script>
+	<script src="../js/steamtools-import.js?v=20261118b"></script>
+	<script src="main.js?v=20261118b"></script>
 
 	<!-- Start of StatCounter Code for Default Guide -->
 	<script>

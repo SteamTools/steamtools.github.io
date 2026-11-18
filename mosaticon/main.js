@@ -360,19 +360,30 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 		e.hue = vecs.hue;
 	}
 
+	$scope.showImportCta = false;
+
 	$scope.loadInventory = function(initialJson) {
 		if (!window.SteamToolsImport) return;
-		var idHint = String($scope.UserID || '').trim();
+		var rawId = String($scope.UserID || '').trim();
+		var storedUser = window.localStorage && window.localStorage.lastUser ? String(window.localStorage.lastUser).trim() : '';
+		var idHint = (rawId && rawId.charAt(0) !== ':')
+			? rawId
+			: ((storedUser && storedUser.charAt(0) !== ':') ? storedUser : '');
 		window.SteamToolsImport.openImportDialog({
 			mode: 'emotes',
 			appid: '753',
 			contextid: '6',
 			steamId: idHint,
+			allowEmptyEmotes: true,
 			initialJson: typeof initialJson === 'string' ? initialJson : undefined,
-			title: 'Load Owned Emoticons',
-			subtitle: 'Paste EmoticonList JSON (even []), or paste/drop/bookmarklet-sync your 753/6 Steam inventory JSON.',
+			title: 'Import Owned Emoticons',
+			subtitle: 'Load your Steam emoticons locally in two quick steps (or load the 6 default Steam emotes).',
 			onImport: function(parsed) {
 				$scope.$applyAsync(function() {
+					$scope.showImportCta = false;
+					if (parsed && parsed.steamid64 && (!rawId || rawId.charAt(0) === ':')) {
+						$scope.UserID = parsed.steamid64;
+					}
 					var DEFAULT_EMOTES = [
 						'steambored',
 						'steamfacepalm',
@@ -412,7 +423,8 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 			},
 			onOversizedPaste: function() {
 				$scope.$applyAsync(function() {
-					$scope.status = "Pasted text is too long for a SteamID — click Import… to paste JSON.";
+					$scope.status = 'Pasted text is too long for a SteamID — click "Import Emotes…" to import JSON.';
+					$scope.showImportCta = true;
 				});
 			}
 		});
@@ -424,6 +436,7 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 	$scope.toProcess = 0;
 
 	$scope.loadEmoticons = function(){
+		$scope.showImportCta = false;
 		var u = ($scope.UserID || '').trim();
 		if (u.charAt(0) === ":" && u.slice(-1) === ":" && u.length > 2) {
 			var cleanName = window.SteamToolsImport && window.SteamToolsImport.sanitizeEmoteName
@@ -443,7 +456,8 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 				$scope.getEmoticonColor(emote, catalog, activeGen);
 			});
 		} else if (!u) {
-			$scope.loadInventory();
+			$scope.status = 'Enter a SteamID / custom URL, or click "Import Emotes…" to import from Steam.';
+			$scope.showImportCta = true;
 		} else {
 			$scope.status = "Loading emoticons...";
 			var emotePath = '/FetchEmotes?id=' + encodeURIComponent(u);
@@ -460,11 +474,11 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 					}
 					var reason = (data && data.reason) || "Could not load emoticons.";
 					if (data && (data.error === 'private_or_unavailable' || data.error === 'rate_limited')) {
-						$scope.status = reason + " Use the Import dialog to load directly.";
-						$scope.loadInventory();
+						$scope.status = reason + ' Click "Import Emotes from Steam" below to load directly.';
+						$scope.showImportCta = true;
 					} else {
 						$scope.status = reason + (data && data.help === 2
-							? " Try your Steam custom URL or full profile link, or leave blank to import JSON."
+							? ' Try your Steam custom URL or full profile link, or click "Import Emotes…" instead.'
 							: "");
 					}
 				});
@@ -473,11 +487,11 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 					var d = errResp && errResp.data;
 					var reason = (d && d.reason) || "Could not load emoticons.";
 					if (errResp && (errResp.status === 403 || errResp.status === 429 || errResp.status === 503)) {
-						$scope.status = reason + " Use the Import dialog to load directly.";
-						$scope.loadInventory();
+						$scope.status = reason + ' Click "Import Emotes from Steam" below to load directly.';
+						$scope.showImportCta = true;
 					} else {
 						$scope.status = reason + (d && d.help === 2
-							? " Try your Steam custom URL or full profile link, or leave blank to import JSON."
+							? ' Try your Steam custom URL or full profile link, or click "Import Emotes…" instead.'
 							: "");
 					}
 				});
@@ -486,6 +500,7 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 	};
 
 	$scope.loadEmotes = function(emotes, inlineColors) {
+		$scope.showImportCta = false;
 		var gen = ++loadGeneration;
 		var seen = Object.create(null);
 		var cleanEmotes = [];

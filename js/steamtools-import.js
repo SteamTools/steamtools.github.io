@@ -194,23 +194,23 @@
     var appid = String(opts.appid || '753').replace(/[^\d]/g, '') || '753';
     var contextid = String(opts.contextid || cfg.getContextId(appid)).replace(/[^\d]/g, '') || '6';
     var unlockCode = opts.lockApp === false
-      ? "if(+p[3])A=p[3],C=p[4]||2;else{let h=L.hash.slice(1).split('_');+h[0]&&(A=h[0],C=h[1]||(A==753?6:A==322330?1:2));}"
+      ? "+p[3]?(A=p[3],C=p[4]||2):(h=parseInt(L.hash.slice(1)))&&(A=h,C=A==753?6:A==322330?1:2);"
       : "";
     var qOrigin = "'" + origin + "'";
     var qApp = "'" + appid + "'";
     var qCtx = "'" + contextid + "'";
 
     return (
-      "(async()=>{let O=" + qOrigin + ",A=" + qApp + ",C=" + qCtx + ",S=window,d=document,D=S.opener,P=[],T='',M=1,N=0,L=S.location,X=u=>fetch(u,{credentials:'include'}),E=t=>d.createElement(t),b=S._st||(S._st=E('div')),z='textContent',U=t=>b[z]='SteamTools:'+t,W=m=>new Promise(r=>setTimeout(r,m)),Q=/^\\d{17}$/,g=S.g_rgProfileData;" +
-      "if(L.origin!=='https://steamcommunity.com')return alert('Open Steam first');" +
+      "(async()=>{let O=" + qOrigin + ",A=" + qApp + ",C=" + qCtx + ",S=window,d=document,D=S.opener,P=[],T='',N=0,L=S.location,X=u=>fetch(u,{credentials:'include'}),E=t=>d.createElement(t),b=S._st||(S._st=E('div')),z='textContent',U=t=>b[z]='SteamTools:'+t,W=m=>new Promise(r=>setTimeout(r,m)),Q=/^\\d{17}$/,h;" +
+      "if(L.host!=='steamcommunity.com')return alert('Open Steam first');" +
       "let p=L.pathname.split('/');" +
       unlockCode +
-      "let I=(Q.test(p[2])?p[2]:'')||(g&&g.steamid)||S.g_steamID||'';" +
-      "b.style='position:fixed;top:8px;right:8px;z-index:9999;background:#111;color:#fff;padding:8px';(d.body||d.documentElement).append(b);" +
-      "try{if(!I)I=((await(await X('/my/?xml=1')).text()).split('<steamID64>')[1]||'').slice(0,17);if(!Q.test(I))return U('Sign in first');let R=0,e='';" +
-      "try{while(M&&N<25){U('p'+(P.length+1));let r=await X('/inventory/'+I+'/'+A+'/'+C+'?l=english&count=2000'+(T?'&start_assetid='+encodeURIComponent(T):''));if(r.status===429&&!R){R=1;await W(2500);continue;}R=0;if(!r.ok)throw Error(r.status);let j=await r.json();if(!j||j.success<1)throw Error(j&&j.error||'Private');N++;P.push(j);M=j.more_items&&j.last_assetid;T=M||'';M&&await W(600);}}catch(x){if(!P.length)return U(x.message);e=x.message;}" +
-      "if(e)e+=' ';if(D&&!D.closed)try{D.postMessage({type:'STEAMTOOLS_INVENTORY_IMPORT',appid:A,contextid:C,steamid:I,pages:P,partial:!!e,error:e},O);U(e+'Sent '+P.length+'p');return setTimeout(()=>b.remove(),4e3);}catch(x){}" +
-      "let J=JSON.stringify(P[1]?P:P[0]),c=E('button'),a=E('a');U(e+P.length+'p ');c[z]='Copy';c.onclick=()=>navigator.clipboard.writeText(J).then(()=>c[z]='Copied');a[z]=' Save .json';a.style='color:#7cf';a.href=URL.createObjectURL(new Blob([J]));a.download='inv-'+A+'.json';b.append(c,a);" +
+      "let I=(Q.test(p[2])?p[2]:'')||S.g_rgProfileData?.steamid||S.g_steamID||'';" +
+      "b.style='position:fixed;top:0;right:0;z-index:9999;background:#111;color:#fff;padding:8px';(d.body||d.documentElement).append(b);" +
+      "try{if(!I)I=((await(await X('/my/?xml=1')).text()).split('D64>')[1]||'').slice(0,17);if(!Q.test(I))return U('Sign in first');let R=0,e='';" +
+      "try{for(;N<25;){U('p'+(N+1));let r=await X('/inventory/'+I+'/'+A+'/'+C+'?l=english&count=2000'+(T?'&start_assetid='+T:''));if(r.status===429&&!R){R=1;await W(2500);continue;}R=0;if(!r.ok)throw Error(r.status);let j=await r.json();if(!j||j.success<1)throw Error(j?.error||'Private');N++;P.push(j);T=j.more_items&&j.last_assetid||'';if(!T)break;if(N<25)await W(600);}if(T&&!e)e='50k cap';}catch(x){if(!P.length)return U(x.message);e=x.message;}" +
+      "if(e)e+=' ';if(D&&!D.closed)try{D.postMessage({type:'STEAMTOOLS_INVENTORY_IMPORT',appid:A,contextid:C,steamid:I,pages:P,partial:!!e,error:e},O);U(e+'Sent '+P.length+'p; open SteamTools');return setTimeout(()=>b.remove(),4e3);}catch(x){}" +
+      "let J=JSON.stringify(P[1]?P:P[0]),c=E('button'),a=E('a');U(e+P.length+'p ');c[z]='Copy';c.onclick=()=>navigator.clipboard.writeText(J).then(()=>c[z]='Copied');a[z]=' Save';a.style='color:#7cf';a.href=URL.createObjectURL(new Blob([J]));a.download=A+'.json';b.append(c,a);" +
       "}catch(x){U(x.message);}})();"
     );
   }
@@ -591,84 +591,207 @@
 
   // ---- Shared Accessible <dialog> UI Controller ----
   var DEFAULT_STEAMID_HINT = 'Accepts a 17-digit SteamID64, custom URL name (e.g. ehsankia), or steamcommunity.com profile URL.';
+  var METHOD_STORAGE_KEY = 'st_import_method';
   var _dialogInstance = null;
+
+  function getAppDisplayName(appid) {
+    var k = String(appid || '753');
+    var cfg = getConfig();
+    var top = Array.isArray(cfg.TOP_6_APPS) ? cfg.TOP_6_APPS : [];
+    for (var i = 0; i < top.length; i++) {
+      if (String(top[i].appid) === k) return top[i].name;
+    }
+    var map = {
+      '753': 'Steam',
+      '730': 'Counter-Strike 2',
+      '440': 'Team Fortress 2',
+      '570': 'Dota 2',
+      '252490': 'Rust',
+      '322330': "Don't Starve Together"
+    };
+    return map[k] || ('App ' + k);
+  }
+
+  function getShortAppName(appid) {
+    var k = String(appid || '753');
+    var shortMap = {
+      '753': 'Steam',
+      '730': 'CS2',
+      '440': 'TF2',
+      '570': 'Dota 2',
+      '252490': 'Rust',
+      '322330': 'DST'
+    };
+    return shortMap[k] || getAppDisplayName(k);
+  }
+
+  function safeStorageGet(key) {
+    try {
+      return root && root.localStorage ? root.localStorage.getItem(key) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function safeStorageSet(key, val) {
+    try {
+      if (root && root.localStorage) {
+        root.localStorage.setItem(key, String(val));
+      }
+    } catch (e) {
+      // Ignore storage quota/privacy restrictions
+    }
+  }
 
   function ensureDialogDom() {
     if (_dialogInstance) return _dialogInstance;
     var doc = root.document;
 
     var dlg = doc.createElement('dialog');
+    dlg.id = 'st-import-dialog';
     dlg.className = 'st-import-dialog';
     dlg.setAttribute('closedby', 'any');
     dlg.setAttribute('aria-labelledby', 'st-import-title');
 
+    var appOptionsHtml = '';
+    var topApps = getConfig().TOP_6_APPS || [
+      { appid: '753', name: 'Steam' },
+      { appid: '730', name: 'Counter-Strike 2' },
+      { appid: '440', name: 'Team Fortress 2' },
+      { appid: '570', name: 'Dota 2' },
+      { appid: '252490', name: 'Rust' },
+      { appid: '322330', name: "Don't Starve Together" }
+    ];
+    for (var ai = 0; ai < topApps.length; ai++) {
+      appOptionsHtml += '<option value="' + String(topApps[ai].appid) + '">' + String(topApps[ai].name) + '</option>';
+    }
+
     dlg.innerHTML = [
       '<div class="st-import-header">',
-      '  <h2 class="st-import-title" id="st-import-title">Import Steam Inventory</h2>',
+      '  <div class="st-import-title-wrap">',
+      '    <h2 class="st-import-title" id="st-import-title">Import Steam Inventory</h2>',
+      '    <select id="st-import-app-select" class="st-app-select" aria-label="Select game inventory" hidden>' + appOptionsHtml + '</select>',
+      '  </div>',
       '  <button type="button" class="st-import-close" id="st-import-close-btn" aria-label="Close import dialog">&times;</button>',
       '</div>',
       '<div class="st-import-body">',
-      '  <p class="st-import-subtitle" id="st-import-subtitle">Bypass rate limits cleanly without captchas by importing directly from your browser session.</p>',
-      '  <div class="st-field-group">',
-      '    <label class="st-label" for="st-import-steamid">SteamID64, Custom URL, or Profile Link (optional)</label>',
-      '    <div class="st-field-row">',
-      '      <input type="text" id="st-import-steamid" class="st-input" maxlength="256" style="max-width:300px" placeholder="7656119..., custom URL, or profile link" autocorrect="off" autocapitalize="none" spellcheck="false" aria-invalid="false" aria-describedby="st-import-steamid-hint" data-error="st-import-steamid-err">',
-      '      <a id="st-open-steam-inv-link" class="st-btn" href="https://steamcommunity.com/my/inventory/" target="_blank" rel="noopener noreferrer">Open My Steam Inventory</a>',
-      '    </div>',
-      '    <p class="st-hint" id="st-import-steamid-hint">' + DEFAULT_STEAMID_HINT + '</p>',
-      '    <p class="st-error-msg" id="st-import-steamid-err" hidden></p>',
-      '  </div>',
+      '  <p class="st-import-subtitle" id="st-import-subtitle">Processed locally in your browser &mdash; nothing is sent to our servers.</p>',
       '  <div class="st-import-tabs" role="tablist" aria-label="Import methods">',
-      '    <button type="button" class="st-tab-btn" role="tab" id="st-tab-paste" aria-selected="true" tabindex="0">Paste JSON</button>',
-      '    <button type="button" class="st-tab-btn" role="tab" id="st-tab-drop" aria-selected="false" tabindex="-1">Drop .json Files</button>',
-      '    <button type="button" class="st-tab-btn" role="tab" id="st-tab-bookmarklet" aria-selected="false" tabindex="-1">Bookmarklet Sync</button>',
+      '    <button type="button" class="st-tab-btn" role="tab" id="st-tab-paste" aria-selected="true" aria-controls="st-panel-paste" tabindex="0">Quick Copy &amp; Paste (No Setup)</button>',
+      '    <button type="button" class="st-tab-btn" role="tab" id="st-tab-bookmarklet" aria-selected="false" aria-controls="st-panel-bookmarklet" tabindex="-1">&#9889; 1-Click Auto-Sync (Bookmarklet)</button>',
       '  </div>',
       '  <div class="st-tabpanel" role="tabpanel" id="st-panel-paste" aria-labelledby="st-tab-paste">',
-      '    <div class="st-field-group">',
-      '      <label class="st-label" for="st-import-json-input" id="st-import-json-label">Steam Inventory or EmoticonList JSON</label>',
-      '      <p class="st-hint" id="st-import-json-hint">Paste one or more JSON responses saved from Steam Community (CTRL+A then CTRL+C).</p>',
-      '      <p class="st-hint" id="st-emotes-direct-row" hidden>Tip for emotes: open <a href="https://steamcommunity.com/actions/EmoticonList" target="_blank" rel="noopener noreferrer" class="st-url-link">steamcommunity.com/actions/EmoticonList</a> while signed into Steam, copy all (CTRL+A, CTRL+C), and paste below.</p>',
-      '      <textarea id="st-import-json-input" class="st-textarea" placeholder=\'{"assets":[...],"descriptions":[...],"more_items":0}\' autocorrect="off" autocapitalize="none" spellcheck="false" aria-invalid="false" aria-describedby="st-import-json-hint" data-error="st-import-json-err"></textarea>',
-      '      <p class="st-error-msg" id="st-import-json-err" hidden></p>',
-      '      <div class="st-field-row">',
-      '        <button type="button" class="st-btn st-btn-primary" id="st-parse-paste-btn">Parse &amp; Stage Page</button>',
-      '        <button type="button" class="st-btn" id="st-clear-paste-btn">Clear Box</button>',
+      '    <div class="st-emote-fast" id="st-emote-fast-section" hidden>',
+      '      <div class="st-step-row">',
+      '        <span class="st-step-num" aria-hidden="true">1</span>',
+      '        <div class="st-step-body">',
+      '          <div class="st-step-title">Open your Steam EmoticonList data (no SteamID needed)</div>',
+      '          <div class="st-field-row">',
+      '            <button type="button" class="st-btn" id="st-open-emotelist-btn">Open Steam EmoticonList JSON &#x2197;</button>',
+      '          </div>',
+      '          <p class="st-hint">Copy everything on that tab (<code>Ctrl+A</code> then <code>Ctrl+C</code>, or <code>&#8984;A</code> then <code>&#8984;C</code> &middot; in Firefox click <strong>Raw Data</strong> first). Shows <code>null</code>? <button type="button" class="st-link-btn" id="st-emote-login-btn">Sign into Steam in browser &#x2197;</button></p>',
+      '        </div>',
+      '      </div>',
+      '      <details class="st-alt-source-details" id="st-emote-alt-details">',
+      '        <summary>Or import from a public Steam Profile inventory (by SteamID)</summary>',
+      '        <div id="st-emote-alt-slot" class="st-alt-source-slot"></div>',
+      '      </details>',
+      '    </div>',
+      '    <div id="st-std-profile-slot">',
+      '      <div id="st-std-steps-wrap" class="st-step-list">',
+      '        <div class="st-step-row">',
+      '          <span class="st-step-num" aria-hidden="true">1</span>',
+      '          <div class="st-step-body">',
+      '            <div class="st-step-title"><label for="st-import-steamid">Your Steam Profile</label></div>',
+      '            <div class="st-field-row">',
+      '              <input type="text" id="st-import-steamid" class="st-input st-steamid-input" maxlength="256" placeholder="SteamID64, custom URL (e.g. ehsankia), or profile link" autocorrect="off" autocapitalize="none" spellcheck="false" aria-invalid="false" aria-describedby="st-import-steamid-hint" data-error="st-import-steamid-err">',
+      '              <span id="st-resolved-chip" class="st-resolved-chip" hidden></span>',
+      '            </div>',
+      '            <p class="st-hint" id="st-import-steamid-hint">' + DEFAULT_STEAMID_HINT + '</p>',
+      '            <p class="st-error-msg" id="st-import-steamid-err" hidden></p>',
+      '          </div>',
+      '        </div>',
+      '        <div class="st-step-row">',
+      '          <span class="st-step-num" aria-hidden="true">2</span>',
+      '          <div class="st-step-body">',
+      '            <div class="st-step-title">Open raw inventory JSON in a new tab</div>',
+      '            <div class="st-field-row">',
+      '              <button type="button" class="st-btn" id="st-open-steam-inv-btn" disabled>Open Raw Steam JSON (Page 1) &#x2197;</button>',
+      '              <span class="st-step-status" id="st-step2-hint">Enter your SteamID64, custom URL, or profile link in Step 1 first.</span>',
+      '            </div>',
+      '            <p class="st-hint">Copy everything on that tab (<code>Ctrl+A</code> / <code>&#8984;A</code>, then <code>Ctrl+C</code> / <code>&#8984;C</code> &middot; in Firefox click <strong>Raw Data</strong> first). Shows <code>null</code>? <button type="button" class="st-link-btn" id="st-std-login-btn">Sign into Steam in browser &#x2197;</button></p>',
+      '          </div>',
+      '        </div>',
       '      </div>',
       '    </div>',
-      '  </div>',
-      '  <div class="st-tabpanel" role="tabpanel" id="st-panel-drop" aria-labelledby="st-tab-drop" hidden>',
-      '    <div class="st-dropzone" id="st-import-dropzone">',
-      '      <input type="file" id="st-import-file-input" class="st-visually-hidden" multiple accept=".json,application/json,text/plain">',
-      '      <label for="st-import-file-input" class="st-dropzone-label">Choose .json file(s)</label>',
-      '      <p class="st-hint">Or drag and drop multiple page JSON files here. Duplicate asset IDs across pages are merged safely.</p>',
+      '    <div class="st-step-row st-step-paste">',
+      '      <span class="st-step-num" id="st-paste-step-num" aria-hidden="true">3</span>',
+      '      <div class="st-step-body">',
+      '        <div class="st-step-title" id="st-paste-step-title">Return here &amp; paste or drop the JSON</div>',
+      '        <div class="st-smart-dropcard" id="st-import-dropzone">',
+      '          <div class="st-smart-dropcard-actions">',
+      '            <button type="button" class="st-btn" id="st-clipboard-paste-btn">Paste from Clipboard</button>',
+      '            <input type="file" id="st-import-file-input" class="st-visually-hidden" multiple accept=".json,application/json,text/plain">',
+      '            <label for="st-import-file-input" class="st-btn">Choose .json file(s)</label>',
+      '          </div>',
+      '          <p class="st-hint st-drop-subhint">Or press <strong>Ctrl+V / &#8984;V anywhere</strong> in this window, or drag &amp; drop <code>.json</code> file(s) here.</p>',
+      '        </div>',
+      '        <details id="st-manual-paste-details" class="st-manual-details">',
+      '          <summary id="st-manual-paste-summary">Paste or inspect raw JSON text manually</summary>',
+      '          <div class="st-field-group">',
+      '            <label class="st-label" for="st-import-json-input" id="st-import-json-label">Steam Inventory JSON</label>',
+      '            <p class="st-hint" id="st-import-json-hint">Pasting automatically stages the data, or click Stage Text after typing.</p>',
+      '            <textarea id="st-import-json-input" class="st-textarea" placeholder=\'{"assets":[...],"descriptions":[...],"more_items":0}\' autocorrect="off" autocapitalize="none" spellcheck="false" aria-invalid="false" aria-describedby="st-import-json-hint" data-error="st-import-json-err"></textarea>',
+      '            <p class="st-error-msg" id="st-import-json-err" hidden></p>',
+      '            <div class="st-field-row st-paste-actions">',
+      '              <button type="button" class="st-btn" id="st-parse-paste-btn">Stage Text</button>',
+      '              <button type="button" class="st-btn" id="st-clear-paste-btn">Clear</button>',
+      '            </div>',
+      '          </div>',
+      '        </details>',
+      '      </div>',
       '    </div>',
       '  </div>',
       '  <div class="st-tabpanel" role="tabpanel" id="st-panel-bookmarklet" aria-labelledby="st-tab-bookmarklet" hidden>',
       '    <div class="st-bookmarklet-box">',
-      '      <p class="st-hint" id="st-bm-steps">1. Drag the green pill to your bookmarks bar once. 2. Click Open Steam Tab (or open Steam Community in any tab). 3. Click the bookmarklet on Steam &mdash; it auto-syncs back here when launched from SteamTools, or lets you copy/save the JSON from any tab.</p>',
-      '      <div class="st-field-row">',
-      '        <a id="st-bookmarklet-anchor" class="st-bookmarklet-pill" href="javascript:void(0)">SteamTools Sync Bookmarklet</a>',
-      '        <button type="button" class="st-btn st-btn-primary" id="st-open-popup-btn">Open Steam Tab</button>',
-      '        <button type="button" class="st-btn" id="st-copy-bm-btn">Copy Bookmarklet URL</button>',
+      '      <div class="st-listen-pill" id="st-bm-listen-status"><span class="st-listen-dot" aria-hidden="true"></span> Listening for Steam tab &mdash; will import &amp; close automatically when clicked on Steam.</div>',
+      '      <ol class="st-bm-steps" id="st-bm-steps">',
+      '        <li>Show your Bookmarks Bar (<code>Ctrl+Shift+B</code> or <code>&#8984;+Shift+B</code>) and drag this pill up to it once: <a id="st-bookmarklet-anchor" class="st-bookmarklet-pill" href="javascript:void(0)" draggable="true">SteamTools Sync</a></li>',
+      '        <li>Click <button type="button" class="st-btn" id="st-open-popup-btn">Open Steam Community Tab &#x2197;</button> (keep this window open).</li>',
+      '        <li>On the Steam tab, click <strong>SteamTools Sync</strong> in your Bookmarks Bar &mdash; up to 50,000 items sync back automatically.</li>',
+      '      </ol>',
+      '      <div class="st-field-row st-bm-copy-row">',
+      '        <span class="st-copy-wrap">',
+      '          <button type="button" class="st-btn" id="st-copy-bm-btn">Copy Bookmarklet Code</button>',
+      '          <span class="st-copy-status" id="st-copy-bm-tip" role="status"></span>',
+      '        </span>',
+      '        <span class="st-hint">Paste into a bookmark&apos;s URL field if creating manually (not the browser address bar).</span>',
       '      </div>',
-      '      <details>',
-      '        <summary id="st-bm-code-label">Inspect Bookmarklet Source (<span id="st-bm-size">0</span> bytes, under 2 KB limit)</summary>',
-      '        <pre class="st-bookmarklet-code" role="region" aria-labelledby="st-bm-code-label" tabindex="0"><code id="st-bm-code-text"></code></pre>',
+      '      <details class="st-bm-fallback">',
+      '        <summary id="st-bm-code-label">View read-only bookmarklet source code</summary>',
+      '        <textarea id="st-bm-code-box" class="st-textarea st-bookmarklet-readonly" readonly aria-labelledby="st-bm-code-label" rows="4"></textarea>',
       '      </details>',
       '    </div>',
       '  </div>',
       '  <div class="st-wizard-box" id="st-wizard-box" hidden>',
-      '    <p class="st-wizard-status" id="st-wizard-status"></p>',
-      '    <div class="st-field-row" id="st-wizard-next-row" hidden>',
-      '      <span>Next Steam page URL:</span>',
-      '      <a id="st-wizard-next-link" class="st-url-link" href="#" target="_blank" rel="noopener noreferrer">Open Next Page</a>',
+      '    <div class="st-wizard-top">',
+      '      <p class="st-wizard-status" id="st-wizard-status"></p>',
+      '      <span class="st-wizard-pct" id="st-wizard-pct"></span>',
       '    </div>',
+      '    <div class="st-progress-track" id="st-wizard-progress-wrap" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">',
+      '      <div class="st-progress-fill" id="st-wizard-progress-fill"></div>',
+      '    </div>',
+      '    <div class="st-field-row st-wizard-actions" id="st-wizard-next-row" hidden>',
+      '      <button type="button" class="st-btn" id="st-wizard-next-btn">Open Page 2 JSON &#x2197;</button>',
+      '      <button type="button" class="st-link-btn" id="st-switch-autosync-btn">Auto-sync all remaining pages with 1-Click Bookmarklet &#x25B8;</button>',
+      '    </div>',
+      '    <p class="st-hint" id="st-wizard-next-hint" hidden></p>',
       '  </div>',
       '  <p class="st-status-banner" id="st-status-banner" hidden></p>',
       '  <div id="st-import-live" class="st-visually-hidden" aria-live="polite" aria-atomic="true"></div>',
       '</div>',
       '<div class="st-import-footer">',
-      '  <button type="button" class="st-btn st-btn-danger" id="st-reset-session-btn" hidden>Reset Staged Pages</button>',
+      '  <button type="button" class="st-btn st-btn-danger" id="st-reset-session-btn" hidden>Start Over</button>',
       '  <div class="st-footer-actions">',
       '    <button type="button" class="st-btn" id="st-cancel-btn">Cancel</button>',
       '    <button type="button" class="st-btn st-btn-primary" id="st-apply-btn" disabled>Apply Imported Items</button>',
@@ -681,31 +804,50 @@
     var els = {
       dialog: dlg,
       title: dlg.querySelector('#st-import-title'),
+      appSelect: dlg.querySelector('#st-import-app-select'),
       subtitle: dlg.querySelector('#st-import-subtitle'),
       closeBtn: dlg.querySelector('#st-import-close-btn'),
-      steamIdInput: dlg.querySelector('#st-import-steamid'),
-      steamIdHint: dlg.querySelector('#st-import-steamid-hint'),
-      steamIdErr: dlg.querySelector('#st-import-steamid-err'),
-      openSteamInvLink: dlg.querySelector('#st-open-steam-inv-link'),
       tabs: Array.prototype.slice.call(dlg.querySelectorAll('.st-tab-btn')),
       panels: Array.prototype.slice.call(dlg.querySelectorAll('.st-tabpanel')),
+      emoteFastSection: dlg.querySelector('#st-emote-fast-section'),
+      openEmoteListBtn: dlg.querySelector('#st-open-emotelist-btn'),
+      emoteLoginBtn: dlg.querySelector('#st-emote-login-btn'),
+      emoteAltDetails: dlg.querySelector('#st-emote-alt-details'),
+      emoteAltSlot: dlg.querySelector('#st-emote-alt-slot'),
+      stdProfileSlot: dlg.querySelector('#st-std-profile-slot'),
+      stdStepsWrap: dlg.querySelector('#st-std-steps-wrap'),
+      steamIdInput: dlg.querySelector('#st-import-steamid'),
+      resolvedChip: dlg.querySelector('#st-resolved-chip'),
+      steamIdHint: dlg.querySelector('#st-import-steamid-hint'),
+      steamIdErr: dlg.querySelector('#st-import-steamid-err'),
+      openSteamInvBtn: dlg.querySelector('#st-open-steam-inv-btn'),
+      step2Hint: dlg.querySelector('#st-step2-hint'),
+      stdLoginBtn: dlg.querySelector('#st-std-login-btn'),
+      pasteStepNum: dlg.querySelector('#st-paste-step-num'),
+      pasteStepTitle: dlg.querySelector('#st-paste-step-title'),
+      clipboardPasteBtn: dlg.querySelector('#st-clipboard-paste-btn'),
+      dropzone: dlg.querySelector('#st-import-dropzone'),
+      fileInput: dlg.querySelector('#st-import-file-input'),
+      manualPasteDetails: dlg.querySelector('#st-manual-paste-details'),
       jsonLabel: dlg.querySelector('#st-import-json-label'),
-      emotesDirectRow: dlg.querySelector('#st-emotes-direct-row'),
       jsonInput: dlg.querySelector('#st-import-json-input'),
       jsonErr: dlg.querySelector('#st-import-json-err'),
       parsePasteBtn: dlg.querySelector('#st-parse-paste-btn'),
       clearPasteBtn: dlg.querySelector('#st-clear-paste-btn'),
-      dropzone: dlg.querySelector('#st-import-dropzone'),
-      fileInput: dlg.querySelector('#st-import-file-input'),
       bmAnchor: dlg.querySelector('#st-bookmarklet-anchor'),
       openPopupBtn: dlg.querySelector('#st-open-popup-btn'),
       copyBmBtn: dlg.querySelector('#st-copy-bm-btn'),
-      bmSize: dlg.querySelector('#st-bm-size'),
-      bmCodeText: dlg.querySelector('#st-bm-code-text'),
+      copyBmTip: dlg.querySelector('#st-copy-bm-tip'),
+      bmCodeBox: dlg.querySelector('#st-bm-code-box'),
       wizardBox: dlg.querySelector('#st-wizard-box'),
       wizardStatus: dlg.querySelector('#st-wizard-status'),
+      wizardPct: dlg.querySelector('#st-wizard-pct'),
+      wizardProgressWrap: dlg.querySelector('#st-wizard-progress-wrap'),
+      wizardProgressFill: dlg.querySelector('#st-wizard-progress-fill'),
       wizardNextRow: dlg.querySelector('#st-wizard-next-row'),
-      wizardNextLink: dlg.querySelector('#st-wizard-next-link'),
+      wizardNextBtn: dlg.querySelector('#st-wizard-next-btn'),
+      switchAutosyncBtn: dlg.querySelector('#st-switch-autosync-btn'),
+      wizardNextHint: dlg.querySelector('#st-wizard-next-hint'),
       statusBanner: dlg.querySelector('#st-status-banner'),
       liveRegion: dlg.querySelector('#st-import-live'),
       resetSessionBtn: dlg.querySelector('#st-reset-session-btn'),
@@ -719,13 +861,16 @@
       parsedPages: [],
       parsedResult: null,
       restoredSession: false,
+      lastSavedScopeKey: null,
       popupRef: null,
-      lastFocused: null,
       liveTimer: null,
+      copyTipTimer: null,
+      lastCopyMsg: '',
       inputResolveTimer: null,
       downOutside: false,
       resolvedSteamId: '',
-      resolveSeq: 0
+      resolveSeq: 0,
+      activeTab: 0
     };
 
     function announce(msg, delayMs) {
@@ -753,7 +898,7 @@
         clearInline.type = 'button';
         clearInline.className = 'st-btn st-btn-danger';
         clearInline.style.marginLeft = '8px';
-        clearInline.textContent = 'Clear';
+        clearInline.textContent = 'Start Over';
         clearInline.addEventListener('click', function () {
           els.resetSessionBtn.click();
         });
@@ -778,14 +923,38 @@
       }
     }
 
-    function selectTab(tabIndex, focusTab) {
+    function computeCanAppend() {
+      return Boolean(state.rawPages.length > 0 && state.parsedResult && state.parsedResult.more_items);
+    }
+
+    function shouldPreferPasteTab(opts) {
+      if (opts && opts.initialJson) return true;
+      var cfg = getConfig();
+      if (typeof cfg.isInAppWebview === 'function' && cfg.isInAppWebview()) return true;
+      try {
+        if (root && typeof root.matchMedia === 'function' && root.matchMedia('(pointer: coarse)').matches) {
+          return true;
+        }
+      } catch (e) {}
+      return false;
+    }
+
+    function selectTab(tabIndex, focusTab, tabOpts) {
       if (!els.tabs || els.tabs.length === 0) return;
       var idx = ((tabIndex % els.tabs.length) + els.tabs.length) % els.tabs.length;
+      state.activeTab = idx;
       for (var i = 0; i < els.tabs.length; i++) {
         var active = i === idx;
         els.tabs[i].setAttribute('aria-selected', active ? 'true' : 'false');
         els.tabs[i].setAttribute('tabindex', active ? '0' : '-1');
         els.panels[i].hidden = !active;
+      }
+      if (!tabOpts || !tabOpts.skipPersist) {
+        if (idx === 1 && !shouldPreferPasteTab(state.options)) {
+          safeStorageSet(METHOD_STORAGE_KEY, 'bookmarklet');
+        } else if (idx === 0 && (!tabOpts || !tabOpts.transient)) {
+          safeStorageSet(METHOD_STORAGE_KEY, 'paste');
+        }
       }
       if (focusTab && typeof els.tabs[idx].focus === 'function') {
         els.tabs[idx].focus();
@@ -793,10 +962,15 @@
       if (typeof els.tabs[idx].scrollIntoView === 'function') {
         try {
           els.tabs[idx].scrollIntoView({ block: 'nearest', inline: 'nearest' });
-        } catch (e) {
-          // Ignore scrollIntoView unsupported option objects.
-        }
+        } catch (e) {}
       }
+    }
+
+    function getEffectiveSteamId() {
+      if (/^\d{17}$/.test(state.resolvedSteamId)) {
+        return state.resolvedSteamId;
+      }
+      return parseSteamInput(els.steamIdInput.value).steamid64;
     }
 
     function getScopeKey() {
@@ -809,42 +983,68 @@
       return mode + ':' + appid + ':' + ctx + ':' + (sid || 'anon');
     }
 
-    function getEffectiveSteamId() {
-      if (/^\d{17}$/.test(state.resolvedSteamId)) {
-        return state.resolvedSteamId;
+    function persistCurrentSession() {
+      if (!state.rawPages || state.rawPages.length === 0) return;
+      var currentKey = getScopeKey();
+      var prevKey = state.lastSavedScopeKey;
+      state.lastSavedScopeKey = currentKey;
+      saveImportSession({
+        scopeKey: currentKey,
+        rawPages: state.rawPages,
+        steamId: getEffectiveSteamId() || String(els.steamIdInput.value || '').trim(),
+        updatedAt: Date.now()
+      });
+      if (prevKey && prevKey !== currentKey && prevKey.slice(-5) === ':anon') {
+        clearImportSession(prevKey);
       }
-      return parseSteamInput(els.steamIdInput.value).steamid64;
     }
 
     function updateSteamLinks() {
       var opts = state.options || {};
       var appid = String(opts.appid || '753');
-      var ctx = String(opts.contextid || getConfig().getContextId(appid));
+      var shortApp = getShortAppName(appid);
       var parsed = parseSteamInput(els.steamIdInput.value);
       var sid = /^\d{17}$/.test(state.resolvedSteamId) ? state.resolvedSteamId : parsed.steamid64;
 
-      if (sid) {
-        els.openSteamInvLink.href = buildSteamInventoryUrl(sid, appid, ctx, null);
-      } else if (parsed.vanity) {
-        els.openSteamInvLink.href = 'https://steamcommunity.com/id/' +
-          encodeURIComponent(parsed.vanity) + '/inventory/#' + encodeURIComponent(appid);
+      els.openSteamInvBtn.textContent = 'Open Raw ' + shortApp + ' JSON (Page 1) \u2197';
+
+      if (sid && /^\d{17}$/.test(sid)) {
+        els.resolvedChip.textContent = '\u2713 ID: ' + sid;
+        els.resolvedChip.hidden = false;
+        els.openSteamInvBtn.disabled = false;
+        els.step2Hint.textContent = 'Always opens raw JSON (up to 2,000 items/page).';
+      } else if (parsed.vanity && !parsed.invalid) {
+        els.resolvedChip.hidden = true;
+        els.resolvedChip.textContent = '';
+        els.openSteamInvBtn.disabled = false;
+        els.step2Hint.textContent = 'Click to resolve "' + parsed.vanity + '" & open raw JSON.';
       } else {
-        els.openSteamInvLink.href = 'https://steamcommunity.com/my/inventory/#' + encodeURIComponent(appid);
+        els.resolvedChip.hidden = true;
+        els.resolvedChip.textContent = '';
+        els.openSteamInvBtn.disabled = true;
+        els.step2Hint.textContent = parsed.invalid
+          ? 'Fix the Steam profile field in Step 1 first.'
+          : 'Enter your SteamID64, custom URL, or profile link in Step 1 first.';
       }
 
-      if (state.parsedResult && state.parsedResult.more_items && state.parsedResult.last_assetid && sid) {
-        var nextUrl = buildSteamInventoryUrl(sid, appid, ctx, state.parsedResult.last_assetid);
-        els.wizardNextLink.href = nextUrl;
-        els.wizardNextLink.textContent = nextUrl;
+      var res = state.parsedResult;
+      if (res && res.more_items && res.last_assetid) {
         els.wizardNextRow.hidden = false;
-      } else if (state.parsedResult && state.parsedResult.more_items && state.parsedResult.last_assetid) {
-        els.wizardNextRow.hidden = false;
-        els.wizardNextLink.href = parsed.vanity
-          ? ('https://steamcommunity.com/id/' + encodeURIComponent(parsed.vanity) + '/inventory/#' + encodeURIComponent(appid))
-          : ('https://steamcommunity.com/my/inventory/#' + encodeURIComponent(appid));
-        els.wizardNextLink.textContent = 'Enter your SteamID64 or custom URL above to build next page link (start_assetid=' + state.parsedResult.last_assetid + ')';
+        var nextPageNum = (res.page_count || 1) + 1;
+        els.wizardNextBtn.textContent = 'Open Page ' + nextPageNum + ' JSON \u2197';
+        if (sid || (parsed.vanity && !parsed.invalid)) {
+          els.wizardNextBtn.disabled = false;
+          els.wizardNextHint.hidden = true;
+          els.wizardNextHint.textContent = '';
+        } else {
+          els.wizardNextBtn.disabled = true;
+          els.wizardNextHint.hidden = false;
+          els.wizardNextHint.textContent = 'Enter your SteamID in Step 1 to open Page ' + nextPageNum + ' JSON manually, or use 1-Click Bookmarklet.';
+        }
       } else {
         els.wizardNextRow.hidden = true;
+        els.wizardNextHint.hidden = true;
+        els.wizardNextHint.textContent = '';
       }
     }
 
@@ -869,6 +1069,7 @@
         els.steamIdHint.textContent = DEFAULT_STEAMID_HINT;
         setFieldError(els.steamIdInput, els.steamIdErr, 'st-import-steamid-hint', '');
         updateSteamLinks();
+        persistCurrentSession();
         return Promise.resolve({ ok: true, steamid64: parsed.steamid64 });
       }
 
@@ -883,6 +1084,16 @@
         return Promise.resolve({ ok: false, reason: parsed.invalid });
       }
 
+      var cachedVanityId = _resolvedVanityCache.get(parsed.vanity.toLowerCase()) || '';
+      if (cachedVanityId) {
+        state.resolvedSteamId = cachedVanityId;
+        setFieldError(els.steamIdInput, els.steamIdErr, 'st-import-steamid-hint', '');
+        els.steamIdHint.textContent = 'Resolved "' + parsed.vanity + '" to SteamID64 ' + cachedVanityId + '.';
+        updateSteamLinks();
+        persistCurrentSession();
+        return Promise.resolve({ ok: true, steamid64: cachedVanityId, vanity: parsed.vanity });
+      }
+
       state.resolvedSteamId = '';
       els.steamIdHint.textContent = 'Resolving Steam profile "' + parsed.vanity + '"...';
       setFieldError(els.steamIdInput, els.steamIdErr, 'st-import-steamid-hint', '');
@@ -895,6 +1106,7 @@
           setFieldError(els.steamIdInput, els.steamIdErr, 'st-import-steamid-hint', '');
           els.steamIdHint.textContent = 'Resolved "' + parsed.vanity + '" to SteamID64 ' + res.steamid64 + '.';
           updateSteamLinks();
+          persistCurrentSession();
           return res;
         }
         var reason = (res && res.reason) || 'Could not resolve that Steam custom URL.';
@@ -909,44 +1121,158 @@
       });
     }
 
+    function setProgress(pct) {
+      var clean = Math.max(0, Math.min(100, Math.round(pct || 0)));
+      els.wizardPct.textContent = clean + '%';
+      els.wizardProgressWrap.setAttribute('aria-valuenow', String(clean));
+      els.wizardProgressFill.style.width = clean + '%';
+    }
+
     function renderWizardState() {
+      var opts = state.options || {};
+      var mode = opts.mode || 'auto';
       var res = state.parsedResult;
       if (!res) {
         els.wizardBox.hidden = true;
         els.resetSessionBtn.hidden = true;
         els.applyBtn.disabled = true;
+        els.applyBtn.textContent = 'Apply Imported Items';
+        setProgress(0);
         updateSteamLinks();
         return;
       }
 
-      els.resetSessionBtn.hidden = state.rawPages.length === 0;
+      els.resetSessionBtn.hidden = state.rawPages.length === 0 && !res.isEmptyArray;
 
       if (res.isEmoticonList && res.isEmptyArray) {
+        if (mode !== 'emotes') {
+          els.wizardBox.hidden = true;
+          els.applyBtn.disabled = true;
+          els.applyBtn.textContent = mode === 'backgrounds'
+            ? 'Import Backgrounds'
+            : (mode === 'cards' ? 'Import Card Sets' : 'Import Items');
+          setBanner(
+            'warning',
+            'This empty [] JSON is an EmoticonList, not a Steam Inventory response. Use the Open Raw JSON button in Step 2.'
+          );
+          updateSteamLinks();
+          return;
+        }
+        if (opts.allowEmptyEmotes) {
+          els.wizardBox.hidden = false;
+          els.wizardStatus.textContent = 'Your Steam EmoticonList is empty ([]) — ready to load Steam\'s 6 default emoticons.';
+          setProgress(100);
+          els.applyBtn.disabled = false;
+          els.applyBtn.textContent = 'Load 6 Default Steam Emotes';
+          setBanner(
+            'warning',
+            'Your Steam EmoticonList returned [] (no owned emoticons). Click "Load 6 Default Steam Emotes" below to continue, or import from your public profile above.'
+          );
+          updateSteamLinks();
+          return;
+        }
         els.wizardBox.hidden = true;
         els.applyBtn.disabled = true;
+        els.applyBtn.textContent = 'Import Emoticons';
         setBanner(
           'warning',
-          'Steam returned [] (no emoticons found). Make sure you are logged into steamcommunity.com in this browser, or import your 753/6 Steam inventory JSON instead.'
+          'Steam returned [] (no owned emoticons found). Sign into steamcommunity.com in this browser or import from your public Steam Profile inventory above.'
         );
+        updateSteamLinks();
         return;
       }
 
       els.wizardBox.hidden = false;
-      els.applyBtn.disabled = false;
+
+      var pct = res.isEmoticonList
+        ? 100
+        : (res.total_inventory_count > 0
+          ? Math.min(100, Math.round((res.asset_count / res.total_inventory_count) * 100))
+          : 100);
+      setProgress(pct);
 
       if (res.isEmoticonList) {
         els.wizardStatus.textContent = 'Ready: extracted ' + res.emoticons.length + ' unique emoticon(s).';
       } else {
-        var pageSummary = 'Staged ' + res.page_count + ' page(s), ' + res.asset_count + ' asset(s)';
-        if (res.total_inventory_count) {
+        var pageSummary = 'Staged Page ' + res.page_count + ': ' + res.asset_count + ' item(s)';
+        if (res.total_inventory_count && res.total_inventory_count >= res.asset_count) {
           pageSummary += ' of ' + res.total_inventory_count + ' total';
         }
         if (res.more_items && res.last_assetid) {
-          pageSummary += '. Steam has more pages — open the next page URL below, or apply what you have staged so far.';
+          pageSummary += ' — more items on Steam.';
         } else {
-          pageSummary += '. All pages loaded!';
+          pageSummary += ' — all pages loaded!';
         }
         els.wizardStatus.textContent = pageSummary;
+      }
+
+      var detectedApp = res.detected_appid ? String(res.detected_appid) : String(opts.appid || '753');
+      var wrongSourceWarning = '';
+      var applyDisabled = false;
+      var applyLabel = 'Apply Imported Items';
+
+      if (mode === 'backgrounds') {
+        var bgCount = res.bg_count || (Array.isArray(res.backgrounds) ? res.backgrounds.length : 0);
+        if (res.isEmoticonList || detectedApp !== '753') {
+          applyDisabled = true;
+          applyLabel = 'Import Backgrounds';
+          wrongSourceWarning = 'This data is from ' + (res.isEmoticonList ? 'EmoticonList' : getAppDisplayName(detectedApp)) +
+            ', not Steam Profile Backgrounds (Steam 753 inventory).';
+        } else {
+          applyLabel = 'Import ' + bgCount + ' Background' + (bgCount === 1 ? '' : 's');
+          if (bgCount === 0 && !res.more_items) {
+            wrongSourceWarning = '0 profile backgrounds found in this inventory page.';
+          }
+        }
+      } else if (mode === 'cards') {
+        var setCount = typeof res.card_set_count === 'number'
+          ? res.card_set_count
+          : (res.cards ? Object.keys(res.cards).length : 0);
+        if (res.isEmoticonList || detectedApp !== '753') {
+          applyDisabled = true;
+          applyLabel = 'Import Card Sets';
+          wrongSourceWarning = 'Expected Steam Community (753) inventory JSON for Trading Cards, but got ' +
+            (res.isEmoticonList ? 'EmoticonList' : getAppDisplayName(detectedApp)) + ' data.';
+        } else {
+          applyLabel = setCount > 0
+            ? ('Import ' + setCount + ' Card Set' + (setCount === 1 ? '' : 's'))
+            : ('Import ' + res.asset_count + ' Item' + (res.asset_count === 1 ? '' : 's'));
+        }
+      } else if (mode === 'emotes') {
+        var emoteCount = res.isEmoticonList
+          ? res.emoticons.length
+          : (res.emote_count || (Array.isArray(res.emoticons) ? res.emoticons.length : 0));
+        if (!res.isEmoticonList && detectedApp !== '753') {
+          applyDisabled = true;
+          applyLabel = 'Import Emoticons';
+          wrongSourceWarning = 'This looks like ' + getAppDisplayName(detectedApp) +
+            ' inventory, not Steam Emoticons or EmoticonList JSON.';
+        } else if (emoteCount === 0 && opts.allowEmptyEmotes) {
+          applyLabel = 'Load 6 Default Steam Emotes';
+        } else {
+          applyLabel = 'Import ' + emoteCount + ' Emoticon' + (emoteCount === 1 ? '' : 's');
+          if (emoteCount === 0 && !res.more_items) {
+            applyDisabled = true;
+            wrongSourceWarning = '0 emoticons found in this inventory page.';
+          }
+        }
+      } else {
+        var mCount = Array.isArray(res.items) ? res.items.length : 0;
+        if (res.isEmoticonList) {
+          applyDisabled = true;
+          applyLabel = 'Import Items';
+          wrongSourceWarning = 'EmoticonList JSON cannot be priced in Item Value — open Raw Inventory JSON instead.';
+        } else {
+          applyLabel = mCount > 0
+            ? ('Import ' + mCount + ' Marketable Item' + (mCount === 1 ? '' : 's'))
+            : ('Import ' + res.asset_count + ' Item' + (res.asset_count === 1 ? '' : 's'));
+        }
+      }
+
+      els.applyBtn.disabled = applyDisabled;
+      els.applyBtn.textContent = applyLabel;
+      if (wrongSourceWarning) {
+        setBanner(applyDisabled ? 'error' : 'warning', wrongSourceWarning);
       }
       updateSteamLinks();
     }
@@ -960,14 +1286,38 @@
       });
       var href = 'javascript:' + encodeURI(code);
       els.bmAnchor.href = href;
-      els.bmCodeText.textContent = code;
-      els.bmSize.textContent = String(href.length);
+      els.bmCodeBox.value = code;
+    }
+
+    function syncModeLayout(savedSessionHasSteamId) {
+      var opts = state.options || {};
+      var isEmotes = opts.mode === 'emotes';
+      if (isEmotes) {
+        els.emoteFastSection.hidden = false;
+        if (els.stdStepsWrap.parentNode !== els.emoteAltSlot) {
+          els.emoteAltSlot.appendChild(els.stdStepsWrap);
+        }
+        els.pasteStepNum.textContent = '2';
+        els.pasteStepTitle.textContent = 'Copy & paste the EmoticonList JSON here';
+        if (savedSessionHasSteamId || opts.steamId) {
+          els.emoteAltDetails.open = true;
+        }
+      } else {
+        els.emoteFastSection.hidden = true;
+        els.emoteAltDetails.open = false;
+        if (els.stdStepsWrap.parentNode !== els.stdProfileSlot) {
+          els.stdProfileSlot.appendChild(els.stdStepsWrap);
+        }
+        els.pasteStepNum.textContent = '3';
+        els.pasteStepTitle.textContent = 'Return here & paste or drop the JSON';
+      }
     }
 
     function processIncomingInputs(newInputs, appendToSession, parseOpts) {
       setBanner(null, '');
       setFieldError(els.jsonInput, els.jsonErr, 'st-import-json-hint', '');
       var isRestored = Boolean(parseOpts && parseOpts.restored);
+      var prevPageCount = state.parsedResult ? Number(state.parsedResult.page_count || 0) : 0;
       var list = Array.isArray(newInputs) ? newInputs.slice() : [newInputs];
       var payloadList = appendToSession ? state.rawPages.concat(list) : list;
       var parsedList = appendToSession ? state.parsedPages.concat(list) : list;
@@ -986,28 +1336,46 @@
           return result;
         }
         var pagesForStorage = Array.isArray(result.slim_pages) ? result.slim_pages : payloadList;
+        var dupIgnored = Boolean(appendToSession && result.duplicate_pages_ignored > 0 && result.page_count <= prevPageCount);
         state.rawPages = pagesForStorage;
         state.parsedPages = pagesForStorage;
         state.parsedResult = result;
         state.restoredSession = isRestored;
         renderWizardState();
-        saveImportSession({
-          scopeKey: getScopeKey(),
-          rawPages: state.rawPages,
-          steamId: getEffectiveSteamId() || String(els.steamIdInput.value || '').trim(),
-          updatedAt: Date.now()
-        });
+        persistCurrentSession();
+
+        if (els.applyBtn.disabled) {
+          return result;
+        }
+
+        if (dupIgnored) {
+          var nextPage = (result.page_count || 1) + 1;
+          setBanner(
+            'warning',
+            'That page is already staged — click "Open Page ' + nextPage + ' JSON \u2197" below to get the next 2,000 items.'
+          );
+          return result;
+        }
+
+        if (!els.statusBanner.hidden && els.statusBanner.classList.contains('is-warning')) {
+          return result;
+        }
+
         if (isRestored) {
           setBanner(
             'warning',
-            'Restored staged session (' + result.page_count + ' page(s), ' +
-              result.asset_count + ' item(s)).',
+            'Restored staged session (Page ' + result.page_count + ', ' + result.asset_count + ' item(s)).',
             { showClear: true }
           );
         } else if (parseOpts && parseOpts.bannerOverride) {
           setBanner('success', parseOpts.bannerOverride);
+        } else if (!result.isEmoticonList && result.detected_appid && String(result.detected_appid) !== String(opts.appid || '753') && opts.lockApp === false) {
+          setBanner(
+            'success',
+            'Detected ' + getAppDisplayName(result.detected_appid) + ' inventory (' + result.asset_count + ' items across ' + result.page_count + ' page(s)) — game filter will switch automatically.'
+          );
         } else if (!result.isEmoticonList) {
-          setBanner('success', 'Parsed ' + result.asset_count + ' asset(s) across ' + result.page_count + ' page(s).');
+          setBanner('success', 'Staged ' + result.asset_count + ' item(s) across ' + result.page_count + ' page(s).');
         } else {
           setBanner('success', 'Extracted ' + result.emoticons.length + ' unique emoticon(s).');
         }
@@ -1018,6 +1386,32 @@
         setBanner('error', msg);
         announce(msg);
       });
+    }
+
+    function reportCopyStatus(ok, msgText) {
+      if (state.copyTipTimer) clearTimeout(state.copyTipTimer);
+      els.copyBmBtn.removeAttribute('data-copied');
+      els.copyBmBtn.removeAttribute('data-failed');
+      var msg = msgText || (ok ? 'Copied' : 'Copy failed');
+      if (msg === state.lastCopyMsg) {
+        msg += '\u00A0';
+      }
+      state.lastCopyMsg = msg;
+      els.copyBmTip.textContent = '';
+      els.copyBmTip.classList.remove('is-visible');
+      els.copyBmBtn.setAttribute(ok ? 'data-copied' : 'data-failed', '');
+      var sched = typeof root.requestAnimationFrame === 'function' ? root.requestAnimationFrame : setTimeout;
+      sched(function () {
+        els.copyBmTip.textContent = msg;
+        els.copyBmTip.classList.add('is-visible');
+      }, 0);
+      state.copyTipTimer = setTimeout(function () {
+        els.copyBmBtn.removeAttribute('data-copied');
+        els.copyBmBtn.removeAttribute('data-failed');
+        els.copyBmTip.classList.remove('is-visible');
+        els.copyBmTip.textContent = '';
+        state.copyTipTimer = null;
+      }, 2000);
     }
 
     // Event bindings
@@ -1045,6 +1439,25 @@
       })(t);
     }
 
+    els.appSelect.addEventListener('change', function () {
+      if (!state.options) return;
+      var newApp = els.appSelect.value;
+      state.options.appid = newApp;
+      state.options.contextid = getConfig().getContextId(newApp);
+      els.title.textContent = 'Import Inventory for ' + getAppDisplayName(newApp);
+      refreshBookmarklet();
+      updateSteamLinks();
+      if (state.rawPages.length > 0) {
+        processIncomingInputs(state.rawPages.slice(), false);
+      } else {
+        loadImportSession(getScopeKey()).then(function (saved) {
+          if (saved && Array.isArray(saved.rawPages) && saved.rawPages.length > 0 && state.rawPages.length === 0) {
+            processIncomingInputs(saved.rawPages, false, { restored: true });
+          }
+        });
+      }
+    });
+
     els.closeBtn.addEventListener('click', function () {
       dlg.close('cancel');
     });
@@ -1054,7 +1467,7 @@
     });
 
     els.applyBtn.addEventListener('click', function () {
-      if (!state.parsedResult) return;
+      if (!state.parsedResult || els.applyBtn.disabled) return;
       dlg.close('apply');
     });
 
@@ -1063,20 +1476,17 @@
       dlg.returnValue = '';
       var callback = state.options && state.options.onImport;
       var result = state.parsedResult;
-      if (state.lastFocused && typeof state.lastFocused.focus === 'function') {
-        try {
-          state.lastFocused.focus();
-        } catch (e) {
-          // Ignore focus failures on detached elements
-        }
-      }
       if (rv === 'apply' && typeof callback === 'function' && result) {
+        var resolvedSid = getEffectiveSteamId() || '';
+        result.steamid64 = resolvedSid;
+        var finishedKey = getScopeKey();
         if (!result.more_items) {
           state.rawPages = [];
           state.parsedPages = [];
           state.parsedResult = null;
           state.restoredSession = false;
-          clearImportSession(getScopeKey());
+          state.lastSavedScopeKey = null;
+          clearImportSession(finishedKey);
         }
         callback(result);
       }
@@ -1113,12 +1523,11 @@
         tab.document.title = 'Resolving Steam profile...';
         tab.document.body.style.cssText = 'background:#1b2026;color:#edf2f7;font:14px sans-serif;padding:24px;margin:0;';
         tab.document.body.textContent = 'Resolving Steam custom URL "' + vanityName + '"...';
-      } catch (e) {
-        // Ignore cross-origin or popup restrictions
-      }
+      } catch (e) {}
     }
 
     function openSteamTarget(kind, ev) {
+      if (ev) ev.preventDefault();
       var opts = state.options || {};
       var appid = String(opts.appid || '753');
       var ctx = String(opts.contextid || getConfig().getContextId(appid));
@@ -1128,44 +1537,64 @@
         ? state.parsedResult.last_assetid
         : null;
 
+      if (kind === 'emotelist') {
+        var eTab = root.open('https://steamcommunity.com/actions/EmoticonList', '_blank', 'noopener,noreferrer');
+        if (!eTab) {
+          setBanner('error', 'Popup blocked by browser. Allow popups for this site and try again.');
+        }
+        return;
+      }
+
+      if (kind === 'login') {
+        var lTab = root.open('https://steamcommunity.com/', '_blank', 'noopener,noreferrer');
+        if (!lTab) {
+          setBanner('error', 'Popup blocked by browser. Allow popups for this site and try again.');
+        }
+        return;
+      }
+
       function buildTargetUrl(resolvedSid) {
         if (kind === 'tab') {
           return resolvedSid
             ? ('https://steamcommunity.com/profiles/' + encodeURIComponent(resolvedSid) + '/inventory/#' + encodeURIComponent(appid))
             : ('https://steamcommunity.com/my/inventory/#' + encodeURIComponent(appid));
         }
-        if (resolvedSid) {
-          return buildSteamInventoryUrl(resolvedSid, appid, ctx, startAsset);
-        }
-        return 'https://steamcommunity.com/my/inventory/#' + encodeURIComponent(appid);
+        return resolvedSid ? buildSteamInventoryUrl(resolvedSid, appid, ctx, startAsset) : '';
       }
 
       if (parsed.invalid) {
-        if (ev) ev.preventDefault();
         resolveInputNow(true);
         els.steamIdInput.focus();
         return;
       }
 
-      if (ev) ev.preventDefault();
+      if ((kind === 'json' || kind === 'next') && !sid && !parsed.vanity) {
+        setFieldError(
+          els.steamIdInput,
+          els.steamIdErr,
+          'st-import-steamid-hint',
+          'Enter your SteamID64, custom URL, or profile link first.'
+        );
+        els.steamIdInput.focus();
+        updateSteamLinks();
+        return;
+      }
 
-      if (sid || !parsed.vanity) {
+      if (sid || (kind === 'tab' && !parsed.vanity)) {
         var directUrl = buildTargetUrl(sid);
-        // Open normal tab WITHOUT window features (keeps Bookmarks Bar visible) and WITHOUT noopener (keeps window.opener intact).
+        // Open without noopener for bookmarklet tab so window.opener stays intact
         state.popupRef = root.open(directUrl, '_blank');
         if (!state.popupRef) {
           setBanner('error', 'Popup blocked by browser. Allow popups for this site and try again.');
           return;
         }
         if (kind === 'tab') {
-          setBanner('success', 'Opened Steam Community tab. Click your SteamTools Sync bookmarklet in that tab.');
-        } else if (!sid && kind === 'json') {
-          setBanner('warning', 'Opened your Steam Inventory page (logged-in account). Enter a SteamID64 or custom URL above for the direct raw JSON URL.');
+          setBanner('success', 'Opened Steam Community tab. Click "SteamTools Sync" in your Bookmarks Bar on that tab.');
         }
         return;
       }
 
-      // First-click unresolved vanity name (e.g. "ehsankia"): open tab synchronously under user gesture, resolve ID, then navigate it to JSON URL.
+      // Unresolved vanity name: open tab synchronously under user gesture, resolve ID, navigate strictly to raw JSON or Steam tab
       var pendingTab = root.open('about:blank', '_blank');
       state.popupRef = pendingTab;
       if (!pendingTab) {
@@ -1182,12 +1611,12 @@
         if (res && res.ok && res.steamid64) {
           var finalUrl = buildTargetUrl(res.steamid64);
           try {
-            if (!pendingTab.closed) {
+            if (!pendingTab.closed && finalUrl) {
               pendingTab.location.href = finalUrl;
             }
           } catch (navErr) {}
           if (kind === 'tab') {
-            setBanner('success', 'Opened Steam Community tab. Click your SteamTools Sync bookmarklet in that tab.');
+            setBanner('success', 'Opened Steam Community tab. Click "SteamTools Sync" in your Bookmarks Bar on that tab.');
           }
           return;
         }
@@ -1213,11 +1642,19 @@
         state.inputResolveTimer = null;
       }
       var parsed = parseSteamInput(els.steamIdInput.value);
-      state.resolvedSteamId = parsed.steamid64 || '';
-      els.steamIdHint.textContent = DEFAULT_STEAMID_HINT;
+      var cachedId = (parsed.vanity && !parsed.steamid64 && !parsed.invalid)
+        ? (_resolvedVanityCache.get(parsed.vanity.toLowerCase()) || '')
+        : '';
+      state.resolvedSteamId = parsed.steamid64 || cachedId || '';
+      els.steamIdHint.textContent = cachedId
+        ? ('Resolved "' + parsed.vanity + '" to SteamID64 ' + cachedId + '.')
+        : DEFAULT_STEAMID_HINT;
       setFieldError(els.steamIdInput, els.steamIdErr, 'st-import-steamid-hint', '');
       updateSteamLinks();
-      if (parsed.vanity && !parsed.steamid64 && !parsed.invalid) {
+      if (state.resolvedSteamId) {
+        persistCurrentSession();
+      }
+      if (parsed.vanity && !state.resolvedSteamId && !parsed.invalid) {
         state.inputResolveTimer = setTimeout(function () {
           state.inputResolveTimer = null;
           resolveInputNow(false);
@@ -1232,14 +1669,9 @@
     if (attachGuard) {
       attachGuard(els.steamIdInput, {
         onJsonPaste: function (text) {
-          selectTab(0, false);
-          if (text.length <= 120000) {
-            els.jsonInput.value = text;
-          } else {
-            els.jsonInput.value = '';
-          }
-          var canAppend = !state.restoredSession && state.rawPages.length > 0 && state.parsedResult && state.parsedResult.more_items;
-          processIncomingInputs([text], Boolean(canAppend), {
+          selectTab(0, false, { transient: true });
+          els.jsonInput.value = '';
+          processIncomingInputs([text], computeCanAppend(), {
             bannerOverride: 'Detected inventory JSON pasted into the SteamID field — staged items automatically!'
           });
         },
@@ -1248,13 +1680,36 @@
             els.steamIdInput,
             els.steamIdErr,
             'st-import-steamid-hint',
-            'Pasted text is too long for a SteamID. Paste inventory JSON in the box below.'
+            'Pasted text is too long for a SteamID. Paste inventory JSON in Step 3 instead.'
           );
           announce('Pasted text is too long for a SteamID.');
         }
       });
     }
 
+    // Global Ctrl+V / Cmd+V handler anywhere in the open dialog
+    dlg.addEventListener('paste', function (ev) {
+      if (!dlg.open || ev.defaultPrevented) return;
+      var target = ev.target;
+      if (target && (target === els.steamIdInput || target === els.jsonInput ||
+          target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
+        return;
+      }
+      var clip = (ev && ev.clipboardData) || (root && root.clipboardData);
+      if (!clip || typeof clip.getData !== 'function') return;
+      var text = '';
+      try {
+        text = clip.getData('text/plain') || clip.getData('text') || '';
+      } catch (e) {
+        return;
+      }
+      if (!text || !text.trim()) return;
+      ev.preventDefault();
+      selectTab(0, false, { transient: true });
+      processIncomingInputs([text], computeCanAppend());
+    });
+
+    // Consistent instant paste handling in manual JSON textarea (any length)
     els.jsonInput.addEventListener('paste', function (ev) {
       var clip = (ev && ev.clipboardData) || (root && root.clipboardData);
       if (!clip || typeof clip.getData !== 'function') return;
@@ -1264,25 +1719,62 @@
       } catch (e) {
         return;
       }
+      if (!text || !text.trim()) return;
+      ev.preventDefault();
+      els.jsonInput.value = '';
       if (text.length > 200000) {
-        ev.preventDefault();
-        els.jsonInput.value = '';
-        setBanner('warning', 'Staging large JSON (' + Math.round(text.length / 1024) + ' KB) in background worker...');
-        var canAppend = !state.restoredSession && state.rawPages.length > 0 && state.parsedResult && state.parsedResult.more_items;
-        processIncomingInputs([text], Boolean(canAppend));
+        setBanner('warning', 'Staging large JSON (' + Math.round(text.length / 1024) + ' KB)...');
       }
+      processIncomingInputs([text], computeCanAppend()).then(function (parsed) {
+        if (parsed) {
+          els.manualPasteDetails.open = false;
+        }
+      });
     });
 
-    els.openSteamInvLink.addEventListener('click', function (ev) {
-      if (ev.button === 0) {
-        openSteamTarget('json', ev);
+    els.clipboardPasteBtn.addEventListener('click', function () {
+      var clip = root && root.navigator && root.navigator.clipboard;
+      if (!clip || typeof clip.readText !== 'function') {
+        els.manualPasteDetails.open = true;
+        els.jsonInput.focus();
+        setBanner('warning', 'Direct clipboard read is unsupported here — press Ctrl+V (or \u2318V) inside the box below.');
+        return;
       }
+      clip.readText().then(function (text) {
+        if (!text || !String(text).trim()) {
+          setBanner('warning', 'Your clipboard is empty. Open the raw data tab and copy everything (Ctrl+A, Ctrl+C) first.');
+          return;
+        }
+        processIncomingInputs([String(text)], computeCanAppend());
+      }).catch(function () {
+        els.manualPasteDetails.open = true;
+        els.jsonInput.focus();
+        setBanner('warning', 'Browser blocked clipboard access — click inside the box below and press Ctrl+V (or \u2318V).');
+      });
     });
 
-    els.wizardNextLink.addEventListener('click', function (ev) {
-      if (ev.button === 0) {
-        openSteamTarget('next', ev);
-      }
+    els.openEmoteListBtn.addEventListener('click', function (ev) {
+      openSteamTarget('emotelist', ev);
+    });
+
+    els.emoteLoginBtn.addEventListener('click', function (ev) {
+      openSteamTarget('login', ev);
+    });
+
+    els.stdLoginBtn.addEventListener('click', function (ev) {
+      openSteamTarget('login', ev);
+    });
+
+    els.openSteamInvBtn.addEventListener('click', function (ev) {
+      openSteamTarget('json', ev);
+    });
+
+    els.wizardNextBtn.addEventListener('click', function (ev) {
+      openSteamTarget('next', ev);
+    });
+
+    els.switchAutosyncBtn.addEventListener('click', function () {
+      selectTab(1, true);
     });
 
     els.jsonInput.addEventListener('input', function () {
@@ -1292,13 +1784,17 @@
     els.parsePasteBtn.addEventListener('click', function () {
       var raw = els.jsonInput.value.trim();
       if (!raw) {
-        setFieldError(els.jsonInput, els.jsonErr, 'st-import-json-hint', 'Paste inventory JSON before parsing.');
-        announce('Paste inventory JSON before parsing.');
+        setFieldError(els.jsonInput, els.jsonErr, 'st-import-json-hint', 'Paste inventory JSON before staging.');
+        announce('Paste inventory JSON before staging.');
         els.jsonInput.focus();
         return;
       }
-      var canAppend = !state.restoredSession && state.rawPages.length > 0 && state.parsedResult && state.parsedResult.more_items;
-      processIncomingInputs([raw], Boolean(canAppend));
+      processIncomingInputs([raw], computeCanAppend()).then(function (parsed) {
+        if (parsed) {
+          els.jsonInput.value = '';
+          els.manualPasteDetails.open = false;
+        }
+      });
     });
 
     els.clearPasteBtn.addEventListener('click', function () {
@@ -1308,12 +1804,18 @@
     });
 
     els.resetSessionBtn.addEventListener('click', function () {
+      var keyToClear = getScopeKey();
+      var prevSaved = state.lastSavedScopeKey;
       state.rawPages = [];
       state.parsedPages = [];
       state.parsedResult = null;
       state.restoredSession = false;
+      state.lastSavedScopeKey = null;
       els.jsonInput.value = '';
-      clearImportSession(getScopeKey());
+      clearImportSession(keyToClear);
+      if (prevSaved && prevSaved !== keyToClear) {
+        clearImportSession(prevSaved);
+      }
       renderWizardState();
       setBanner('warning', 'Cleared staged pages.');
     });
@@ -1333,8 +1835,7 @@
           reader.readAsText(file);
         });
       })).then(function (texts) {
-        var canAppend = !state.restoredSession && state.rawPages.length > 0 && state.parsedResult && state.parsedResult.more_items;
-        return processIncomingInputs(texts, Boolean(canAppend));
+        return processIncomingInputs(texts, computeCanAppend());
       }).catch(function (err) {
         setBanner('error', err && err.message ? err.message : 'Failed reading dropped file(s).');
       });
@@ -1362,6 +1863,14 @@
       }
     });
 
+    els.bmAnchor.addEventListener('click', function (ev) {
+      ev.preventDefault();
+      setBanner(
+        'warning',
+        'Don\'t click this pill here — drag it up to your browser\'s Bookmarks Bar first (press Ctrl+Shift+B / \u2318+Shift+B to show the bar).'
+      );
+    });
+
     els.openPopupBtn.addEventListener('click', function (ev) {
       openSteamTarget('tab', ev);
     });
@@ -1370,12 +1879,15 @@
       var href = els.bmAnchor.getAttribute('href') || '';
       if (root.navigator && root.navigator.clipboard && typeof root.navigator.clipboard.writeText === 'function') {
         root.navigator.clipboard.writeText(href).then(function () {
-          setBanner('success', 'Copied bookmarklet URI (' + href.length + ' chars) to clipboard.');
+          reportCopyStatus(true, 'Copied');
+          setBanner('success', 'Copied bookmarklet URL. Create a new bookmark and paste it into the URL field (not the address bar).');
         }).catch(function () {
-          setBanner('warning', 'Clipboard access denied; drag the green pill to your bookmarks bar instead.');
+          reportCopyStatus(false, 'Copy failed');
+          setBanner('warning', 'Clipboard access denied — drag the green pill directly to your Bookmarks Bar instead.');
         });
       } else {
-        setBanner('warning', 'Drag the green pill directly to your browser bookmarks bar.');
+        reportCopyStatus(false, 'Drag pill');
+        setBanner('warning', 'Drag the green pill directly to your Bookmarks Bar.');
       }
     });
 
@@ -1388,17 +1900,21 @@
       if (!msg || typeof msg !== 'object' || msg.type !== 'STEAMTOOLS_INVENTORY_IMPORT') return;
       if (!Array.isArray(msg.pages) || msg.pages.length === 0) return;
 
+      safeStorageSet(METHOD_STORAGE_KEY, 'bookmarklet');
+
       if (msg.steamid && /^\d{17}$/.test(String(msg.steamid))) {
         els.steamIdInput.value = String(msg.steamid);
         state.resolvedSteamId = String(msg.steamid);
         els.steamIdHint.textContent = DEFAULT_STEAMID_HINT;
       }
-      selectTab(0);
-      processIncomingInputs(msg.pages, false).then(function (parsed) {
-        if (parsed && msg.partial && msg.error) {
-          setBanner('warning', 'Partial import received (' + msg.error + '). Staged ' + parsed.asset_count + ' items.');
-        } else if (parsed) {
-          setBanner('success', 'Received ' + parsed.page_count + ' page(s) via Bookmarklet! Click "Apply Imported Items".');
+
+      processIncomingInputs(msg.pages, false, { sourceLabel: 'bookmarklet' }).then(function (parsed) {
+        if (!parsed) return;
+        if (msg.partial && msg.error) {
+          selectTab(0, false, { skipPersist: true });
+          setBanner('warning', 'Partial sync received (' + msg.error + '). Staged ' + parsed.asset_count + ' items — review and click Apply.');
+        } else if (!els.applyBtn.disabled && dlg.open) {
+          dlg.close('apply');
         }
       });
     });
@@ -1406,48 +1922,86 @@
     _dialogInstance = {
       els: els,
       selectTab: selectTab,
-      open: function (options) {
-        state.options = options || {};
+      open: function (options, onImportCb) {
+        var opts = Object.assign({}, options || {});
+        if (typeof onImportCb === 'function') {
+          opts.onImport = onImportCb;
+        }
+        state.options = opts;
         state.rawPages = [];
         state.parsedPages = [];
         state.parsedResult = null;
         state.restoredSession = false;
-        state.lastFocused = doc.activeElement;
+        state.lastSavedScopeKey = null;
         if (state.inputResolveTimer) {
           clearTimeout(state.inputResolveTimer);
           state.inputResolveTimer = null;
         }
 
-        els.title.textContent = state.options.title || 'Import Steam Inventory';
-        els.subtitle.textContent = state.options.subtitle ||
-          'Import directly from Steam Community JSON without captchas or server rate limits.';
-        els.jsonLabel.textContent = state.options.mode === 'emotes'
-          ? 'Steam Inventory (753/6) or EmoticonList JSON'
+        var defaultTitle = opts.appid ? ('Import Inventory for ' + getAppDisplayName(opts.appid)) : 'Import Steam Inventory';
+        els.title.textContent = opts.title || defaultTitle;
+        els.subtitle.textContent = opts.subtitle ||
+          'Processed locally in your browser \u2014 nothing is sent to our servers.';
+
+        if (opts.lockApp === false) {
+          els.appSelect.hidden = false;
+          var targetApp = String(opts.appid || '753');
+          if (Array.prototype.some.call(els.appSelect.options, function (o) { return o.value === targetApp; })) {
+            els.appSelect.value = targetApp;
+          }
+        } else {
+          els.appSelect.hidden = true;
+        }
+
+        els.jsonLabel.textContent = opts.mode === 'emotes'
+          ? 'Steam EmoticonList or Inventory JSON'
           : 'Steam Inventory JSON';
         els.jsonInput.value = '';
-        els.steamIdInput.value = state.options.steamId ? String(state.options.steamId).trim() : '';
+        els.manualPasteDetails.open = false;
+        els.steamIdInput.value = opts.steamId ? String(opts.steamId).trim() : '';
         state.resolvedSteamId = '';
         state.resolveSeq++;
         els.steamIdHint.textContent = DEFAULT_STEAMID_HINT;
-        els.emotesDirectRow.hidden = state.options.mode !== 'emotes';
         setFieldError(els.steamIdInput, els.steamIdErr, 'st-import-steamid-hint', '');
         setFieldError(els.jsonInput, els.jsonErr, 'st-import-json-hint', '');
         setBanner(null, '');
-        selectTab(0);
+
+        syncModeLayout(false);
+
+        var savedMethod = safeStorageGet(METHOD_STORAGE_KEY);
+        var startTab = (!shouldPreferPasteTab(opts) && savedMethod === 'bookmarklet') ? 1 : 0;
+        selectTab(startTab, false, { skipPersist: true });
+
         refreshBookmarklet();
         renderWizardState();
 
         dlg.showModal();
 
+        var parsedInitial = parseSteamInput(els.steamIdInput.value);
+        if (parsedInitial.vanity && !parsedInitial.steamid64 && !parsedInitial.invalid) {
+          var syncCached = _resolvedVanityCache.get(parsedInitial.vanity.toLowerCase()) || '';
+          if (syncCached) {
+            state.resolvedSteamId = syncCached;
+            updateSteamLinks();
+          }
+        }
+
+        if (startTab === 1 && typeof els.openPopupBtn.focus === 'function') {
+          els.openPopupBtn.focus();
+        } else if (opts.mode === 'emotes' && typeof els.openEmoteListBtn.focus === 'function') {
+          els.openEmoteListBtn.focus();
+        } else if (getEffectiveSteamId() && typeof els.openSteamInvBtn.focus === 'function') {
+          els.openSteamInvBtn.focus();
+        } else if (typeof els.steamIdInput.focus === 'function') {
+          els.steamIdInput.focus();
+        }
+
         var resolvePromise = els.steamIdInput.value
           ? resolveInputNow(false)
           : Promise.resolve({ ok: true, steamid64: '' });
 
-        if (state.options.initialJson) {
-          var initStr = String(state.options.initialJson);
-          if (initStr.length <= 120000) {
-            els.jsonInput.value = initStr;
-          }
+        if (opts.initialJson) {
+          var initStr = String(opts.initialJson);
           processIncomingInputs([initStr], false, {
             bannerOverride: 'Detected inventory JSON pasted into the SteamID field — staged items automatically!'
           });
@@ -1458,14 +2012,21 @@
         resolvePromise.then(function () {
           var primaryKey = getScopeKey();
           return loadImportSession(primaryKey).then(function (saved) {
-            if (saved || primaryKey === rawFallbackKey) return saved;
-            return loadImportSession(rawFallbackKey);
+            if (saved || primaryKey === rawFallbackKey) return { saved: saved, key: primaryKey };
+            return loadImportSession(rawFallbackKey).then(function (fallbackSaved) {
+              return { saved: fallbackSaved, key: rawFallbackKey };
+            });
           });
-        }).then(function (saved) {
+        }).then(function (found) {
+          var saved = found && found.saved;
           if (saved && Array.isArray(saved.rawPages) && saved.rawPages.length > 0 && state.rawPages.length === 0) {
+            state.lastSavedScopeKey = found.key;
             if (saved.steamId && !els.steamIdInput.value) {
               els.steamIdInput.value = String(saved.steamId);
               resolveInputNow(false);
+            }
+            if (opts.mode === 'emotes' && saved.steamId) {
+              els.emoteAltDetails.open = true;
             }
             processIncomingInputs(saved.rawPages, false, { restored: true });
           }
@@ -1476,12 +2037,12 @@
     return _dialogInstance;
   }
 
-  function openImportDialog(options) {
+  function openImportDialog(options, onImport) {
     if (!root || !root.document) {
       throw new Error('openImportDialog requires a browser DOM.');
     }
     var inst = ensureDialogDom();
-    inst.open(options);
+    inst.open(options, onImport);
     return inst;
   }
 
@@ -1503,6 +2064,9 @@
     buildBookmarkletHref: buildBookmarkletHref,
     buildSteamInventoryUrl: buildSteamInventoryUrl,
     getAllowedOpenerOrigin: getAllowedOpenerOrigin,
+    saveImportSession: saveImportSession,
+    loadImportSession: loadImportSession,
+    clearImportSession: clearImportSession,
     openImportDialog: openImportDialog
   };
 });

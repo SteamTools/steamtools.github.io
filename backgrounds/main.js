@@ -272,13 +272,15 @@ function($scope, $http, $location, $filter, $timeout) {
 
 	$scope.owned = {};
 	$scope.loggedIn = false;
-	$scope.user_status = "Login or Import Inventory to filter owned items";
+	$scope.authSteamId = '';
+	$scope.user_status = "Login or Import from Steam to filter owned items";
 	$scope.userLogin = function(steamid64) {
 		var cleanId = String(steamid64 || '').trim();
 		if (!cleanId) {
-			$scope.user_status = "Invalid SteamID — please login or use Import Inventory.";
+			$scope.user_status = "Invalid SteamID — please login or use Import from Steam.";
 			return;
 		}
+		$scope.authSteamId = cleanId;
 		$scope.loggedIn = false;
 		var path = "/FetchBackgrounds?id=" + encodeURIComponent(cleanId);
 		var reqPromise = typeof CFG.httpRequestWithFailover === 'function'
@@ -290,7 +292,7 @@ function($scope, $http, $location, $filter, $timeout) {
 				var data = resp && resp.data;
 				if (!data || !data.success) {
 					$scope.user_status = (data && data.reason ? data.reason : "Unable to load inventory") +
-						" — try Import Inventory.";
+						" — try Import from Steam.";
 					return;
 				}
 
@@ -308,7 +310,7 @@ function($scope, $http, $location, $filter, $timeout) {
 			$scope.$applyAsync(function() {
 				var errData = errResp && errResp.data;
 				$scope.user_status = (errData && errData.reason ? errData.reason : "Could not fetch inventory") +
-					" — try Import Inventory.";
+					" — try Import from Steam.";
 			});
 		});
 	};
@@ -316,11 +318,12 @@ function($scope, $http, $location, $filter, $timeout) {
 	$scope.openInventoryImporter = function() {
 		if (!window.SteamToolsImport) return;
 		window.SteamToolsImport.openImportDialog({
-			mode: 'cards',
+			mode: 'backgrounds',
 			appid: '753',
 			contextid: '6',
-			title: 'Import Steam Backgrounds (753/6)',
-			subtitle: 'Filter owned backgrounds locally without backend limits or Steam login.',
+			steamId: $scope.authSteamId || window.localStorage.lastUser || '',
+			title: 'Import Steam Profile Backgrounds',
+			subtitle: 'Filter owned backgrounds locally in your browser — nothing is sent to our servers.',
 			onImport: function(parsed) {
 				$scope.$applyAsync(function() {
 					var bgList = parsed && Array.isArray(parsed.backgrounds) ? parsed.backgrounds : [];
@@ -329,6 +332,9 @@ function($scope, $http, $location, $filter, $timeout) {
 					$scope.owned = {};
 					for (var i = 0; i < bgKeys.length; i++) {
 						$scope.owned[bgKeys[i]] = true;
+					}
+					if (parsed && parsed.steamid64) {
+						$scope.authSteamId = parsed.steamid64;
 					}
 					$scope.loggedIn = true;
 					$scope.user_status = bgList.length + " items filtered (local import)";
@@ -348,7 +354,8 @@ function($scope, $http, $location, $filter, $timeout) {
 
 	$scope.userLogout = function() {
 		CFG.performLogout($http);
-		$scope.user_status = "Login or Import Inventory to filter owned items";
+		$scope.authSteamId = '';
+		$scope.user_status = "Login or Import from Steam to filter owned items";
 		$scope.loggedIn = false;
 		$scope.owned = {};
 		applyFilterFromSorted();
@@ -612,6 +619,7 @@ function($scope, $http, $location, $filter, $timeout) {
 	CFG.checkAuthSession($http).then(function(auth) {
 		if (auth && auth.authenticated && auth.steamid) {
 			$scope.$applyAsync(function() {
+				$scope.authSteamId = auth.steamid;
 				$scope.userLogin(auth.steamid);
 			});
 		}

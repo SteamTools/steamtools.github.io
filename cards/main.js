@@ -111,7 +111,7 @@ function($scope, $http, $filter, $compile, $modal, $timeout){
 				if (data && data.help === 2) {
 					sMsg += " Try pasting your full Steam profile URL.";
 				}
-				$scope.user_status = sMsg + " Or use Import Inventory (753/6) below.";
+				$scope.user_status = sMsg + " Or use Import from Steam below.";
 				$scope.userData = {'games': 1, 'cards': 1, 'badges': 1};
 				return;
 			}
@@ -136,8 +136,8 @@ function($scope, $http, $filter, $compile, $modal, $timeout){
 
 			if (data.cards === null) {
 				$scope.user_status = data.huge
-					? "Inventory has >20,000 items (games & badges loaded) — use Import Inventory (753/6) below for cards."
-					: "Inventory unavailable/private — use Import Inventory (753/6) below.";
+					? "Inventory has >20,000 items (games & badges loaded) — use Import from Steam below for cards."
+					: "Inventory unavailable/private — use Import from Steam below.";
 			}
 
 			$scope.importUserData();
@@ -151,7 +151,7 @@ function($scope, $http, $filter, $compile, $modal, $timeout){
 				if (errData && errData.help === 2) {
 					msg += " Try pasting your full Steam profile URL.";
 				}
-				msg += " Or use Import Inventory (753/6) below.";
+				msg += " Or use Import from Steam below.";
 				$scope.user_status = msg;
 				$scope.userData = {'games': 0, 'cards': 0, 'badges': 0};
 			}, 0);
@@ -194,15 +194,21 @@ function($scope, $http, $filter, $compile, $modal, $timeout){
 			contextid: '6',
 			steamId: idHint,
 			initialJson: typeof initialJson === 'string' ? initialJson : undefined,
-			title: 'Import Steam Inventory (753/6)',
-			subtitle: 'Computes card sets, foil cards, emotes, and backgrounds locally without backend calls.',
+			title: 'Import Steam Trading Cards',
+			subtitle: 'Load your card sets, foil cards, emotes, and backgrounds directly from Steam.',
 			onImport: function(parsed) {
 				$timeout(function() {
 					var prevUser = $scope.user && typeof $scope.user === 'object' ? $scope.user : {};
 					var cardsMap = parsed && parsed.cards ? parsed.cards : {};
-					var steamIdVal = (/^\d{17}$/.test(String(prevUser.steamid64 || '')))
-						? prevUser.steamid64
-						: (/^\d{17}$/.test(String($scope.UserID || '').trim()) ? String($scope.UserID).trim() : '');
+					var importedSid = (parsed && /^\d{17}$/.test(String(parsed.steamid64 || '')))
+						? String(parsed.steamid64)
+						: '';
+					var steamIdVal = importedSid ||
+						(/^\d{17}$/.test(String(prevUser.steamid64 || '')) ? prevUser.steamid64 : '') ||
+						(/^\d{17}$/.test(String($scope.UserID || '').trim()) ? String($scope.UserID).trim() : '');
+					if (steamIdVal && !String($scope.UserID || '').trim()) {
+						$scope.UserID = steamIdVal;
+					}
 
 					var prevLvl = Number(prevUser.level);
 					var prevXp = Number(prevUser.xp);
@@ -222,8 +228,12 @@ function($scope, $http, $filter, $compile, $modal, $timeout){
 					$scope.userData.cards = 3;
 					if (!prevUser.games) $scope.userData.games = 0;
 					if (!prevUser.badges) $scope.userData.badges = 0;
-					$scope.user_status = "Local inventory: " + Object.keys(cardsMap).length +
+					var stMsg = "Local inventory: " + Object.keys(cardsMap).length +
 						" card set(s), " + $scope.user.emote_count + " emote(s), " + $scope.user.bg_count + " bg(s).";
+					if (parsed && parsed.more_items) {
+						stMsg += ' More pages on Steam — click "Update / Add Inventory Page" to add Page ' + ((parsed.page_count || 1) + 1) + '.';
+					}
+					$scope.user_status = stMsg;
 					$scope.importUserData();
 					$scope.userLoaded = true;
 				});
@@ -240,7 +250,7 @@ function($scope, $http, $filter, $compile, $modal, $timeout){
 			},
 			onOversizedPaste: function() {
 				$timeout(function() {
-					$scope.user_status = "Pasted text is too long for a SteamID — use Import Inventory (753/6) below.";
+					$scope.user_status = "Pasted text is too long for a SteamID — use Import from Steam below.";
 				}, 0);
 			}
 		});
