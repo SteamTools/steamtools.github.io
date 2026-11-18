@@ -6,7 +6,12 @@ html, body {
 	height: 97%;
 }
 
-body {margin: 0; padding: 0; background: url(/img/bg.png);}
+body {
+	margin: 0;
+	padding: 0;
+	background: url(/img/bg.png);
+	background-image: image-set(url("/img/bg.webp") type("image/webp"), url("/img/bg.png") type("image/png"));
+}
 :where(button, a, input, select, [tabindex]):focus-visible {
 	outline: 2px solid #159;
 	outline-offset: 2px;
@@ -157,7 +162,7 @@ a.item:hover {text-decoration: none;}
 	border-top-right-radius: 0;
 	border-bottom-right-radius: 0;
 }
-.emotebox {width: min(380px, 100%); max-width: 100%; box-sizing: border-box; text-align: center; background-color: #333; padding: 4px; border-radius: 3px; margin: 5px auto; color: white;}
+.emotebox {width: min(380px, 100%); max-width: 100%; box-sizing: border-box; text-align: center; background-color: #333; padding: 4px; border-radius: 3px; margin: 5px auto; color: white; contain: layout style paint;}
 .select {border: 1px solid #FFF; padding: 1px; margin: 0 !important;}
 .emote {margin: 2px;}
 .disable {opacity: 0.2;}
@@ -181,6 +186,7 @@ a.item:hover {text-decoration: none;}
 	line-height: 0;
 	font-size: 0;
 	vertical-align: top;
+	contain: layout style paint;
 }
 #mosaic .mosaic-row {
 	height: 18px;

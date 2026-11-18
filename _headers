@@ -1,0 +1,60 @@
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Content-Security-Policy: frame-ancestors 'self'
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+
+/img/*
+  Cache-Control: public, max-age=2592000
+
+/fonts/*
+  Cache-Control: public, max-age=2592000
+
+/*.js
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+/*.css
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+/js/*
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+/css/*
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+/cards/*.js
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+/cards/*.css
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+/itemvalue/*.js
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+/itemvalue/*.css
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+/games/*.js
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+/games/*.css
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+/emoticons/*.js
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+/emoticons/*.css
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+/backgrounds/*.js
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+/backgrounds/*.css
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+/mosaticon/*.js
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+/mosaticon/*.css
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400

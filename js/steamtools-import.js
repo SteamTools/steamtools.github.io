@@ -353,25 +353,15 @@
     }
 
     var bucketFn = appStr === '753' ? workerMod.fnv1a32Hex2 : workerMod.fnv1a32Hex64;
-    var monolithThreshold = appStr === '753' ? 96 : 24;
     var bucketSet = Object.create(null);
     for (var i = 0; i < list.length; i++) {
       var b = list[i].bucket || bucketFn(list[i].quoted_key);
       bucketSet[b] = true;
     }
     var buckets = Object.keys(bucketSet).sort();
-    if (buckets.length > monolithThreshold) {
-      return fetchAppMonolith(appStr, cdnBase, fetchImpl).then(function (monolith) {
-        return {
-          items: applyPriceLookup(monolith),
-          usedBucketFallback: true,
-          bucketsFetched: []
-        };
-      });
-    }
     var mergedPrices = Object.create(null);
 
-    return runWithConcurrency(buckets, 8, function (hex2) {
+    return runWithConcurrency(buckets, 12, function (hex2) {
       return fetchDatasetViaConfig('value/' + appStr + '/' + hex2 + '.json', cdnBase, fetchImpl).then(function (map) {
         return { hex2: hex2, map: map };
       });
@@ -1449,9 +1439,9 @@
 
         dlg.showModal();
 
-        if (els.steamIdInput.value) {
-          resolveInputNow(false);
-        }
+        var resolvePromise = els.steamIdInput.value
+          ? resolveInputNow(false)
+          : Promise.resolve({ ok: true, steamid64: '' });
 
         if (state.options.initialJson) {
           var initStr = String(state.options.initialJson);
@@ -1464,7 +1454,14 @@
           return;
         }
 
-        loadImportSession(getScopeKey()).then(function (saved) {
+        var rawFallbackKey = getScopeKey();
+        resolvePromise.then(function () {
+          var primaryKey = getScopeKey();
+          return loadImportSession(primaryKey).then(function (saved) {
+            if (saved || primaryKey === rawFallbackKey) return saved;
+            return loadImportSession(rawFallbackKey);
+          });
+        }).then(function (saved) {
           if (saved && Array.isArray(saved.rawPages) && saved.rawPages.length > 0 && state.rawPages.length === 0) {
             if (saved.steamId && !els.steamIdInput.value) {
               els.steamIdInput.value = String(saved.steamId);

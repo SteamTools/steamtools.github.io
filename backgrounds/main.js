@@ -237,9 +237,18 @@ function($scope, $http, $location, $filter, $timeout) {
 				b._gameLower = String(b.game || '').toLowerCase();
 				var appMatch = /^753\/(\d+)-/.exec(b.url || '');
 				b.appid = appMatch ? appMatch[1] : '753';
-				b.price = b.price === null ? Infinity : parseFloat(b.price);
+				b.price = (b.price === null || b.price === undefined) ? Infinity : parseFloat(b.price);
 				b._search = (nameStr + '\t' + String(b.game || '') + '\t' + b.appid).toLowerCase();
 				b._rand = nameStr.hashCode();
+				if (Array.isArray(b.pos) && b.pos.length >= 3) {
+					var bgSpriteUrl = CFG.CDN_BASE + "/backgrounds/" + b.pos[0] + ".webp?v4";
+					b._style = {
+						backgroundImage: "url(" + bgSpriteUrl + ")",
+						backgroundPosition: (b.pos[1] * -256) + "px " + (b.pos[2] * -160) + "px"
+					};
+				} else {
+					b._style = null;
+				}
 				if (b.price < 1000 && b.price > maxPrice)
 					maxPrice = b.price;
 			}

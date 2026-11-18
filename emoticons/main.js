@@ -229,9 +229,23 @@ function($scope, $http, $location, $filter, $timeout) {
 				e._nameLen = Math.max(0, nameStr.length - 2);
 				var appMatch = /^753\/(\d+)-/.exec(e.url || '');
 				e.appid = appMatch ? appMatch[1] : '753';
-				e.price = e.price === null ? Infinity : parseFloat(e.price);
+				e.price = (e.price === null || e.price === undefined) ? Infinity : parseFloat(e.price);
 				e._search = (nameStr + '\t' + String(e.game || '') + '\t' + e.appid).toLowerCase();
 				e._rand = nameStr.hashCode();
+				if (Array.isArray(e.pos) && e.pos.length >= 3) {
+					var spriteBase = CFG.CDN_BASE + "/emoticons/" + e.pos[0];
+					e._style = {
+						backgroundImage: "url(" + spriteBase + ".webp?v4)",
+						backgroundPosition: (e.pos[1] * -64) + "px " + (e.pos[2] * -64) + "px"
+					};
+					e._styleSmall = {
+						backgroundImage: "url(" + spriteBase + "s.webp?v4)",
+						backgroundPosition: (e.pos[1] * -20) + "px " + (e.pos[2] * -20) + "px"
+					};
+				} else {
+					e._style = null;
+					e._styleSmall = null;
+				}
 				if (e.price < 1000 && e.price > maxPrice)
 					maxPrice = e.price;
 			}

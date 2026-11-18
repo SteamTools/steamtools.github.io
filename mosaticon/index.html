@@ -15,8 +15,8 @@
 	<link rel="shortcut icon" href="/favicon.ico">
 	<link href="bootstrap-2.1.0.min.css" rel="stylesheet">
 	<link href="hotkeys.min.css" rel="stylesheet">
-	<link rel="stylesheet" href="style.css?v=20261117a">
-	<link rel="stylesheet" href="../css/steamtools-import.css?v=20261117a">
+	<link rel="stylesheet" href="style.css?v=20261118a">
+	<link rel="stylesheet" href="../css/steamtools-import.css?v=20261118a">
 </head>
 <body ng-controller="mosaticonCtrl" ng-cloak>
 	<a class="corner topbutton" style="left: 25px;" href="../">&laquo; Hub</a>
@@ -47,17 +47,17 @@
 					<br>
 					<form id="filterinput" class="input-prepend form-horizontal">
 						<label for="mos-emote-filter" class="add-on" style="color: black;display:inline-block;margin-bottom:0;">Filter</label>
-						<input id="mos-emote-filter" class="span2" type="text" ng-model="emoteFilter" autocorrect="off" autocapitalize="none" spellcheck="false">
+						<input id="mos-emote-filter" class="span2" type="text" ng-model="emoteFilter" ng-model-options="{ debounce: 120 }" autocorrect="off" autocapitalize="none" spellcheck="false">
 					</form>
 				</div>
-				<img class="emote" alt=":{{e.name}}:" width="18" height="18" loading="lazy" ng-repeat="e in emoticons | filter:{disable: false} | filter:emoteFilter"
+				<img class="emote" alt=":{{e.name}}:" width="18" height="18" loading="lazy" ng-repeat="e in emoticons | filter:{disable: false} | filter:emoteFilter track by e.name"
 					ng-src="{{EMOTE_IMG_BASE}}/{{e.name}}"
 					ng-click="selectEmote($event, e)" ng-right-click="toggleEmote(e)" draggable="false"
 					ng-class="{select: e.select}" tooltip-popup-delay='200' tooltip-placement="top" tooltip=":{{e.name}}:" />
 			</div>
 			<div class="emotebox" style="background-color: #363; padding: 0 4px;" ng-right-click="">
 				<span ng-if="usedEmotes.length > 0" style="color: white">Used Emotes<br></span>
-				<img class="emote" alt=":{{e.name}}:" width="18" height="18" loading="lazy" ng-repeat="e in usedEmotes"
+				<img class="emote" alt=":{{e.name}}:" width="18" height="18" loading="lazy" ng-repeat="e in usedEmotes track by e.name"
 					ng-src="{{EMOTE_IMG_BASE}}/{{e.name}}"
 					ng-click="selectEmote($event, e)" ng-right-click="toggleEmote(e)" draggable="false"
 					ng-class="{select: e.select}" tooltip-popup-delay='200' tooltip-placement="top" tooltip=":{{e.name}}:" />
@@ -65,7 +65,7 @@
 			<div class="emotebox" style="background-color: #633; padding: 0 4px;" ng-right-click="">
 				<span ng-if="(emoticons | filter:{disable: true}).length > 0"
 					style="color: white">Disabled Emotes<br></span>
-				<img class="emote" alt=":{{e.name}}:" width="18" height="18" loading="lazy" ng-repeat="e in emoticons | filter:{disable: true}"
+				<img class="emote" alt=":{{e.name}}:" width="18" height="18" loading="lazy" ng-repeat="e in emoticons | filter:{disable: true} track by e.name"
 					ng-src="{{EMOTE_IMG_BASE}}/{{e.name}}"
 					ng-click="selectEmote($event, e)" ng-right-click="toggleEmote(e)" draggable="false"
 					ng-class="{select: e.select}" tooltip-popup-delay='200' tooltip-placement="top" tooltip=":{{e.name}}:" />
@@ -156,7 +156,7 @@
 			</div>
 			<div style="font-size: 10px; margin-top: 2px;" ng-show="imageLoaded || blankLoaded">Press <b>?</b> for keyboard shortcuts</div>
 			<div class="mosaic-scroll-wrap" role="region" aria-label="Emoticon mosaic canvas" tabindex="0">
-				<div ng-mousemove="mouseMove($event)" ng-mousedown="mouseDown($event)" ng-mouseup="mouseUp()"
+				<div ng-mousedown="mouseDown($event)" ng-mouseup="mouseUp()"
 					id="mosaic" ng-show="mosaic" ng-style="{'width': ((mosaic[0] ? mosaic[0].length : width.value) * 18) + 'px'}">
 					<div class="mosaic-row" ng-repeat="row in mosaic track by $index">
 						<img alt=":{{e.name}}:" width="18" height="18" ng-repeat="e in row track by $index"
@@ -167,7 +167,7 @@
 				</div>
 			</div>
 			<div style="margin-top: 8px;">
-				<span><b>Character count:</b> {{mosaic | charSum}}</span>
+				<span><b>Character count:</b> {{charCount}}</span>
 				<div style="font-size: 10px;"><b>Limits: </b>Showcase = 8000, Comment = 800</div>
 			</div>
 		</div>
@@ -192,11 +192,11 @@
 	<script src="hotkeys.min.js"></script>
 	<script src="ui-bootstrap-tpls-0.12.0.min.js"></script>
 	<script src="kdTree.min.js"></script>
-	<script src="colors.js?v=20261117a"></script>
-	<script src="../js/steamtools-config.js?v=20261117a"></script>
-	<script src="../js/import-worker.js?v=20261117a"></script>
-	<script src="../js/steamtools-import.js?v=20261117a"></script>
-	<script src="main.js?v=20261117a"></script>
+	<script src="colors.js?v=20261118a"></script>
+	<script src="../js/steamtools-config.js?v=20261118a"></script>
+	<script src="../js/import-worker.js?v=20261118a"></script>
+	<script src="../js/steamtools-import.js?v=20261118a"></script>
+	<script src="main.js?v=20261118a"></script>
 
 	<!-- Start of StatCounter Code for Default Guide -->
 	<script>

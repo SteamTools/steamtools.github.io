@@ -12,15 +12,13 @@
 	<title>Game Filter</title>
 
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js" integrity="sha384-WksqwlT8hWlAsDjVT3cRrnCjB7YvUzq8jcwbyvcUWsT2leBuNB5KOay2yMPL43EV" crossorigin="anonymous"></script>
-	<script src="jquery.mCustomScrollbar.concat.min.js"></script>
 	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js" integrity="sha384-25OA1Qsy+8YnGp0IWGZ+Ej1rjq+GnXMxO+Vj4rGk/DYO9Qjx6zIPVP/5occ4ZdIR" crossorigin="anonymous"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.2/js/bootstrap.min.js" integrity="sha384-7sVK908dLMjOwvGD47EHg9cxk32sTpllx4Qqg0vzxEIlyBSsK9UauzrqZl8SPP0+" crossorigin="anonymous"></script>
 
 	<link rel="shortcut icon" href="/favicon.ico">
 	<link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" integrity="sha384-4FeI0trTH/PCsLWrGCD1mScoFu9Jf2NdknFdFoJhXZFwsvzZ3Bo5sAh7+zL8Xgnd" crossorigin="anonymous" rel="stylesheet">
-	<link rel="stylesheet" type="text/css" href="jquery.mCustomScrollbar.css" media="all">
-	<link rel="stylesheet" type="text/css" href="../css/steamtools-import.css?v=20261117a" media="all">
-	<link rel="stylesheet" type="text/css" href="style.css?v=20261117a" media="all">
+	<link rel="stylesheet" type="text/css" href="../css/steamtools-import.css?v=20261118a" media="all">
+	<link rel="stylesheet" type="text/css" href="style.css?v=20261118a" media="all">
 </head>
 <body ng-controller="SteamCtrl" ng-cloak>
 	<a class="corner topbutton" style="left: 25px;" href="../">&laquo; Hub</a>
@@ -111,10 +109,12 @@
 				<img ng:switch-when="true" src="img/loading2.gif" alt="Loading games..." width="220" height="19">
 			</ng:switch>
 			<div id="game-content">
-				<a ng-repeat="game in gameList | orderBy:getGameName" adjust-size
+				<a ng-repeat="game in gameList | limitTo:gameLimit"
 					ng-href="https://store.steampowered.com/app/[[game]]" target="_blank" rel="noopener noreferrer">
-					<div class="game" draggable="true" ng-bind="getGameName(game)" scrollbar></div>
+					<div class="game" draggable="true" ng-bind="getGameName(game)"></div>
 				</a>
+				<button type="button" class="btn btn-mini" ng-show="gameList.length > gameLimit" ng-click="showMoreGames()"
+					style="display: block; margin: 6px auto;">Show more ([[gameList.length - gameLimit]] more)</button>
 			</div>
 				<button ng-show="gameList.length>0" class="btn btn-inverse" ng-click="exportGames()"
 					style="display: block; margin: 8px auto 0;">Export List</button>
@@ -148,8 +148,8 @@
 		</div>
 	</dialog>
 
-	<script type="text/javascript" src="../js/steamtools-config.js?v=20261117a"></script>
-	<script type="text/javascript" src="steam.js?v=20261117a"></script>
+	<script type="text/javascript" src="../js/steamtools-config.js?v=20261118a"></script>
+	<script type="text/javascript" src="steam.js?v=20261118a"></script>
 
 	<!-- Start of StatCounter Code for Default Guide -->
 	<script>

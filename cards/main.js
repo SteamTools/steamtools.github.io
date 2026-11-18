@@ -135,7 +135,9 @@ function($scope, $http, $filter, $compile, $modal, $timeout){
 			$scope.userData.badges = (data.badges !== null) ? 3 : 0;
 
 			if (data.cards === null) {
-				$scope.user_status = "Inventory unavailable/private — use Import Inventory (753/6) below.";
+				$scope.user_status = data.huge
+					? "Inventory has >20,000 items (games & badges loaded) — use Import Inventory (753/6) below for cards."
+					: "Inventory unavailable/private — use Import Inventory (753/6) below.";
 			}
 
 			$scope.importUserData();
@@ -354,6 +356,11 @@ function($scope, $http, $filter, $compile, $modal, $timeout){
 		$scope.UserID = "";
 
 		delete window.localStorage.lastUser;
+		if (window.history && typeof window.history.replaceState === 'function') {
+			window.history.replaceState(null, '', window.location.pathname + window.location.search);
+		} else {
+			document.location.hash = '';
+		}
 		delete $scope.userGames;
 		delete $scope.userBadges;
 		delete $scope.userCards;
@@ -367,6 +374,7 @@ function($scope, $http, $filter, $compile, $modal, $timeout){
 	};
 
 	$scope.openLevelCalc = function () {
+		ensureHighchartsLoaded().catch(function() {});
 		$modal.open({
 			templateUrl: 'levelCalculator.html',
 			controller: LevelCalcCtrl,
@@ -632,9 +640,11 @@ function($scope, $http, $filter, $compile, $modal, $timeout){
 			$scope.curIndex = 0;
 	}
 	// Update table whenever currency is changed
-	$scope.$watch('curIndex', function(){
+	$scope.$watch('curIndex', function(newVal, oldVal){
 		window.localStorage.curIndex = $scope.curIndex;
-		$scope.table.rows().invalidate();
+		if (newVal !== oldVal && $scope.table) {
+			$scope.table.rows().invalidate().draw(false);
+		}
 	});
 
 	// Update table whenever filters are changed
@@ -650,7 +660,11 @@ function($scope, $http, $filter, $compile, $modal, $timeout){
 
 	var hash = document.location.hash.slice(1).replace('/', '');
 	if (hash && hash.trim().length > 0) {
-		$scope.UserID = decodeURIComponent(hash);
+		try {
+			$scope.UserID = decodeURIComponent(hash);
+		} catch (e) {
+			$scope.UserID = hash;
+		}
 		$scope.userLogin($scope.UserID);
 	} else {
 		CFG.checkAuthSession($http).then(function(auth) {
@@ -775,15 +789,37 @@ var GameImporterCtrl = function($scope, $modalInstance, $filter) {
 	};
 };
 
-var LevelCalcCtrl = function($scope, $modalInstance) {
+var _highchartsPromise = null;
+function ensureHighchartsLoaded() {
+	if (window.Highcharts || (window.jQuery && window.jQuery.fn && typeof window.jQuery.fn.highcharts === 'function')) {
+		return Promise.resolve();
+	}
+	if (_highchartsPromise) return _highchartsPromise;
+	_highchartsPromise = new Promise(function(resolve, reject) {
+		var s = document.createElement('script');
+		s.src = 'highcharts-custom.js';
+		s.charset = 'utf-8';
+		s.onload = function() { resolve(); };
+		s.onerror = function() {
+			_highchartsPromise = null;
+			reject(new Error('Failed to load Highcharts'));
+		};
+		document.head.appendChild(s);
+	});
+	return _highchartsPromise;
+}
+
+var LevelCalcCtrl = function($scope, $modalInstance, $timeout) {
 	$scope.draw = function() {
 		var mainScope = $scope.$parent;
+		var rows = Array.isArray(mainScope && mainScope.rows) ? mainScope.rows : [];
+		if (rows.length === 0) return;
 
 		var i, j, c, needed, row, price;
 		var set_prices = [];
 
-		for (i = 0; i < mainScope.rows.length; i++) {
-			row = mainScope.rows[i];
+		for (i = 0; i < rows.length; i++) {
+			row = rows[i];
 			price = Number(row.price_set);
 			if (!Number.isFinite(price) || price <= 0) continue;
 
@@ -823,53 +859,60 @@ var LevelCalcCtrl = function($scope, $modalInstance) {
 			level++;
 		}
 
-		$("#graph").css("height", "400px").highcharts({
-			chart: {type: 'area'},
-			legend: {enabled: false},
-			title: {text: null},
-			xAxis: {
-				min: startLevel + 1,
-				title: {text: 'Target Level'}
-			},
-			yAxis: {
-				min: 0.01,
-				labels: {
-					formatter: function() {
-						return mainScope.formatCurrency(this.value, 'display');
-					}
-				},
-				type: 'logarithmic',
-				title: {
-					offset: 80,
-					text: 'Total Cost'
-				}
-			},
-			series: [{data: cumCost}],
-			plotOptions: {
-				area: {
-					marker: {
-						enabled: false,
-						symbol: 'circle',
-						radius: 1,
-						states: {
-							hover: {
-								enabled: true
+		ensureHighchartsLoaded().then(function() {
+			$timeout(function() {
+				$("#graph").css("height", "400px").highcharts({
+					chart: {type: 'area'},
+					legend: {enabled: false},
+					title: {text: null},
+					xAxis: {
+						min: startLevel + 1,
+						title: {text: 'Target Level'}
+					},
+					yAxis: {
+						min: 0.01,
+						labels: {
+							formatter: function() {
+								return mainScope.formatCurrency(this.value, 'display');
+							}
+						},
+						type: 'logarithmic',
+						title: {
+							offset: 80,
+							text: 'Total Cost'
+						}
+					},
+					series: [{data: cumCost}],
+					plotOptions: {
+						area: {
+							marker: {
+								enabled: false,
+								symbol: 'circle',
+								radius: 1,
+								states: {
+									hover: {
+										enabled: true
+									}
+								}
 							}
 						}
+					},
+					tooltip: {
+						formatter: function () {
+							return '<b>Cost to level ' + this.x + '</b><br>' +
+								mainScope.formatCurrency(this.y, 'display') +
+								' (' + cumBadge[this.x] + ' badges)';
+						},
+						useHTML: true
 					}
-				}
-			},
-			tooltip: {
-				formatter: function () {
-					return '<b>Cost to level ' + this.x + '</b><br>' +
-						mainScope.formatCurrency(this.y, 'display') +
-						' (' + cumBadge[this.x] + ' badges)';
-				},
-				useHTML: true
-			},
+				});
+				$scope.graphLoaded = true;
+			}, 0);
+		}, function() {
+			$timeout(function() {
+				$("#levelInfo").text("Failed to load chart library — please try again.");
+			}, 0);
 		});
-
-		$scope.graphLoaded = true;
 	};
 
 	$scope.close = function() {

@@ -590,7 +590,7 @@
   var _manifestCache = Object.create(null);
   var _manifestPromises = Object.create(null);
   var MANIFEST_FRESH_MS = 300000;
-  var MANIFEST_SWR_MS = 21600000;
+  var MANIFEST_SWR_MS = 10800000;
   var MANIFEST_STORAGE_PREFIX = 'st_manifest_v2:';
   var API_PRIMARY_STORAGE_KEY = 'st_api_primary';
 
@@ -827,8 +827,11 @@
     var opts = options || {};
     var $http = opts.$http;
     var fetchImpl = opts.fetchImpl;
+    var forceReload = Boolean(opts.forceRefresh);
     if (fetchImpl) {
-      return Promise.resolve().then(function () { return fetchImpl(url); }).then(function (resp) {
+      return Promise.resolve().then(function () {
+        return forceReload ? fetchImpl(url, { cache: 'reload' }) : fetchImpl(url);
+      }).then(function (resp) {
         if (!resp || !resp.ok) {
           var err = new Error('HTTP ' + (resp ? resp.status : 'ERR') + ' loading ' + url);
           err.status = resp ? resp.status : 0;
@@ -839,7 +842,10 @@
     }
     if ($http && typeof $http.get === 'function') {
       return new Promise(function (resolve, reject) {
-        var req = $http.get(url);
+        var reqUrl = forceReload
+          ? (url + (url.indexOf('?') === -1 ? '?_t=' : '&_t=') + Date.now())
+          : url;
+        var req = $http.get(reqUrl);
         var ok = function (resp) { resolve(resp && resp.data !== undefined ? resp.data : resp); };
         var fail = function (err) {
           var status = err && typeof err.status === 'number' ? err.status : 0;
@@ -861,7 +867,7 @@
       });
     }
     if (root && typeof root.fetch === 'function') {
-      return root.fetch(url).then(function (resp) {
+      return (forceReload ? root.fetch(url, { cache: 'reload' }) : root.fetch(url)).then(function (resp) {
         if (!resp || !resp.ok) {
           var err = new Error('HTTP ' + (resp ? resp.status : 'ERR') + ' loading ' + url);
           err.status = resp ? resp.status : 0;
@@ -902,19 +908,20 @@
   }
 
   function _fetchManifestNetwork(cdnBase, opts) {
-    if (_manifestPromises[cdnBase]) return _manifestPromises[cdnBase];
+    var promiseKey = (opts && opts.forceRefresh) ? (cdnBase + '#fresh') : cdnBase;
+    if (_manifestPromises[promiseKey]) return _manifestPromises[promiseKey];
     var p = fetchRawJson(cdnBase + '/manifest.json', opts).then(function (data) {
-      delete _manifestPromises[cdnBase];
+      delete _manifestPromises[promiseKey];
       if (_isValidManifestDoc(data)) {
         _writeStoredManifest(cdnBase, { ts: Date.now(), data: data });
         return data;
       }
       return null;
     }).catch(function () {
-      delete _manifestPromises[cdnBase];
+      delete _manifestPromises[promiseKey];
       return null;
     });
-    _manifestPromises[cdnBase] = p;
+    _manifestPromises[promiseKey] = p;
     return p;
   }
 
@@ -1382,6 +1389,28 @@
     });
   }
 
+  function hardenLegacyJquery() {
+    if (!root) return;
+    var applyPatch = function () {
+      var jq = root.jQuery;
+      if (jq && typeof jq.htmlPrefilter === 'function' && !jq._stHardenedPrefilter) {
+        var origPrefilter = jq.htmlPrefilter;
+        jq.htmlPrefilter = function (html) {
+          var s = String(html === null || html === undefined ? '' : html);
+          if (/<\s*(?:style|script|option|textarea|title|noscript|noembed|xmp)\b/i.test(s)) {
+            return s;
+          }
+          return origPrefilter.call(this, s);
+        };
+        jq._stHardenedPrefilter = true;
+      }
+    };
+    applyPatch();
+    if (root.document && typeof root.document.addEventListener === 'function' && root.document.readyState === 'loading') {
+      root.document.addEventListener('DOMContentLoaded', applyPatch);
+    }
+  }
+
   function refresh() {
     config.CDN_BASE = resolveUrlSetting('st_cdn_base', DEFAULTS.CDN_BASE);
     config.CDN2_BASE = resolveUrlSetting('st_cdn2_base', DEFAULTS.CDN2_BASE);
@@ -1446,10 +1475,12 @@
     mountWebviewNotice: mountWebviewNotice,
     classifySteamIdPaste: classifySteamIdPaste,
     attachSteamIdPasteGuard: attachSteamIdPasteGuard,
+    hardenLegacyJquery: hardenLegacyJquery,
     refresh: refresh
   };
 
   refresh();
+  hardenLegacyJquery();
   mountWebviewNotice();
   return config;
 });

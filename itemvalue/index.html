@@ -17,8 +17,8 @@
 	<link rel="shortcut icon" href="/favicon.ico">
 	<link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" integrity="sha384-4FeI0trTH/PCsLWrGCD1mScoFu9Jf2NdknFdFoJhXZFwsvzZ3Bo5sAh7+zL8Xgnd" crossorigin="anonymous" rel="stylesheet">
 	<link rel="stylesheet" href="https://cdn.datatables.net/plug-ins/725b2a2115b/integration/bootstrap/2/dataTables.bootstrap.css" integrity="sha384-4SQ3Sbg1c0nehbs7ZDC8AXc1+28jXzj7A+IEe8n+NUax9HLniBlsoFpKv3EMWtJI" crossorigin="anonymous">
-	<link rel="stylesheet" href="style.css?v=20261117a">
-	<link rel="stylesheet" href="../css/steamtools-import.css?v=20261117a">
+	<link rel="stylesheet" href="style.css?v=20261118a">
+	<link rel="stylesheet" href="../css/steamtools-import.css?v=20261118a">
 	<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 </head>
 <body ng-controller="InvCtrl" ng-cloak>
@@ -82,8 +82,8 @@
 			<hr>
 			<div class="iv-summary-bar">
 				<div class="iv-summary-left">
-					<span><b>Total:</b> {{(items | filter:dupesFilter | filter:typeFilter | filter:filterText | sumByKey:'price':'count':flags.fee) | currency:curIndex:false}}
-						({{items | filter:dupesFilter | filter:typeFilter | filter:filterText | sumByKey:'count'}} items)</span>
+					<span><b>Total:</b> {{filteredTotalUsd | currency:curIndex:false}}
+						({{filteredItemCount}} items)</span>
 					<span ng-show="isStaleData" class="label label-warning">Cached inventory (Steam throttled)</span>
 
 					<div class="iv-control-group">
@@ -130,7 +130,7 @@
 
 				<div class="input-prepend iv-filter-prepend" style="margin: 0;">
 					<label for="iv-filter-text" class="add-on" style="width:50px;display:inline-block;margin-bottom:0;">Filter</label>
-					<input id="iv-filter-text" class="span3" type="text" ng-model="filterText" autocorrect="off" autocapitalize="none" spellcheck="false">
+					<input id="iv-filter-text" class="span3" type="text" ng-model="filterText" ng-model-options="{ debounce: 150 }" autocorrect="off" autocapitalize="none" spellcheck="false">
 				</div>
 			</div>
 
@@ -139,21 +139,21 @@
 				cellspacing="0" width="100%"></table>
 		</div>
 
-		<div ng-hide="useTable" class="itemBox">
-			<a class="item" ng-repeat="i in items | filter:dupesFilter | filter:typeFilter | filter:filterText | orderBy:'price':1 | limitTo:iconLimit"
-				ng-style="{'border': '2px solid #' + i.color, 'background-color': '#' + i.bg}"
-				target="_blank" rel="noopener noreferrer" ng-href="{{LISTING + i.url}}">
-				<span ng-hide="i.count == 1" class="counter">x{{i.count}}</span>
-				<span ng-show="i.rarity || i.rcolor" class="rarity {{i.rarity + appidLoaded}}" ng-style="{'background-color': '#' + i.rcolor}"
-					tooltip-popup-delay='250' tooltip-placement="top" tooltip="{{i.rarity}}">.</span>
-					<img ng-if="i.icon" ng-src="{{ECONOMY + i.icon + '/62fx62f'}}" width="62" height="62" loading="lazy" alt="{{i.name}}" tooltip-popup-delay='250' tooltip-placement="top" tooltip="{{i.name}}" class="itemicon">
-					<span ng-if="!i.icon" class="itemicon no-icon-placeholder" style="display:inline-flex;align-items:center;justify-content:center;width:62px;height:62px;font-size:11px;color:#bbb;" tooltip-popup-delay='250' tooltip-placement="top" tooltip="{{i.name}}">No icon</span><br>
+		<div ng-if="!useTable" class="itemBox" style="contain: layout style paint;">
+			<a class="item" ng-repeat="i in filteredItems | limitTo:iconLimit track by i.quoted_key"
+				ng-style="::{'border': '2px solid #' + i.color, 'background-color': '#' + i.bg}"
+				target="_blank" rel="noopener noreferrer" ng-href="{{::(LISTING + i.url)}}">
+				<span ng-if="::(i.count != 1)" class="counter">x{{::i.count}}</span>
+				<span ng-if="::(i.rarity || i.rcolor)" class="rarity {{::(i.rarity + appidLoaded)}}" ng-style="::{'background-color': '#' + i.rcolor}"
+					tooltip-popup-delay='250' tooltip-placement="top" tooltip="{{::i.rarity}}">.</span>
+					<img ng-if="::i.icon" ng-src="{{::(ECONOMY + i.icon + '/62fx62f')}}" width="62" height="62" loading="lazy" alt="{{::i.name}}" tooltip-popup-delay='250' tooltip-placement="top" tooltip="{{::i.name}}" class="itemicon">
+					<span ng-if="::(!i.icon)" class="itemicon no-icon-placeholder" style="display:inline-flex;align-items:center;justify-content:center;width:62px;height:62px;font-size:11px;color:#bbb;" tooltip-popup-delay='250' tooltip-placement="top" tooltip="{{::i.name}}">No icon</span><br>
 					<span class="price">
 						{{gridPrice(i)}}
 					</span>
 			</a>
 		</div>
-		<button style="margin: 5px;" ng-show="(items | filter:dupesFilter | filter:typeFilter | filter:filterText).length > iconLimit && !useTable" type="button" class="btn" ng-click="iconLimit=9999999">Show all</button>
+		<button style="margin: 5px;" ng-show="filteredItems.length > iconLimit && !useTable" type="button" class="btn" ng-click="expandIconLimit()">Show all</button>
 		</div>
 
 	</div>
@@ -163,10 +163,10 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/seedrandom/2.3.6/seedrandom.min.js" integrity="sha384-y1acivWp2snFne3YG4coUV7wpeb2W96+HlYnnUFn2CZDJke1SPiE3Z67IraV36C/" crossorigin="anonymous"></script>
 	<script src="ui-bootstrap-custom-tpls-0.7.0.min.js"></script>
 	<script src="jquery.thumbhover.js"></script>
-	<script src="../js/steamtools-config.js?v=20261117a"></script>
-	<script src="../js/import-worker.js?v=20261117a"></script>
-	<script src="../js/steamtools-import.js?v=20261117a"></script>
-	<script src="main.js?v=20261117a"></script>
+	<script src="../js/steamtools-config.js?v=20261118a"></script>
+	<script src="../js/import-worker.js?v=20261118a"></script>
+	<script src="../js/steamtools-import.js?v=20261118a"></script>
+	<script src="main.js?v=20261118a"></script>
 
 	<div id="nn_skinl" class="adswitch_skin"></div>
 	<div id="nn_skinr" class="adswitch_skin"></div>

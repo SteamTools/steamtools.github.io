@@ -96,6 +96,12 @@ angular.module('valueApp', ['ui.bootstrap'])
 	$scope.isLoading = false;
 	$scope.isStaleData = false;
 	$scope.showImportCta = false;
+	$scope.filteredItems = [];
+	$scope.filteredTotalUsd = 0;
+	$scope.filteredItemCount = 0;
+	$scope.expandIconLimit = function() {
+		$scope.iconLimit = 9999999;
+	};
 	$scope.turnstileConfigured = CFG.isTurnstileConfigured();
 
 	CFG.loadCurrencyRates($http).then(function() {
@@ -259,6 +265,56 @@ angular.module('valueApp', ['ui.bootstrap'])
 		}
 	}
 
+	function matchesItemFilter(item, qLower) {
+		if (!item) return false;
+		if ($scope.flags.dupes && (!item.count || item.count <= 1)) return false;
+		if ($scope.appidLoaded === '753' && $scope.type !== '0') {
+			var targetType = $scope.TYPES[parseInt($scope.type, 10)];
+			if (targetType && item.type !== targetType) return false;
+		}
+		if (qLower) {
+			var hay = item._searchHay;
+			if (!hay) {
+				hay = (
+					String(item.name || '') + '\t' +
+					String(item.type || '') + '\t' +
+					String(item.game || '') + '\t' +
+					String(item.quality || '') + '\t' +
+					String(item.rarity || '')
+				).toLowerCase();
+				item._searchHay = hay;
+			}
+			if (hay.indexOf(qLower) === -1) return false;
+		}
+		return true;
+	}
+
+	function recomputeFilteredSummary() {
+		var src = Array.isArray($scope.items) ? $scope.items : [];
+		var qLower = String($scope.filterText || '').trim().toLowerCase();
+		var useFee = Boolean($scope.flags.fee);
+		var filtered = [];
+		var totalUsd = 0;
+		var totalCount = 0;
+		for (var i = 0; i < src.length; i++) {
+			var it = src[i];
+			if (!matchesItemFilter(it, qLower)) continue;
+			filtered.push(it);
+			var cnt = Number(it.count) || 0;
+			totalCount += cnt;
+			var rawPrice = Number(it.price) || 0;
+			if (rawPrice > 0 && cnt > 0) {
+				totalUsd += (useFee ? netPriceAfterFee(rawPrice) : rawPrice) * cnt;
+			}
+		}
+		filtered.sort(function(a, b) {
+			return (Number(b.price) || 0) - (Number(a.price) || 0);
+		});
+		$scope.filteredItems = filtered;
+		$scope.filteredTotalUsd = totalUsd;
+		$scope.filteredItemCount = totalCount;
+	}
+
 	function renderValuedItems(items, appid, options) {
 		var opts = options || {};
 		$scope.type = "0";
@@ -297,6 +353,7 @@ angular.module('valueApp', ['ui.bootstrap'])
 			var type = $scope.typeMap[$scope.appid.model] || "game";
 			$scope.status = "No " + type + " items found.";
 		}
+		recomputeFilteredSummary();
 	}
 
 	$scope.openImportModal = function(initialJson) {
@@ -362,6 +419,7 @@ angular.module('valueApp', ['ui.bootstrap'])
 	}
 
 	$scope.loadItems = function(){
+		if ($scope.isLoading) return;
 		if (!$scope.UserID || $scope.UserID.trim() === "") {
 			$scope.status = "Enter your SteamID64, custom URL name, or Steam profile link first, or click Import Inventory.";
 			var idEl = document.getElementById('iv-steamid');
@@ -378,6 +436,7 @@ angular.module('valueApp', ['ui.bootstrap'])
 
 		cancelPendingRetry();
 		$scope.items = [];
+		recomputeFilteredSummary();
 		$scope.showImportCta = false;
 		window.localStorage.lastUser = $scope.UserID;
 		window.localStorage.lastAppid = $scope.appid.model;
@@ -457,18 +516,14 @@ angular.module('valueApp', ['ui.bootstrap'])
 				var errCode = data.error || '';
 				var isRateLimited = errCode === 'rate_limited' || /rate|429/i.test(data.reason || '');
 				var isPrivate = errCode === 'private_or_unavailable' || data.help === 1 || /private/i.test(data.reason || '');
-				if (isRateLimited || isPrivate) {
+				var isHuge = errCode === 'huge_inventory' || Boolean(data.huge);
+				if (isRateLimited || isPrivate || isHuge) {
 					$scope.showImportCta = true;
 				}
 
 				var retryAfterSec = typeof data.retry_after === 'number' && data.retry_after > 0
 					? data.retry_after
 					: null;
-
-				if (data.huge && !huge && ($scope.hasValidPass() || $scope.turnstileToken)) {
-					$scope.fetchItems(user, appid, true);
-					return;
-				}
 
 				if (data.retry && $scope.retries < MAX_AUTO_RETRIES &&
 					($scope.hasValidPass()) && (!retryAfterSec || retryAfterSec <= 15)) {
@@ -579,6 +634,14 @@ angular.module('valueApp', ['ui.bootstrap'])
 
 			if (helpCode) {
 				setHelpMode(helpCode);
+			}
+
+			if (status === 413 || errCode === 'huge_inventory') {
+				$scope.showImportCta = true;
+				$scope.status = errReason
+					? String(errReason)
+					: "This inventory has over 20,000 items — use Import Inventory below to load and price it directly in your browser.";
+				return;
 			}
 
 			if (errCode === 'private_or_unavailable' || (status === 403 && helpCode === 1)) {
@@ -735,7 +798,7 @@ angular.module('valueApp', ['ui.bootstrap'])
 				result = result && row.count > 1;
 			}
 
-			if ($scope.type !== "0") {
+			if ($scope.appidLoaded === '753' && $scope.type !== "0") {
 				result = result && row.type === $scope.TYPES[$scope.type];
 			}
 
@@ -774,8 +837,16 @@ angular.module('valueApp', ['ui.bootstrap'])
 			window.localStorage.useTable = $scope.useTable;
 		}
 	});
-	$scope.$watch('flags.fee', function(){$scope.table.rows().invalidate();});
-	$scope.$watch('flags.dupes', function(){$scope.table.draw();});
+	$scope.$watch('flags.fee', function(newVal, oldVal){
+		recomputeFilteredSummary();
+		if (newVal !== oldVal && $scope.table) {
+			$scope.table.rows().invalidate().draw(false);
+		}
+	});
+	$scope.$watch('flags.dupes', function(){
+		recomputeFilteredSummary();
+		if ($scope.table) $scope.table.draw();
+	});
 	$scope.$watch('flags.stack', function(newValue){
 		var showStack = Boolean(newValue);
 		$scope.table.column(7).visible(!showStack);
@@ -783,14 +854,22 @@ angular.module('valueApp', ['ui.bootstrap'])
 		$('#item_table').width("100%");
 		$scope.table.draw();
 	});
-	$scope.$watch('type', function(){$scope.table.draw();});
-	$scope.$watch('curIndex', function(){
+	$scope.$watch('type', function(){
+		recomputeFilteredSummary();
+		if ($scope.table) $scope.table.draw();
+	});
+	$scope.$watch('curIndex', function(newVal, oldVal){
 		window.localStorage.curIndex = $scope.curIndex;
-		$scope.table.rows().invalidate();
+		if (newVal !== oldVal && $scope.table) {
+			$scope.table.rows().invalidate().draw(false);
+		}
 	});
 	$scope.$watch('filterText', function(v){
-			$scope.table.search(v);
+		recomputeFilteredSummary();
+		if ($scope.table) {
+			$scope.table.search(v || '');
 			$scope.table.draw();
+		}
 	});
 
 	function escapeCsvCell(val) {
@@ -804,18 +883,9 @@ angular.module('valueApp', ['ui.bootstrap'])
 	}
 
 	$scope.exportCsv = function() {
+		var q = String($scope.filterText || '').trim().toLowerCase();
 		var list = ($scope.items || []).filter(function(item) {
-			if ($scope.flags.dupes && (!item.count || item.count <= 1)) return false;
-			if ($scope.appidLoaded === '753' && $scope.type !== '0') {
-				var targetType = $scope.TYPES[parseInt($scope.type, 10)];
-				if (targetType && item.type !== targetType) return false;
-			}
-			var q = String($scope.filterText || '').trim().toLowerCase();
-			if (q) {
-				var hay = (String(item.name || '') + ' ' + String(item.type || '')).toLowerCase();
-				if (hay.indexOf(q) === -1) return false;
-			}
-			return true;
+			return matchesItemFilter(item, q);
 		});
 		var lines = [['Name', 'Type', 'Count', 'Unit USD', 'Stack USD'].join(',')];
 		for (var i = 0; i < list.length; i++) {

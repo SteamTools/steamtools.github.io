@@ -8,6 +8,7 @@ body, html { margin: 0; padding: 0; height: 100%; font-size: 100%;}
 
 body {
 	background-image: url(/img/bg.png);
+	background-image: image-set(url("/img/bg.webp") type("image/webp"), url("/img/bg.png") type("image/png"));
 	color: #212121;
 	text-align: center;
 }

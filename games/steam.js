@@ -31,36 +31,6 @@ SteamApp.directive('fadey', function() {
 	};
 });
 
-SteamApp.directive('adjustSize', function() {
-	return function(scope) {
-		if (scope.$last){
-			var h = $(window).height() - 250;
-			$("#game-content").height(h);
-		}
-	};
-});
-
-(function($){
-	$(window).load(function(){
-		$("#game-content").mCustomScrollbar({
-			scrollInertia: 500,
-			mouseWheelPixels: 200,
-			advanced:{
-				updateOnContentResize: true,
-				updateOnSelectorChange: 'game-content'
-			}
-		});
-		$(window).resize(function(){
-			var games = $('.mCSB_container').children();
-			if (games.length === 0) return;
-			var h = $(window).height() - 250;
-			$("#game-content").height(h);
-		});
-	});
-})(jQuery);
-
-
-
 var users, ids, privates;
 var games = {};
 if (!localStorage.users){
@@ -94,12 +64,16 @@ function updateLS(){
 	localStorage.privates = JSON.stringify(privates);
 }
 
-function SteamCtrl($scope, $http){
+function SteamCtrl($scope, $http, $timeout){
 	var CFG = window.STEAMTOOLS_CONFIG;
 	var GAMES_INFO_URL = CFG.GAMES_API_BASE + '/info';
 	$scope.steamLoginUrl = CFG.getLoginUrl();
 	$scope.loggedIn = false;
 	$scope.gameSearch = '';
+	$scope.gameLimit = 150;
+	$scope.showMoreGames = function() {
+		$scope.gameLimit += 200;
+	};
 
 	for (var u = 0; u < users.length; u++) {
 		if (users[u] && users[u].avatar) {
@@ -227,12 +201,9 @@ function SteamCtrl($scope, $http){
 			}
 		}
 		if (missingBuckets.length === 0) return Promise.resolve();
-		if (missingBuckets.length > 24) {
-			return loadGameDataMonolith();
-		}
 
 		var idx = 0;
-		var cap = Math.min(8, missingBuckets.length);
+		var cap = Math.min(12, missingBuckets.length);
 		var shardFailed = false;
 		function worker() {
 			if (idx >= missingBuckets.length) return Promise.resolve();
@@ -312,9 +283,28 @@ function SteamCtrl($scope, $http){
 	};
 
 	$scope.$watch('f', applyFlags, true);
-	$scope.$watch('gameSearch', function() { applyFlags($scope.f, [], $scope); });
+	var _searchDebounceTimer = null;
+	$scope.$watch('gameSearch', function(newVal, oldVal) {
+		if (newVal === oldVal) return;
+		if (_searchDebounceTimer) {
+			$timeout.cancel(_searchDebounceTimer);
+		}
+		_searchDebounceTimer = $timeout(function() {
+			_searchDebounceTimer = null;
+			applyFlags($scope.f, [], $scope);
+		}, 120);
+	});
+
+	function sortGameIdsByName(list, s) {
+		return list.sort(function(a, b) {
+			var na = String(s.getGameName(a) || a).toLowerCase();
+			var nb = String(s.getGameName(b) || b).toLowerCase();
+			return na < nb ? -1 : (na > nb ? 1 : 0);
+		});
+	}
 
 	function applyFlags(f,o,s){
+		s.gameLimit = 150;
 		if (!s.fullGameList || s.fullGameList.length === 0) {
 			s.gameList = [];
 			return;
@@ -326,7 +316,7 @@ function SteamCtrl($scope, $http){
 
 		var q = String(s.gameSearch || '').trim().toLowerCase();
 		if (flags.length === 0 && !q) {
-			s.gameList = s.fullGameList.slice();
+			s.gameList = sortGameIdsByName(s.fullGameList.slice(), s);
 			return;
 		}
 		if (!s.gameData) {
@@ -352,7 +342,7 @@ function SteamCtrl($scope, $http){
 			}
 			newList.push(appid);
 		}
-		s.gameList = newList;
+		s.gameList = sortGameIdsByName(newList, s);
 	}
 
 	$scope.userLogout = function() {
@@ -498,20 +488,35 @@ function SteamCtrl($scope, $http){
 			$scope.userError = "No users with public game libraries selected.";
 			return;
 		}
+		var pendingIds = [];
 		for (var i=0; i<$scope.selectedUsers.length ; i++){
 			var steamid = $scope.selectedUsers[i];
 			if (!steamid || steamid === undefined) return;
 			if (!games.hasOwnProperty(steamid)) {
-				fetchGamesInfo({ owned: steamid }).then(function(data) {
+				pendingIds.push(steamid);
+			}
+		}
+		if (pendingIds.length > 0) {
+			var pIdx = 0;
+			var cap = Math.min(4, pendingIds.length);
+			function runWorker() {
+				if (pIdx >= pendingIds.length) return;
+				var targetId = pendingIds[pIdx++];
+				fetchGamesInfo({ owned: targetId }).then(function(data) {
 					safeApply(function() {
 						appendGames(data);
 					});
+					runWorker();
 				}, function() {
 					safeApply(function() {
 						$scope.gameStatus = 1;
 						$scope.userError = "Failed to load games from server.";
 					});
+					runWorker();
 				});
+			}
+			for (var w = 0; w < cap; w++) {
+				runWorker();
 			}
 		}
 		if (gamesLoaded())

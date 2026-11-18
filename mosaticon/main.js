@@ -57,6 +57,10 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 	$scope.quality = "1";
 	$scope.tool = "pen";
 	$scope.q = 1;
+	$scope.charCount = 0;
+	$scope.updateCharCount = function() {
+		$scope.charCount = $filter('charSum')($scope.mosaic);
+	};
 
 	if (localStorage.hasOwnProperty("lastUser")) {
 		$scope.UserID = localStorage.lastUser;
@@ -90,47 +94,93 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 		return _colorDbPromise;
 	}
 
-	function idbGetEmoteBytes(name) {
-		var key = 'v1:' + name;
-		if (_memEmoteBytes.has(key)) {
-			return Promise.resolve(_memEmoteBytes.get(key));
+	function idbGetManyEmoteBytes(names) {
+		var found = Object.create(null);
+		var missing = [];
+		for (var i = 0; i < names.length; i++) {
+			var name = names[i];
+			if (!name) continue;
+			var key = 'v1:' + name;
+			if (_memEmoteBytes.has(key)) {
+				found[name] = _memEmoteBytes.get(key);
+			} else {
+				missing.push(name);
+			}
+		}
+		if (missing.length === 0) {
+			return Promise.resolve(found);
 		}
 		return openColorDb().then(function(db) {
-			if (!db) return null;
+			if (!db) return found;
 			return new Promise(function(resolve) {
+				var settled = false;
+				var finish = function() {
+					if (settled) return;
+					settled = true;
+					resolve(found);
+				};
 				try {
 					var tx = db.transaction(COLOR_STORE_NAME, 'readonly');
-					var req = tx.objectStore(COLOR_STORE_NAME).get(key);
-					req.onsuccess = function() {
-						var val = req.result;
-						if (Array.isArray(val) && val.length === 42) {
-							_memEmoteBytes.set(key, val);
-							resolve(val);
-						} else {
-							resolve(null);
-						}
-					};
-					req.onerror = function() { resolve(null); };
+					var store = tx.objectStore(COLOR_STORE_NAME);
+					tx.oncomplete = finish;
+					tx.onerror = finish;
+					tx.onabort = finish;
+					for (var m = 0; m < missing.length; m++) {
+						(function(n) {
+							var k = 'v1:' + n;
+							var req = store.get(k);
+							req.onsuccess = function() {
+								var val = req.result;
+								if (Array.isArray(val) && val.length === 42) {
+									_memEmoteBytes.set(k, val);
+									found[n] = val;
+								}
+							};
+						})(missing[m]);
+					}
 				} catch (e) {
-					resolve(null);
+					finish();
 				}
 			});
 		});
 	}
 
-	function idbPutEmoteBytes(name, bytes42) {
-		if (!Array.isArray(bytes42) || bytes42.length !== 42) return;
-		var key = 'v1:' + name;
-		_memEmoteBytes.set(key, bytes42);
+	function idbPutManyEmoteBytes(entries) {
+		if (!Array.isArray(entries) || entries.length === 0) return;
+		var valid = [];
+		for (var i = 0; i < entries.length; i++) {
+			var ent = entries[i];
+			if (!ent || !ent.name || !Array.isArray(ent.bytes42) || ent.bytes42.length !== 42) continue;
+			_memEmoteBytes.set('v1:' + ent.name, ent.bytes42);
+			valid.push(ent);
+		}
+		if (valid.length === 0) return;
 		openColorDb().then(function(db) {
 			if (!db) return;
 			try {
 				var tx = db.transaction(COLOR_STORE_NAME, 'readwrite');
-				tx.objectStore(COLOR_STORE_NAME).put(bytes42, key);
+				var store = tx.objectStore(COLOR_STORE_NAME);
+				for (var j = 0; j < valid.length; j++) {
+					store.put(valid[j].bytes42, 'v1:' + valid[j].name);
+				}
 			} catch (e) {
 				// Ignore storage quota / private mode failures
 			}
 		});
+	}
+
+	function idbGetEmoteBytes(name) {
+		var key = 'v1:' + name;
+		if (_memEmoteBytes.has(key)) {
+			return Promise.resolve(_memEmoteBytes.get(key));
+		}
+		return idbGetManyEmoteBytes([name]).then(function(found) {
+			return found[name] || null;
+		});
+	}
+
+	function idbPutEmoteBytes(name, bytes42) {
+		idbPutManyEmoteBytes([{ name: name, bytes42: bytes42 }]);
 	}
 
 	function b64ToBytes42(b64) {
@@ -164,6 +214,7 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 	function cacheColorMapToIdb(colorMap, resolvedOut) {
 		if (!colorMap || typeof colorMap !== 'object') return;
 		var keys = Object.keys(colorMap);
+		var batch = [];
 		for (var i = 0; i < keys.length; i++) {
 			var k = keys[i];
 			var b64 = colorMap[k];
@@ -171,10 +222,30 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 				resolvedOut[k] = b64;
 				var bytes42 = b64ToBytes42(b64);
 				if (bytes42) {
-					idbPutEmoteBytes(k, bytes42);
+					batch.push({ name: k, bytes42: bytes42 });
 				}
 			}
 		}
+		idbPutManyEmoteBytes(batch);
+	}
+
+	function postEmoteColorsBatch(namesBatch) {
+		var req = typeof CFG.httpRequestWithFailover === 'function'
+			? CFG.httpRequestWithFailover($http, '/v1/emote-colors', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				data: { names: namesBatch }
+			})
+			: $http.post(CFG.API_BASE + '/v1/emote-colors', { names: namesBatch });
+		return req.then(function(resp) {
+			var body = resp && resp.data;
+			if (body && body.colors && typeof body.colors === 'object') {
+				return body.colors;
+			}
+			return null;
+		}, function() {
+			return null;
+		});
 	}
 
 	function resolveEmoteColorsForNames(namesList, inlineColors) {
@@ -192,14 +263,12 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 			return Promise.resolve(resolved);
 		}
 
-		return Promise.all(remaining.map(function(n) {
-			return idbGetEmoteBytes(n).then(function(bytes) {
-				return bytes ? null : n;
-			});
-		})).then(function(missResults) {
+		return idbGetManyEmoteBytes(remaining).then(function(foundMap) {
 			var stillMissing = [];
-			for (var m = 0; m < missResults.length; m++) {
-				if (missResults[m]) stillMissing.push(missResults[m]);
+			for (var m = 0; m < remaining.length; m++) {
+				if (!foundMap[remaining[m]]) {
+					stillMissing.push(remaining[m]);
+				}
 			}
 			if (stillMissing.length === 0) {
 				return resolved;
@@ -240,26 +309,39 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 				});
 			}
 
-			var apiReq = typeof CFG.httpRequestWithFailover === 'function'
-				? CFG.httpRequestWithFailover($http, '/v1/emote-colors', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					data: { names: stillMissing.slice(0, 2000) }
-				})
-				: $http.post(CFG.API_BASE + '/v1/emote-colors', { names: stillMissing.slice(0, 2000) });
+			var chunks = [];
+			for (var c = 0; c < stillMissing.length; c += 2000) {
+				chunks.push(stillMissing.slice(c, c + 2000));
+			}
 
-			return apiReq.then(function(resp) {
-				var body = resp && resp.data;
-				if (body && body.colors && typeof body.colors === 'object') {
-					cacheColorMapToIdb(body.colors, resolved);
+			var anyFailed = false;
+			var idx = 0;
+			var workers = [];
+			var cap = Math.min(2, chunks.length);
+			function nextChunk() {
+				if (idx >= chunks.length) return Promise.resolve();
+				var batch = chunks[idx++];
+				return postEmoteColorsBatch(batch).then(function(colors) {
+					if (colors) {
+						cacheColorMapToIdb(colors, resolved);
+					} else {
+						anyFailed = true;
+					}
+					return nextChunk();
+				});
+			}
+			for (var w = 0; w < cap; w++) {
+				workers.push(nextChunk());
+			}
+			return Promise.all(workers).then(function() {
+				if (!anyFailed) {
 					return resolved;
 				}
 				return loadEmoteColorsCatalog().then(function(monolith) {
-					return monolith || resolved;
-				});
-			}, function() {
-				return loadEmoteColorsCatalog().then(function(monolith) {
-					return monolith || resolved;
+					if (monolith) {
+						return Object.assign(Object.create(null), monolith, resolved);
+					}
+					return resolved;
 				});
 			});
 		});
@@ -473,7 +555,22 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 		$scope.process(gen);
 	}
 
-	function extractEmoteFromCanvas(e, gen) {
+	var _canvasQueue = [];
+	var _canvasActive = 0;
+	var MAX_CANVAS_CONCURRENCY = 6;
+
+	function drainCanvasQueue() {
+		while (_canvasActive < MAX_CANVAS_CONCURRENCY && _canvasQueue.length > 0) {
+			var task = _canvasQueue.shift();
+			if (task.gen !== loadGeneration) {
+				continue;
+			}
+			_canvasActive++;
+			startCanvasExtract(task.e, task.gen);
+		}
+	}
+
+	function startCanvasExtract(e, gen) {
 		var emoteCvs = document.createElement('canvas');
 		emoteCvs.width = 18;
 		emoteCvs.height = 18;
@@ -481,8 +578,19 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 		var ctx = emoteCvs.getContext("2d", {willReadFrequently: true});
 		var img = document.createElement("img");
 		img.crossOrigin = "Anonymous";
+		var finished = false;
+		function finishTask() {
+			if (finished) return;
+			finished = true;
+			_canvasActive = Math.max(0, _canvasActive - 1);
+			drainCanvasQueue();
+			$scope.process(gen);
+		}
 		img.onload = function() {
-			if (gen !== loadGeneration) return;
+			if (gen !== loadGeneration) {
+				finishTask();
+				return;
+			}
 			try {
 				ctx.clearRect(0, 0, 18, 18);
 				ctx.drawImage(img, 0, 0, 18, 18);
@@ -500,18 +608,25 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 				idbPutEmoteBytes(e.name, bytes42);
 				var vecs = ColorTools.decodeEmoteColorBytes(bytes42);
 				if (vecs) {
+					finished = true;
+					_canvasActive = Math.max(0, _canvasActive - 1);
+					drainCanvasQueue();
 					commitEmoteVectors(e, vecs, gen);
 					return;
 				}
 			} catch (err) {
 				// Canvas tainted or unreadable
 			}
-			$scope.process(gen);
+			finishTask();
 		};
-		img.onerror = function() {
-			$scope.process(gen);
-		};
+		img.onerror = finishTask;
 		img.src = CFG.EMOTE_CORS_BASE + '/' + encodeURIComponent(e.name);
+	}
+
+	function extractEmoteFromCanvas(e, gen) {
+		if (gen !== loadGeneration) return;
+		_canvasQueue.push({ e: e, gen: gen });
+		drainCanvasQueue();
 	}
 
 	$scope.getEmoticonColor = function(e, catalog, expectedGen) {
@@ -577,6 +692,7 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 		for (var i = 0; i < $scope.emoticons.length; i += cols) {
 			$scope.mosaic.push($scope.emoticons.slice(i, i + cols));
 		}
+		$scope.updateCharCount();
 	};
 
 	$scope.averageColor = function(colors) {
@@ -659,25 +775,34 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 		$scope.usedEmotes = [];
 
 		var ctx = $scope.smallCvs.getContext("2d", {willReadFrequently: true});
+		var sw = $scope.smallCvs.width;
+		var sh = $scope.smallCvs.height;
 		$scope.mosaic = [];
-		for (var y=0; y < $scope.smallCvs.height; y+=q) {
+		if (sw <= 0 || sh <= 0) {
+			$scope.updateCharCount();
+			return;
+		}
+		var fullData = ctx.getImageData(0, 0, sw, sh).data;
+		for (var y = 0; y < sh; y += q) {
 			var row = [];
-			for (var x=0; x < $scope.smallCvs.width; x+=q) {
-				var data = ctx.getImageData(x, y, q, q).data;
+			for (var x = 0; x < sw; x += q) {
 				var color = [];
-				for (var k = 0; k < data.length; k+=4) {
-					var r, g, b, a = data[k + 3] / 255;
-					r = (data[k + 0] * a + 25 * (1 - a)) / 255;
-					g = (data[k + 1] * a + 25 * (1 - a)) / 255;
-					b = (data[k + 2] * a + 25 * (1 - a)) / 255;
-					if ($scope.compareMode === "rgb") {
-						Array.prototype.push.apply(color, [r, g, b]);
-					} else if ($scope.compareMode === "lab") {
-						var lab = RGB_to_Lab(r, g, b);
-						Array.prototype.push.apply(color, lab);
-					} else if ($scope.compareMode === "hsl") {
-						var hsl = RGB_to_HSL(r, g, b);
-						Array.prototype.push.apply(color, hsl);
+				for (var dy = 0; dy < q; dy++) {
+					for (var dx = 0; dx < q; dx++) {
+						var idx = ((y + dy) * sw + (x + dx)) * 4;
+						var r, g, b, a = fullData[idx + 3] / 255;
+						r = (fullData[idx + 0] * a + 25 * (1 - a)) / 255;
+						g = (fullData[idx + 1] * a + 25 * (1 - a)) / 255;
+						b = (fullData[idx + 2] * a + 25 * (1 - a)) / 255;
+						if ($scope.compareMode === "rgb") {
+							color.push(r, g, b);
+						} else if ($scope.compareMode === "lab") {
+							var lab = RGB_to_Lab(r, g, b);
+							color.push(lab[0], lab[1], lab[2]);
+						} else if ($scope.compareMode === "hsl") {
+							var hsl = RGB_to_HSL(r, g, b);
+							color.push(hsl[0], hsl[1], hsl[2]);
+						}
 					}
 				}
 				var e = tree.nearest(color, 1)[0][0].emote;
@@ -689,6 +814,7 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 			}
 			$scope.mosaic.push(row);
 		}
+		$scope.updateCharCount();
 	};
 
 	$scope.toggleEmote = function(emote) {
@@ -780,8 +906,17 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 		var sx = x1 < x2 ? 1 : -1;
 		var sy = y1 < y2 ? 1 : -1;
 
-		if ($scope.tool !== "pen") {
-			$scope.mosaic = copyMatrix($scope.mosaicCopy);
+		if ($scope.tool !== "pen" && Array.isArray($scope.mosaicCopy)) {
+			for (j = 0; j < $scope.mosaicCopy.length; j++) {
+				var copyRow = $scope.mosaicCopy[j];
+				var dstRow = $scope.mosaic[j];
+				if (!dstRow) continue;
+				for (i = 0; i < copyRow.length; i++) {
+					if (dstRow[i] !== copyRow[i]) {
+						dstRow[i] = copyRow[i];
+					}
+				}
+			}
 		}
 
 		if ($scope.tool === "pen") {
@@ -870,10 +1005,40 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 				}
 			}
 		}
+		$scope.updateCharCount();
 	};
 
 	$scope.startX = 0;
 	$scope.startY = 0;
+	var _dragRafId = null;
+	var _pendingMoveEvent = null;
+
+	function onWindowMouseMove(ev) {
+		if (!$scope.clicking) return;
+		_pendingMoveEvent = ev;
+		if (_dragRafId !== null) return;
+		_dragRafId = window.requestAnimationFrame(function() {
+			_dragRafId = null;
+			var moveEv = _pendingMoveEvent;
+			_pendingMoveEvent = null;
+			if (!moveEv || !$scope.clicking) return;
+			$scope.$applyAsync(function() {
+				if ($scope.clicking) {
+					$scope.mouseMove(moveEv);
+				}
+			});
+		});
+	}
+
+	function detachDragListeners() {
+		window.removeEventListener('mousemove', onWindowMouseMove);
+		if (_dragRafId !== null) {
+			window.cancelAnimationFrame(_dragRafId);
+			_dragRafId = null;
+		}
+		_pendingMoveEvent = null;
+	}
+
 	$scope.mouseDown = function(e) {
 		if (!$scope.mosaic || !$scope.mosaic.length || !$scope.mosaic[0] || !$scope.mosaic[0].length) return;
 		$scope.clicking = true;
@@ -883,14 +1048,18 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 		$scope.startX = coords.x;
 		$scope.startY = coords.y;
 
+		detachDragListeners();
+		window.addEventListener('mousemove', onWindowMouseMove);
 		$scope.mouseMove(e);
 	};
 
 	$scope.mouseUp = function() {
+		detachDragListeners();
 		if (!$scope.clicking) return;
 		$scope.clicking = false;
-		$scope.undoHistory.push($scope.mosaicCopy);
+		$scope.pushUndoSnapshot($scope.mosaicCopy);
 		$scope.updateUsed();
+		$scope.updateCharCount();
 	};
 
 	function onWindowMouseUp() {
@@ -899,6 +1068,7 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 	}
 	window.addEventListener('mouseup', onWindowMouseUp);
 	$scope.$on('$destroy', function() {
+		detachDragListeners();
 		window.removeEventListener('mouseup', onWindowMouseUp);
 	});
 
@@ -949,6 +1119,7 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 		$scope.usedEmotes = [];
 		$scope.selectedEmote.used = true;
 		$scope.usedEmotes.push($scope.selectedEmote);
+		$scope.updateCharCount();
 	};
 
 	$scope.resizeBlank = function() {
@@ -989,12 +1160,24 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 		} else if (newHeight < oldHeight) {
 			$scope.mosaic.splice(newHeight);
 		}
+		$scope.updateCharCount();
 	};
 
+	var MAX_UNDO_HISTORY = 30;
 	$scope.undoHistory = [];
+	$scope.pushUndoSnapshot = function(mat) {
+		if (!mat) return;
+		$scope.undoHistory.push(mat);
+		if ($scope.undoHistory.length > MAX_UNDO_HISTORY) {
+			$scope.undoHistory.shift();
+		}
+	};
+
 	$scope.undo = function() {
 		if ($scope.undoHistory.length === 0) return;
 		$scope.mosaic = $scope.undoHistory.pop();
+		$scope.updateUsed();
+		$scope.updateCharCount();
 	};
 
 	$scope.disableAll = function() {
@@ -1034,16 +1217,18 @@ function($scope, $http, $timeout, $filter, $modal, hotkeys){
 
 	$scope.horizontalFlip = function() {
 		if ($scope.mosaic && $scope.mosaic.length > 0) {
-			$scope.undoHistory.push(copyMatrix($scope.mosaic));
+			$scope.pushUndoSnapshot(copyMatrix($scope.mosaic));
 		}
 		$scope.mosaic.forEach(function(e) { e.reverse(); });
+		$scope.updateCharCount();
 	};
 
 	$scope.verticalFlip = function() {
 		if ($scope.mosaic && $scope.mosaic.length > 0) {
-			$scope.undoHistory.push(copyMatrix($scope.mosaic));
+			$scope.pushUndoSnapshot(copyMatrix($scope.mosaic));
 		}
 		$scope.mosaic.reverse();
+		$scope.updateCharCount();
 	};
 
 	// Hotkeys
@@ -1190,7 +1375,11 @@ var ImportMenuCtrl = function($scope, $modalInstance) {
 		}
 
 		if (ms.mosaic && ms.mosaic.length > 0) {
-			ms.undoHistory.push(copyMatrix(ms.mosaic));
+			if (typeof ms.pushUndoSnapshot === 'function') {
+				ms.pushUndoSnapshot(copyMatrix(ms.mosaic));
+			} else {
+				ms.undoHistory.push(copyMatrix(ms.mosaic));
+			}
 		}
 		ms.mosaic = [];
 		for (i = 0; i < rows.length; i++) {
@@ -1224,6 +1413,9 @@ var ImportMenuCtrl = function($scope, $modalInstance) {
 		ms.width.value = width;
 		ms.height.value = ms.mosaic.length;
 		ms.updateUsed();
+		if (typeof ms.updateCharCount === 'function') {
+			ms.updateCharCount();
+		}
 		$modalInstance.dismiss('close');
 	};
 };
