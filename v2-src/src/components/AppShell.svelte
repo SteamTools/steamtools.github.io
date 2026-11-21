@@ -4,11 +4,13 @@
   import { isWebviewClient, trackEvent } from '../lib/bridge.ts';
   import { currencyStore } from '../lib/currency.svelte.ts';
   import { routerStore, type RouteId } from '../lib/router.svelte.ts';
+  import { syncSentryContext } from '../lib/sentry-bridge.ts';
   import { themeStore } from '../lib/theme.svelte.ts';
 
   let { children }: { children: Snippet } = $props();
 
   let showWebviewBanner = $state(false);
+  let feedbackLoading = $state(false);
 
   onMount(() => {
     if (isWebviewClient()) {
@@ -19,6 +21,24 @@
       }
     }
   });
+
+  $effect(() => {
+    const route = routerStore.currentRoute;
+    const theme = themeStore.effectiveScheme;
+    const currency = currencyStore.currencies[currencyStore.curIndex]?.name;
+    syncSentryContext({ route, theme, currency });
+  });
+
+  async function handleOpenFeedback() {
+    if (feedbackLoading) return;
+    feedbackLoading = true;
+    try {
+      const { openSentryFeedback } = await import('../lib/sentry-feedback.ts');
+      await openSentryFeedback();
+    } finally {
+      feedbackLoading = false;
+    }
+  }
 
   function dismissWebviewBanner() {
     showWebviewBanner = false;
@@ -106,23 +126,39 @@
         type="button"
         class="st-btn st-btn-sm st-theme-btn"
         onclick={() => themeStore.toggle()}
+        aria-label="Toggle light/dark theme"
         title={themeStore.storedOverride
           ? `Pinned to ${themeStore.storedOverride} theme — click to switch / revert to OS setting`
           : 'Following OS theme — click to switch'}
       >
         <span class="st-theme-label-to-light">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <circle cx="12" cy="12" r="4"></circle>
             <path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"></path>
           </svg>
-          <span>Light</span>
+          <span class="st-visually-hidden">Switch to light theme</span>
         </span>
         <span class="st-theme-label-to-dark">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
           </svg>
-          <span>Dark</span>
+          <span class="st-visually-hidden">Switch to dark theme</span>
         </span>
+      </button>
+
+      <button
+        type="button"
+        id="st-feedback-btn"
+        class="st-btn st-btn-sm st-feedback-btn"
+        disabled={feedbackLoading}
+        onclick={handleOpenFeedback}
+        aria-label="Report a bug or send feedback"
+        title="Report a bug or send feedback with an optional screenshot"
+      >
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+        <span class="st-feedback-label">{feedbackLoading ? 'Opening...' : 'Feedback'}</span>
       </button>
 
       <a

@@ -913,3 +913,16 @@ test('all classic v1 tool pages include a Try v2 link to their matching /v2/ rou
     assert.ok(html.includes(`href="${expectedHref}"`), `${relHtml} missing href="${expectedHref}"`);
   }
 });
+
+test('Sentry setup discloses usage in privacy policy and restricts tracePropagationTargets away from API/CDN hosts', () => {
+  const privacyHtml = fs.readFileSync(path.join(REPO_ROOT, 'privacy.html'), 'utf8');
+  assert.ok(
+    privacyHtml.includes('https://sentry.io/privacy/'),
+    'privacy.html must disclose Sentry error monitoring and feedback'
+  );
+
+  const sentryTs = fs.readFileSync(path.join(REPO_ROOT, 'v2-src/src/lib/sentry.ts'), 'utf8');
+  assert.ok(sentryTs.includes('tracePropagationTargets'), 'sentry.ts must configure tracePropagationTargets');
+  assert.ok(!sentryTs.includes("tracePropagationTargets: ['*'"), 'tracePropagationTargets must not wildcard all hosts');
+  assert.ok(sentryTs.includes('dataCollection'), 'sentry.ts must configure dataCollection privacy controls');
+});

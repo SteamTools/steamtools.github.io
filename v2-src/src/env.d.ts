@@ -1,6 +1,8 @@
 /// <reference types="svelte" />
 /// <reference types="vite/client" />
 
+declare const __ST_SENTRY_RELEASE__: string;
+
 interface SteamToolsCurrency {
   name: string;
   symbolFormat: string;

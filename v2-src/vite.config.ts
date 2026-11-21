@@ -1,11 +1,22 @@
 import { defineConfig, type Plugin } from 'vite';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
+import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, '..');
+
+function resolveSentryRelease(): string {
+  try {
+    const sha = execSync('git rev-parse --short HEAD', { cwd: REPO_ROOT, encoding: 'utf8' }).trim();
+    if (sha) return `steamtools-v2@${sha}`;
+  } catch {
+    // Fallback when git metadata is unavailable
+  }
+  return 'steamtools-v2@dev';
+}
 
 const MIME_TYPES: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
@@ -81,6 +92,9 @@ function serveRepoRootAssets(): Plugin {
 export default defineConfig({
   base: '/v2/',
   publicDir: false,
+  define: {
+    __ST_SENTRY_RELEASE__: JSON.stringify(resolveSentryRelease()),
+  },
   plugins: [svelte(), serveRepoRootAssets()],
   build: {
     outDir: path.resolve(__dirname, '../v2'),

@@ -10,7 +10,8 @@
     "check": "svelte-check --tsconfig ./tsconfig.json"
   },
   "dependencies": {
-    "@oddbird/popover-polyfill": "^0.7.0"
+    "@oddbird/popover-polyfill": "^0.7.0",
+    "@sentry/svelte": "^11.16.0"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^5.0.0",

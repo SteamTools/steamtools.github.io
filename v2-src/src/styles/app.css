@@ -353,8 +353,8 @@ a:hover {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 8px 12px;
-  padding: 7px 12px;
+  gap: 6px 8px;
+  padding: 6px 10px;
   margin-top: 8px;
   border-radius: 6px 6px 0 0;
   background: var(--st-surface-header);
@@ -366,13 +366,14 @@ a:hover {
 .st-brand {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
   font-family: var(--st-font-display);
-  font-size: 18px;
+  font-size: 17.5px;
   font-weight: 400;
   letter-spacing: 0.02em;
   color: var(--st-text);
   text-decoration: none;
+  white-space: nowrap;
 }
 
 .st-brand:hover {
@@ -397,21 +398,22 @@ a:hover {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 2px;
+  gap: 1px;
 }
 
 .st-nav-link {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   height: 27px;
-  padding: 0 7px;
+  padding: 0 6px;
   border-radius: 4px;
   font-size: 12px;
   font-weight: 600;
   color: var(--st-text);
   background: transparent;
   border: 1px solid transparent;
+  white-space: nowrap;
   transition: background-color 0.12s ease, border-color 0.12s ease;
 }
 
@@ -441,7 +443,7 @@ a:hover {
   display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
 }
 
 /* Main Centered Sheet (#container DNA) */
@@ -663,14 +665,14 @@ a:hover {
 .st-theme-btn .st-theme-label-to-dark {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 0;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not(:has(> head > meta[name="color-scheme"][content="light"])) .st-theme-btn .st-theme-label-to-light {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 0;
   }
   :root:not(:has(> head > meta[name="color-scheme"][content="light"])) .st-theme-btn .st-theme-label-to-dark {
     display: none;
@@ -680,7 +682,7 @@ a:hover {
 :root:has(> head > meta[name="color-scheme"][content="dark"]) .st-theme-btn .st-theme-label-to-light {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 0;
 }
 :root:has(> head > meta[name="color-scheme"][content="dark"]) .st-theme-btn .st-theme-label-to-dark {
   display: none;
@@ -2294,4 +2296,64 @@ dialog.st-import-dialog .st-url-link {
 
 dialog.st-export-dialog .st-import-footer {
   justify-content: flex-end;
+}
+
+.st-topbar .st-select {
+  min-width: 62px;
+  padding: 0 7px;
+}
+
+.st-topbar .st-btn-sm {
+  padding: 0 8px;
+}
+
+.st-theme-btn {
+  width: 28px;
+  padding: 0 !important;
+}
+
+.st-feedback-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+@media (max-width: 980px) {
+  .st-feedback-btn {
+    width: 28px;
+    padding: 0 !important;
+  }
+  .st-feedback-btn .st-feedback-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+}
+
+@media (max-width: 900px) {
+  .st-brand-badge {
+    display: none;
+  }
+  .st-nav-link {
+    padding: 0 5px;
+    gap: 3px;
+  }
+}
+
+#sentry-feedback {
+  --font-family: var(--st-font-ui);
+  --font-size: 13px;
+  --z-index: 100000;
+  --dialog-inset: 46px 12px auto auto;
+  --dialog-padding: 18px;
+  --dialog-border-radius: 6px;
+  --button-border-radius: 4px;
+  --button-primary-border-radius: 4px;
+  --input-border-radius: 4px;
 }
