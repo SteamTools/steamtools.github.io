@@ -855,3 +855,26 @@ dialog.st-import-dialog::backdrop {
     align-items: flex-start;
   }
 }
+
+/* Classic v1 top-left "Try v2" button */
+.corner .topbutton.st-v2-link {
+  width: auto;
+  min-width: 0;
+  padding: 2px 10px;
+  background-color: #2A363B;
+  color: #FECEA8;
+  border-color: #1B2428;
+  box-shadow: 0px 3px 0px 0px #1B2428;
+  white-space: nowrap;
+}
+
+.corner .topbutton.st-v2-link:hover,
+.corner .topbutton.st-v2-link:focus-visible {
+  background-color: #35454C;
+  color: #FFFFFF;
+  text-decoration: none;
+}
+
+.corner .topbutton.st-v2-link:active {
+  box-shadow: 0px 1px 0px 0px #1B2428;
+}

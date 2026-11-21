@@ -1560,6 +1560,23 @@
     });
   }
 
+  function mountV2LinkHelper() {
+    if (!root || !root.document || typeof root.document.addEventListener !== 'function') return;
+    if (root._stV2LinkMounted) return;
+    root._stV2LinkMounted = true;
+    root.document.addEventListener('click', function (ev) {
+      var target = ev && ev.target;
+      var link = target && typeof target.closest === 'function' ? target.closest('a.st-v2-link') : null;
+      if (!link) return;
+      var curHref = link.getAttribute('href') || '';
+      var curHash = (root.location && root.location.hash) ? String(root.location.hash) : '';
+      if (curHref && curHash && curHref.indexOf('#') === -1) {
+        link.setAttribute('href', curHref + curHash);
+      }
+      track('v2_banner_click', { ver: 'v1', a: 'topbutton' });
+    });
+  }
+
   function refresh() {
     _trackCount = 0;
     _jsErrorTrackCount = 0;
@@ -1635,5 +1652,6 @@
   hardenLegacyJquery();
   mountWebviewNotice();
   mountErrorTelemetry();
+  mountV2LinkHelper();
   return config;
 });

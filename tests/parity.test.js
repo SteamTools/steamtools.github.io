@@ -897,3 +897,19 @@ test('CFG.track enforces host gate, event allowlist, field sanitization, and per
   }
   assert.strictEqual(capped.length, 30);
 });
+
+test('all classic v1 tool pages include a Try v2 link to their matching /v2/ route', () => {
+  const routes = [
+    ['itemvalue/index.html', '../v2/itemvalue/'],
+    ['cards/index.html', '../v2/cards/'],
+    ['mosaticon/index.html', '../v2/mosaticon/'],
+    ['emoticons/index.html', '../v2/emoticons/'],
+    ['backgrounds/index.html', '../v2/backgrounds/'],
+    ['games/index.html', '../v2/games/']
+  ];
+  for (const [relHtml, expectedHref] of routes) {
+    const html = fs.readFileSync(path.join(REPO_ROOT, relHtml), 'utf8');
+    assert.ok(html.includes('class="topbutton st-v2-link"'), `${relHtml} missing .st-v2-link`);
+    assert.ok(html.includes(`href="${expectedHref}"`), `${relHtml} missing href="${expectedHref}"`);
+  }
+});
