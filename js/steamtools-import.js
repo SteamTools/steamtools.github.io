@@ -870,8 +870,30 @@
       downOutside: false,
       resolvedSteamId: '',
       resolveSeq: 0,
-      activeTab: 0
+      activeTab: 0,
+      lastImportMethod: 'paste'
     };
+
+    function trackImport(evName, props) {
+      var cfg = getConfig();
+      if (cfg && typeof cfg.track === 'function') {
+        cfg.track(evName, props);
+      }
+    }
+
+    function classifyImportErr(msgText) {
+      var msg = String(msgText || '');
+      if (/not Steam Profile Backgrounds|Expected Steam Community|not Steam Emoticons|EmoticonList JSON cannot|wrong app/i.test(msg)) {
+        return 'wrong_app';
+      }
+      if (/Sign-In web page|HTML|Firefox.*Raw Data/i.test(msg)) {
+        return 'html_page';
+      }
+      if (/returned "null"|returned \[\]|0 .*found|Empty/i.test(msg)) {
+        return 'empty_or_null';
+      }
+      return 'parse_err';
+    }
 
     function announce(msg, delayMs) {
       if (state.liveTimer) {
@@ -1317,6 +1339,9 @@
       setBanner(null, '');
       setFieldError(els.jsonInput, els.jsonErr, 'st-import-json-hint', '');
       var isRestored = Boolean(parseOpts && parseOpts.restored);
+      if (parseOpts && parseOpts.sourceLabel) {
+        state.lastImportMethod = parseOpts.sourceLabel;
+      }
       var prevPageCount = state.parsedResult ? Number(state.parsedResult.page_count || 0) : 0;
       var list = Array.isArray(newInputs) ? newInputs.slice() : [newInputs];
       var payloadList = appendToSession ? state.rawPages.concat(list) : list;
@@ -1333,6 +1358,12 @@
           state.parsedResult = result;
           state.restoredSession = false;
           renderWizardState();
+          if (els.applyBtn.disabled && !isRestored) {
+            trackImport('import_err', {
+              a: opts.mode || 'items',
+              b: classifyImportErr(els.statusBanner.textContent || 'empty_or_null')
+            });
+          }
           return result;
         }
         var pagesForStorage = Array.isArray(result.slim_pages) ? result.slim_pages : payloadList;
@@ -1345,6 +1376,12 @@
         persistCurrentSession();
 
         if (els.applyBtn.disabled) {
+          if (!isRestored) {
+            trackImport('import_err', {
+              a: opts.mode || 'items',
+              b: classifyImportErr(els.statusBanner.textContent)
+            });
+          }
           return result;
         }
 
@@ -1385,6 +1422,12 @@
         setFieldError(els.jsonInput, els.jsonErr, 'st-import-json-hint', msg);
         setBanner('error', msg);
         announce(msg);
+        if (!isRestored) {
+          trackImport('import_err', {
+            a: (state.options && state.options.mode) || 'items',
+            b: classifyImportErr(msg)
+          });
+        }
       });
     }
 
@@ -1479,6 +1522,9 @@
       if (rv === 'apply' && typeof callback === 'function' && result) {
         var resolvedSid = getEffectiveSteamId() || '';
         result.steamid64 = resolvedSid;
+        var modeVal = (state.options && state.options.mode) || 'items';
+        var methodVal = state.lastImportMethod || 'paste';
+        var pagesCount = result.page_count || 1;
         var finishedKey = getScopeKey();
         if (!result.more_items) {
           state.rawPages = [];
@@ -1488,6 +1534,7 @@
           state.lastSavedScopeKey = null;
           clearImportSession(finishedKey);
         }
+        trackImport('import_ok', { a: modeVal, b: methodVal, n: pagesCount });
         callback(result);
       }
     });
@@ -1672,6 +1719,7 @@
           selectTab(0, false, { transient: true });
           els.jsonInput.value = '';
           processIncomingInputs([text], computeCanAppend(), {
+            sourceLabel: 'paste',
             bannerOverride: 'Detected inventory JSON pasted into the SteamID field — staged items automatically!'
           });
         },
@@ -1706,7 +1754,7 @@
       if (!text || !text.trim()) return;
       ev.preventDefault();
       selectTab(0, false, { transient: true });
-      processIncomingInputs([text], computeCanAppend());
+      processIncomingInputs([text], computeCanAppend(), { sourceLabel: 'paste' });
     });
 
     // Consistent instant paste handling in manual JSON textarea (any length)
@@ -1725,7 +1773,7 @@
       if (text.length > 200000) {
         setBanner('warning', 'Staging large JSON (' + Math.round(text.length / 1024) + ' KB)...');
       }
-      processIncomingInputs([text], computeCanAppend()).then(function (parsed) {
+      processIncomingInputs([text], computeCanAppend(), { sourceLabel: 'paste' }).then(function (parsed) {
         if (parsed) {
           els.manualPasteDetails.open = false;
         }
@@ -1745,7 +1793,7 @@
           setBanner('warning', 'Your clipboard is empty. Open the raw data tab and copy everything (Ctrl+A, Ctrl+C) first.');
           return;
         }
-        processIncomingInputs([String(text)], computeCanAppend());
+        processIncomingInputs([String(text)], computeCanAppend(), { sourceLabel: 'paste' });
       }).catch(function () {
         els.manualPasteDetails.open = true;
         els.jsonInput.focus();
@@ -1789,7 +1837,7 @@
         els.jsonInput.focus();
         return;
       }
-      processIncomingInputs([raw], computeCanAppend()).then(function (parsed) {
+      processIncomingInputs([raw], computeCanAppend(), { sourceLabel: 'paste' }).then(function (parsed) {
         if (parsed) {
           els.jsonInput.value = '';
           els.manualPasteDetails.open = false;
@@ -1835,7 +1883,7 @@
           reader.readAsText(file);
         });
       })).then(function (texts) {
-        return processIncomingInputs(texts, computeCanAppend());
+        return processIncomingInputs(texts, computeCanAppend(), { sourceLabel: 'file' });
       }).catch(function (err) {
         setBanner('error', err && err.message ? err.message : 'Failed reading dropped file(s).');
       });
@@ -1933,6 +1981,8 @@
         state.parsedResult = null;
         state.restoredSession = false;
         state.lastSavedScopeKey = null;
+        state.lastImportMethod = opts.source === 'extension' ? 'extension' : 'paste';
+        trackImport('import_open', { a: opts.mode || 'items' });
         if (state.inputResolveTimer) {
           clearTimeout(state.inputResolveTimer);
           state.inputResolveTimer = null;

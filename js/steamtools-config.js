@@ -723,6 +723,10 @@
             issuedPass = { key: data.key, ts: data.ts };
           }
           if (idx + 1 < candidates.length && isRetriableApiFailure(status, data, allowTurnstile)) {
+            track('api_failover', {
+              a: cleanPath.split('?')[0].replace(/^\//, '').slice(0, 32),
+              b: 'http_' + status
+            });
             var nextPath = currentPath;
             var nextAllowTurnstile = allowTurnstile;
             if (allowTurnstile && issuedPass) {
@@ -750,6 +754,10 @@
             if (!errResp.data.ts) errResp.data.ts = issuedPass.ts;
           }
           if (idx + 1 < candidates.length && isRetriableApiFailure(status, data, allowTurnstile)) {
+            track('api_failover', {
+              a: cleanPath.split('?')[0].replace(/^\//, '').slice(0, 32),
+              b: 'http_' + status
+            });
             var nextPath = currentPath;
             var nextAllowTurnstile = allowTurnstile;
             if (allowTurnstile && issuedPass) {
@@ -1411,7 +1419,150 @@
     }
   }
 
+  var ALLOWED_TRACK_EVENTS = {
+    v2_route: 1,
+    v2_banner_click: 1,
+    classic_switch: 1,
+    theme_toggle: 1,
+    currency_change: 1,
+    fetch_ok: 1,
+    fetch_err: 1,
+    turnstile_err: 1,
+    import_open: 1,
+    import_ok: 1,
+    import_err: 1,
+    api_failover: 1,
+    'export': 1,
+    mosaticon_gen: 1,
+    js_error: 1
+  };
+  var ALLOWED_TRACK_APPS = {
+    hub: 1,
+    itemvalue: 1,
+    cards: 1,
+    mosaticon: 1,
+    emoticons: 1,
+    backgrounds: 1,
+    games: 1,
+    other: 1
+  };
+  var MAX_TRACK_EVENTS = 30;
+  var _trackCount = 0;
+  var _jsErrorTrackCount = 0;
+
+  function cleanTrackField(val) {
+    return String(val === null || val === undefined ? '' : val)
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-zA-Z0-9_.:-]/g, '')
+      .slice(0, 48);
+  }
+
+  function detectTelemetryScheme() {
+    try {
+      var ds = root && root.document && root.document.documentElement && root.document.documentElement.dataset;
+      if (ds && (ds.scheme === 'dark' || ds.scheme === 'light')) {
+        return ds.scheme;
+      }
+      if (root && typeof root.matchMedia === 'function') {
+        return root.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+    } catch (e) {}
+    return '';
+  }
+
+  function track(eventName, props) {
+    try {
+      var opts = props || {};
+      var ev = cleanTrackField(eventName);
+      if (!ev || !ALLOWED_TRACK_EVENTS[ev]) return false;
+
+      var host = root && root.location && root.location.hostname
+        ? String(root.location.hostname).toLowerCase()
+        : '';
+      if (!opts._force && host !== 'steam.tools' && host !== 'www.steam.tools') {
+        return false;
+      }
+      if (_trackCount >= MAX_TRACK_EVENTS) return false;
+      _trackCount += 1;
+
+      var path = (root && root.location && root.location.pathname) ? String(root.location.pathname) : '/';
+      var ver = opts.ver === 'v2' ? 'v2' : (opts.ver === 'v1' ? 'v1' : (/^\/v2(\/|$)/.test(path) ? 'v2' : 'v1'));
+      var rawApp = cleanTrackField(opts.app);
+      if (!rawApp) {
+        var m = /\/(itemvalue|cards|mosaticon|emoticons|backgrounds|games)(?:\/|$)/i.exec(path);
+        if (m) {
+          rawApp = m[1].toLowerCase();
+        } else if (path === '/' || path === '/v2' || path === '/v2/' || path === '/index.html' || path === '/v2/index.html') {
+          rawApp = 'hub';
+        }
+      }
+      var app = ALLOWED_TRACK_APPS[rawApp] ? rawApp : 'other';
+      var payloadObj = { e: ev, ver: ver, app: app };
+      var a = cleanTrackField(opts.a);
+      var b = cleanTrackField(opts.b);
+      if (a) payloadObj.a = a;
+      if (b) payloadObj.b = b;
+      var scheme = opts.scheme === 'dark' || opts.scheme === 'light' ? opts.scheme : detectTelemetryScheme();
+      if (scheme) payloadObj.scheme = scheme;
+      if (opts.n !== undefined && opts.n !== null) {
+        var num = Number(opts.n);
+        if (isFinite(num)) {
+          payloadObj.n = Math.max(0, Math.min(1000000000, Math.round(num)));
+        }
+      }
+
+      var body = JSON.stringify(payloadObj);
+      if (typeof opts._sendImpl === 'function') {
+        opts._sendImpl('/t', body);
+        return true;
+      }
+      var nav = root && root.navigator;
+      if (nav && typeof nav.sendBeacon === 'function') {
+        var beaconBody = typeof Blob === 'function' ? new Blob([body], { type: 'text/plain;charset=UTF-8' }) : body;
+        if (nav.sendBeacon('/t', beaconBody)) {
+          return true;
+        }
+      }
+      if (root && typeof root.fetch === 'function') {
+        root.fetch('/t', {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+          body: body,
+          keepalive: true,
+          credentials: 'omit'
+        }).catch(function () {});
+        return true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function mountErrorTelemetry() {
+    if (!root || typeof root.addEventListener !== 'function') return;
+    if (root._stErrTelemetryMounted) return;
+    root._stErrTelemetryMounted = true;
+    root.addEventListener('error', function (ev) {
+      if (_jsErrorTrackCount >= 3) return;
+      _jsErrorTrackCount += 1;
+      var err = ev && ev.error;
+      var name = (err && err.name) ? String(err.name) : 'Error';
+      track('js_error', { a: name, b: 'window' });
+    });
+    root.addEventListener('unhandledrejection', function (ev) {
+      if (_jsErrorTrackCount >= 3) return;
+      _jsErrorTrackCount += 1;
+      var r = ev && ev.reason;
+      var name = (r && r.name) ? String(r.name) : 'UnhandledRejection';
+      track('js_error', { a: name, b: 'promise' });
+    });
+  }
+
   function refresh() {
+    _trackCount = 0;
+    _jsErrorTrackCount = 0;
     config.CDN_BASE = resolveUrlSetting('st_cdn_base', DEFAULTS.CDN_BASE);
     config.CDN2_BASE = resolveUrlSetting('st_cdn2_base', DEFAULTS.CDN2_BASE);
     config.STEAM_ECON_BASE = DEFAULTS.STEAM_ECON_BASE;
@@ -1476,11 +1627,13 @@
     classifySteamIdPaste: classifySteamIdPaste,
     attachSteamIdPasteGuard: attachSteamIdPasteGuard,
     hardenLegacyJquery: hardenLegacyJquery,
+    track: track,
     refresh: refresh
   };
 
   refresh();
   hardenLegacyJquery();
   mountWebviewNotice();
+  mountErrorTelemetry();
   return config;
 });

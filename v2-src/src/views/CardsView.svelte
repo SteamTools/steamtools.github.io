@@ -8,6 +8,7 @@
     getImporter,
     httpShim,
     loadDataset,
+    trackEvent,
   } from '../lib/bridge.ts';
   import {
     applyUserToCardRows,
@@ -410,6 +411,7 @@
 
   function exportCsv() {
     const cfg = getCfg();
+    trackEvent('export', { app: 'cards', a: 'csv' });
     const text = buildCardsExportText(
       filteredRows,
       visibleCols,

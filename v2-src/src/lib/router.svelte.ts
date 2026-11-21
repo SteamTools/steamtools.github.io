@@ -5,6 +5,7 @@ import {
   V1_PATHS,
   type RouteId,
 } from './route-logic.ts';
+import { trackEvent } from './bridge.ts';
 
 export type { RouteId };
 export { parseRouteFromPathname };
@@ -18,6 +19,7 @@ class RouterStore {
     if (typeof window === 'undefined') return;
     this.currentRoute = parseRouteFromPathname(window.location.pathname, fallback);
     document.title = ROUTE_TITLES[this.currentRoute];
+    trackEvent('v2_route', { app: this.currentRoute, a: 'load' });
 
     window.addEventListener('popstate', () => {
       this.currentRoute = parseRouteFromPathname(window.location.pathname, this.initialFallback);
@@ -46,15 +48,20 @@ class RouterStore {
       ev.preventDefault();
     }
     const target = ROUTE_PATHS[route];
+    let switched = false;
     if (typeof window !== 'undefined') {
       const curClean = window.location.pathname.replace(/\/+$/, '') + '/';
       if (curClean !== target) {
         window.history.pushState({ route }, '', target);
         window.scrollTo({ top: 0, behavior: 'auto' });
+        switched = true;
       }
       document.title = ROUTE_TITLES[route];
     }
     this.currentRoute = route;
+    if (switched) {
+      trackEvent('v2_route', { app: route, a: 'spa' });
+    }
   }
 }
 

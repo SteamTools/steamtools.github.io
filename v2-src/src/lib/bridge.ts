@@ -213,3 +213,11 @@ export function isWebviewClient(): boolean {
     return false;
   }
 }
+
+export function trackEvent(eventName: string, props?: Record<string, unknown>): void {
+  try {
+    window.STEAMTOOLS_CONFIG?.track?.(eventName, props);
+  } catch {
+    // Telemetry must never break UI flows
+  }
+}

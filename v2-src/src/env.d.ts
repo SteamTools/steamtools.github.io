@@ -58,6 +58,7 @@ interface SteamToolsConfigGlobal {
     callbacks: { onJsonPaste?: (text: string) => void; onOversizedPaste?: (text: string) => void }
   ): void;
   isInAppWebview(ua?: string): boolean;
+  track?(eventName: string, props?: Record<string, unknown>): boolean;
 }
 
 interface SteamToolsImportGlobal {

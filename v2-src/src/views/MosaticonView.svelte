@@ -9,6 +9,7 @@
     httpShim,
     loadDataset,
     sanitizeEmoteName,
+    trackEvent,
   } from '../lib/bridge.ts';
   import { enhanceModalDialog } from '../lib/dialog.ts';
   import {
@@ -493,6 +494,7 @@
 
   function runMosaicGenerator() {
     if (!srcRgba || palette.length === 0) return;
+    trackEvent('mosaticon_gen', { app: 'mosaticon', a: colorMode });
     pushUndo(grid);
     grid = generateMosaicFromRgba({
       rgba: srcRgba,

@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import { onMount } from 'svelte';
-  import { isWebviewClient } from '../lib/bridge.ts';
+  import { isWebviewClient, trackEvent } from '../lib/bridge.ts';
   import { currencyStore } from '../lib/currency.svelte.ts';
   import { routerStore, type RouteId } from '../lib/router.svelte.ts';
   import { themeStore } from '../lib/theme.svelte.ts';
@@ -31,7 +31,12 @@
 
   function handleCurrencyChange(ev: Event) {
     const sel = ev.currentTarget as HTMLSelectElement;
-    currencyStore.setCurrency(Number.parseInt(sel.value, 10));
+    const nextIdx = Number.parseInt(sel.value, 10);
+    currencyStore.setCurrency(nextIdx);
+    const curName = currencyStore.currencies[nextIdx]?.name;
+    if (curName) {
+      trackEvent('currency_change', { app: routerStore.currentRoute, a: curName });
+    }
   }
 
   const v2NavItems: Array<{ route: RouteId; label: string; color: string }> = [
@@ -124,6 +129,7 @@
         href={routerStore.getClassicUrl(routerStore.currentRoute)}
         class="st-btn st-btn-sm"
         title="Switch back to classic v1 interface"
+        onclick={() => trackEvent('classic_switch', { app: routerStore.currentRoute })}
       >
         Classic v1
       </a>

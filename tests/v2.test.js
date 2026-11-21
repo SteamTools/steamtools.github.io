@@ -472,6 +472,7 @@ test('built v2 HTML entrypoints & assets preserve theme FOUC guard, noindex, sha
     assert.ok(html.includes('src="/js/import-worker.js'), `${relPath} missing import worker script`);
     assert.ok(html.includes('src="/js/steamtools-import.js'), `${relPath} missing shared import script`);
     assert.ok(html.includes('href="/css/steamtools-import.css'), `${relPath} missing shared import css`);
+    assert.ok(!html.includes('statcounter.com'), `${relPath} should not load StatCounter`);
   }
 
   const assetDir = path.join(REPO_ROOT, 'v2', 'assets');

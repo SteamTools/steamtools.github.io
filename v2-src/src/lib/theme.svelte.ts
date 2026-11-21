@@ -7,6 +7,7 @@ import {
   type ColorSchemeOverride,
   type EffectiveScheme,
 } from './theme-logic.ts';
+import { trackEvent } from './bridge.ts';
 
 function readStoredOverride(): ColorSchemeOverride {
   try {
@@ -76,6 +77,10 @@ class ThemeStore {
     const next = computeNextStoredScheme(this.storedOverride, this.systemIsDark);
     this.storedOverride = next;
     applyDomScheme(next);
+    trackEvent('theme_toggle', {
+      a: next ?? 'system',
+      b: resolveEffectiveScheme(next, this.systemIsDark),
+    });
     try {
       if (next === null) {
         window.localStorage.removeItem(COLOR_SCHEME_STORAGE_KEY);

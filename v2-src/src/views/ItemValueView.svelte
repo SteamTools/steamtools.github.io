@@ -5,6 +5,7 @@
     getCfg,
     getImporter,
     loadTurnstileApi,
+    trackEvent,
   } from '../lib/bridge.ts';
   import { currencyStore } from '../lib/currency.svelte.ts';
   import {
@@ -152,6 +153,7 @@
     if (!api || !turnstileContainerEl) {
       statusMsg = 'Captcha widget failed to load — click Import from Steam (no captcha) to load your items.';
       showImportCta = true;
+      trackEvent('turnstile_err', { app: 'itemvalue', a: 'script_load' });
       return;
     }
     if (turnstileWidgetId !== null) {
@@ -173,11 +175,13 @@
       },
       'expired-callback': () => {
         turnstileToken = '';
+        trackEvent('turnstile_err', { app: 'itemvalue', a: 'expired' });
       },
       'error-callback': () => {
         turnstileToken = '';
         statusMsg = 'Captcha check failed. Use Import from Steam (no captcha) or reload.';
         showImportCta = true;
+        trackEvent('turnstile_err', { app: 'itemvalue', a: 'widget_err' });
       },
     });
   }
@@ -340,6 +344,7 @@
         if (retryAfterSec) {
           statusMsg += ` Retry after ${retryAfterSec}s, or use Import from Steam.`;
         }
+        trackEvent('fetch_err', { app: 'itemvalue', a: appid, b: errCode || 'api_fail' });
         try {
           window.localStorage.removeItem('lastUser');
         } catch {
@@ -361,6 +366,11 @@
         try {
           const valued = await imp.priceServerItemValuePayload(data.items, appid, { config: cfg });
           isLoading = false;
+          trackEvent('fetch_ok', {
+            app: 'itemvalue',
+            a: appid,
+            n: Array.isArray(valued.items) ? valued.items.length : 0,
+          });
           applyValuedItems(valued.items, appid, {
             profileName: data.name,
             stale: Boolean(data.stale),
@@ -373,10 +383,16 @@
           isLoading = false;
           showImportCta = true;
           statusMsg = 'Failed to load prices from CDN — try Import from Steam.';
+          trackEvent('fetch_err', { app: 'itemvalue', a: appid, b: 'cdn_price_err' });
         }
         return;
       }
 
+      trackEvent('fetch_ok', {
+        app: 'itemvalue',
+        a: appid,
+        n: Array.isArray(data.items) ? data.items.length : 0,
+      });
       applyValuedItems(data.items, appid, {
         profileName: data.name,
         stale: Boolean(data.stale),
@@ -420,6 +436,7 @@
         resetTurnstileWidget();
         statusMsg = 'Verification expired or failed. Complete Turnstile again or use Import from Steam.';
         showImportCta = true;
+        trackEvent('fetch_err', { app: 'itemvalue', a: appid, b: errCode || 'captcha_fail' });
         return;
       }
 
@@ -437,6 +454,7 @@
         statusMsg = errReason
           ? String(errReason)
           : 'This inventory has over 20,000 items — use Import from Steam to load and price it locally.';
+        trackEvent('fetch_err', { app: 'itemvalue', a: appid, b: 'huge_inventory' });
         return;
       }
 
@@ -446,6 +464,7 @@
         statusMsg = errReason
           ? String(errReason)
           : 'Steam inventory is private or unavailable — check privacy settings or use Import from Steam.';
+        trackEvent('fetch_err', { app: 'itemvalue', a: appid, b: 'private' });
         try {
           window.localStorage.removeItem('lastUser');
         } catch {
@@ -466,6 +485,7 @@
           return;
         }
         statusMsg = `Rate limited by Steam${retryAfterSec ? ` (retry after ${retryAfterSec}s)` : ''} — use Import from Steam for instant results.`;
+        trackEvent('fetch_err', { app: 'itemvalue', a: appid, b: 'rate_limited' });
         return;
       }
 
@@ -483,6 +503,11 @@
       statusMsg = errReason
         ? String(errReason)
         : 'Something went wrong — try again later or use Import from Steam.';
+      trackEvent('fetch_err', {
+        app: 'itemvalue',
+        a: appid,
+        b: errCode || (status ? `http_${status}` : 'net_err'),
+      });
       if (!hasValidPass) {
         resetTurnstileWidget();
       }
@@ -532,6 +557,7 @@
 
   function exportCsv() {
     const cfg = getCfg();
+    trackEvent('export', { app: 'itemvalue', a: 'csv' });
     const text = buildInventoryCsv(filteredSummary.filtered, useFee, cfg.escapeCsvFormula);
     cfg.openTextExportDialog({
       title: `Export Inventory CSV (${filteredSummary.filtered.length} items)`,

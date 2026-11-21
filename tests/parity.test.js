@@ -849,3 +849,51 @@ test('openImportDialog Option B: zero-ID emotes, allowEmptyEmotes, deterministic
   assert.strictEqual(dlg.querySelector('#st-tab-paste').getAttribute('aria-selected'), 'true');
   dlg.close('cancel');
 });
+
+test('CFG.track enforces host gate, event allowlist, field sanitization, and per-page cap', () => {
+  const { CFG } = createMockEnv();
+  const sent = [];
+  const captureSend = (url, body) => sent.push({ url, data: JSON.parse(body) });
+
+  // Disallowed off steam.tools unless _force is true
+  global.location = { hostname: 'localhost', pathname: '/v2/cards/', protocol: 'http:', search: '' };
+  assert.strictEqual(CFG.track('v2_route', { _sendImpl: captureSend }), false);
+  assert.strictEqual(sent.length, 0);
+
+  // Unknown event rejected even with _force
+  assert.strictEqual(CFG.track('unknown_event_name', { _force: true, _sendImpl: captureSend }), false);
+  assert.strictEqual(sent.length, 0);
+
+  // Valid event sanitizes fields and auto-detects v2/app
+  assert.strictEqual(
+    CFG.track('import_ok', {
+      _force: true,
+      a: 'Item Value!! / VeryLongFieldName_1234567890_abcdefghijklmnopqrstuvwxyz',
+      b: 'bookmarklet?x=1',
+      n: 4.8,
+      scheme: 'dark',
+      _sendImpl: captureSend
+    }),
+    true
+  );
+  assert.strictEqual(sent.length, 1);
+  assert.strictEqual(sent[0].url, '/t');
+  assert.deepStrictEqual(sent[0].data, {
+    e: 'import_ok',
+    ver: 'v2',
+    app: 'cards',
+    a: 'itemvalueveryLongFieldName_1234567890_abcdefghij'.toLowerCase(),
+    b: 'bookmarkletx1',
+    scheme: 'dark',
+    n: 5
+  });
+
+  // Reset via refresh and verify 30-event per-page cap on steam.tools
+  global.location = { hostname: 'steam.tools', pathname: '/itemvalue/', protocol: 'https:', search: '' };
+  CFG.refresh();
+  const capped = [];
+  for (let i = 0; i < 35; i++) {
+    CFG.track('export', { a: 'csv', _sendImpl: (u, b) => capped.push(b) });
+  }
+  assert.strictEqual(capped.length, 30);
+});

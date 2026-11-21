@@ -178,6 +178,18 @@
 				}
 			});
 		}
+
+		var v2Banner = document.querySelector('.v2-banner');
+		if (v2Banner) {
+			v2Banner.addEventListener('click', function() {
+				try {
+					var h = location.hostname;
+					if ((h === 'steam.tools' || h === 'www.steam.tools') && navigator.sendBeacon) {
+						navigator.sendBeacon('/t', new Blob([JSON.stringify({ e: 'v2_banner_click', ver: 'v1', app: 'hub' })], { type: 'text/plain;charset=UTF-8' }));
+					}
+				} catch (e) {}
+			});
+		}
 	</script>
 
 	<script type="application/ld+json">
