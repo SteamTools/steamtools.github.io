@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <script>
+  try {
+    var s = localStorage.getItem("color-scheme");
+    if (s === "light" || s === "dark") document.querySelector('meta[name="color-scheme"]').content = s;
+  } catch (e) {}
+  </script>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="Load your Steam Community items and sort them by market value or filter them by type.">
+  <meta name="keywords" content="Steam,items,market,value,price,sort,inventory,emoticon,background,card,tf2,team fortress 2,dota 2,cs2,counter-strike">
+  <meta name="author" content="Ehsan Kia">
+  <meta name="referrer" content="no-referrer-when-downgrade">
+  <title>Item Value Sorter — steam.tools</title>
+
+  <!-- NetworkN -->
+  <script async src="https://kumo.network-n.com/dist/app.js" site="steam-tools"></script>
+
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geo&family=Oswald:wght@300;400;500&display=swap">
+  <link rel="stylesheet" href="/css/steamtools-import.css?v=20261121a">
+</head>
+<body>
+  <div id="app" data-initial-route="itemvalue"></div>
+
+  <script src="/js/steamtools-config.js?v=20261121a"></script>
+  <script src="/js/import-worker.js?v=20261121a"></script>
+  <script src="/js/steamtools-import.js?v=20261121a"></script>
+  <script type="module" src="/src/main.ts"></script>
+
+  <!-- Start of StatCounter Code for Default Guide -->
+  <script>
+    var sc_project=9905430;
+    var sc_invisible=1;
+    var sc_security="89ce89e8";
+  </script>
+  <script async src="https://secure.statcounter.com/counter/counter.js"></script>
+  <noscript><div class="statcounter"><a title="create counter"
+  href="https://statcounter.com/free-hit-counter/"
+  target="_blank" rel="noopener noreferrer"><img class="statcounter"
+  src="https://c.statcounter.com/9905430/0/89ce89e8/1/"
+  alt="create counter" width="1" height="1"></a></div></noscript>
+  <!-- End of StatCounter Code for Default Guide -->
+</body>
+</html>
