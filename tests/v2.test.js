@@ -497,6 +497,21 @@ test('built v2 HTML entrypoints & assets preserve theme FOUC guard, noindex, sha
     'HubView footer should not include the legacy Feedback link',
   );
 
+  const v1IndexHtml = fs.readFileSync(path.join(REPO_ROOT, 'index.html'), 'utf8');
+  for (const [label, content] of [
+    ['index.html', v1IndexHtml],
+    ['HubView.svelte', hubSvelte],
+  ]) {
+    assert.ok(
+      !content.includes('steamcustomizer.com') && !content.includes('steamsignature.com'),
+      `${label} should not list defunct/non-reciprocal affiliate links`,
+    );
+    assert.ok(
+      content.includes('https://steamladder.com/') && content.includes('https://twitch.center'),
+      `${label} should retain SteamLadder and TwitchCenter affiliates`,
+    );
+  }
+
   const appCss = fs.readFileSync(
     path.join(REPO_ROOT, 'v2-src', 'src', 'styles', 'app.css'),
     'utf8',

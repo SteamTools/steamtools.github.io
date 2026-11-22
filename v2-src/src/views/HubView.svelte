@@ -134,9 +134,7 @@
   </div>
   <div class="st-affiliates">
     <span>Affiliates:</span>
-    <a target="_blank" rel="noopener noreferrer" href="https://steamcustomizer.com/">Steam UI Customizer</a>
     <a target="_blank" rel="noopener noreferrer" href="https://steamladder.com/">SteamLadder</a>
-    <a target="_blank" rel="noopener noreferrer" href="https://steamsignature.com/">SteamSignature</a>
     <a target="_blank" rel="noopener noreferrer" href="https://twitch.center">TwitchCenter</a>
   </div>
 </footer>
