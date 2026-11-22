@@ -3,3 +3,5 @@
 set_data.json
 node_modules/
 v2-src/node_modules/
+v2/**/*.map
+.env.sentry-build-plugin

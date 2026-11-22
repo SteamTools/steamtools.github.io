@@ -99,6 +99,7 @@ export default defineConfig({
   build: {
     outDir: path.resolve(__dirname, '../v2'),
     emptyOutDir: true,
+    sourcemap: 'hidden',
     target: 'es2022',
     rollupOptions: {
       input: {

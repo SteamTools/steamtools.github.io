@@ -129,8 +129,6 @@
       &middot;
       <a href="/privacy.html">Privacy</a>
       &middot;
-      <a target="_blank" rel="noopener noreferrer" href="https://steamcommunity.com/groups/steam_tools">Feedback</a>
-      &middot;
       <a target="_blank" rel="noopener noreferrer" href="https://www.paypal.com/donate/?business=HLRYRKCXRYX7C">Donate</a>
     </div>
   </div>

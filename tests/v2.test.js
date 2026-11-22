@@ -477,13 +477,35 @@ test('built v2 HTML entrypoints & assets preserve theme FOUC guard, noindex, sha
 
   const assetDir = path.join(REPO_ROOT, 'v2', 'assets');
   const assets = fs.readdirSync(assetDir);
-  const jsBytes = assets
-    .filter((f) => f.endsWith('.js'))
+  assert.equal(
+    assets.filter((f) => f.endsWith('.map')).length,
+    0,
+    'No .map files may be publicly shipped in v2/assets',
+  );
+
+  const hubSvelte = fs.readFileSync(
+    path.join(REPO_ROOT, 'v2-src', 'src', 'views', 'HubView.svelte'),
+    'utf8',
+  );
+  assert.ok(
+    !hubSvelte.includes('steamcommunity.com/groups/steam_tools'),
+    'HubView footer should not include the legacy Feedback link',
+  );
+
+  const jsFiles = assets.filter((f) => f.endsWith('.js'));
+  const nonSentryJsBytes = jsFiles
+    .filter((f) => !f.startsWith('sentry-'))
+    .reduce((acc, f) => acc + fs.statSync(path.join(assetDir, f)).size, 0);
+  const jsBytes = jsFiles
     .reduce((acc, f) => acc + fs.statSync(path.join(assetDir, f)).size, 0);
   const cssBytes = assets
     .filter((f) => f.endsWith('.css'))
     .reduce((acc, f) => acc + fs.statSync(path.join(assetDir, f)).size, 0);
 
-  assert.ok(jsBytes > 0 && jsBytes < 450_000, `Expected compact split JS assets <450KB, got ${jsBytes}`);
+  assert.ok(
+    nonSentryJsBytes > 0 && nonSentryJsBytes < 300_000,
+    `Expected compact app JS assets <300KB, got ${nonSentryJsBytes}`,
+  );
+  assert.ok(jsBytes > 0 && jsBytes < 550_000, `Expected compact total split JS assets <550KB, got ${jsBytes}`);
   assert.ok(cssBytes > 0 && cssBytes < 80_000, `Expected compact CSS assets <80KB, got ${cssBytes}`);
 });
