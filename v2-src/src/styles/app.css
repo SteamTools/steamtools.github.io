@@ -293,14 +293,10 @@
   }
 }
 
-html, body {
+html {
   margin: 0;
   padding: 0;
   min-height: 100%;
-  font-family: var(--st-font-ui);
-  font-size: 13px;
-  line-height: 1.45;
-  color: var(--st-text);
   background-color: #d6d9da;
   background-image:
     var(--st-backdrop-overlay),
@@ -309,6 +305,22 @@ html, body {
     var(--st-backdrop-overlay),
     image-set(url("/img/bg.webp") type("image/webp"), url("/img/bg.png") type("image/png"));
   background-attachment: fixed;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  max-width: 100% !important;
+  font-family: var(--st-font-ui);
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--st-text);
+  background: transparent;
+}
+
+iframe {
+  color-scheme: light;
 }
 
 :where(button, a, input, select, textarea, [tabindex]):focus-visible {
@@ -472,8 +484,10 @@ a:hover {
   width: min(980px, 100%);
 }
 
-/* NetworkN / Celtra Ad Slots & Skin Takeover Stacking */
-.st-ad-lb1 {
+/* NetworkN / Celtra / JustPremium / GumGum Ad Slots & Skin Takeover Stacking */
+.st-ad-lb1,
+.st-sheet #nn_lb1.st-ad-lb1 {
+  margin-block-start: 0 !important;
   margin-inline: auto;
   text-align: center;
 }
@@ -484,6 +498,20 @@ a:hover {
 
 .st-ad-lb1:has(iframe:not([style*="display: none"]):not([height="0"]):not([height="1"])) {
   margin-block-end: 8px;
+}
+
+/* Collapse the in-sheet #nn_lb1 loader box (without display:none) when a full-page skin/wallpaper is active */
+body:has(.jpx-wp-wrapper, #jpx-wp-front-container, [id^="celtra-skin-container-"]) .st-sheet #nn_lb1.st-ad-lb1 {
+  height: 0 !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  overflow: clip !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+body:has(.jpx-wp-wrapper, #jpx-wp-front-container) {
+  background: transparent !important;
 }
 
 #celtra-skin-container-background {
@@ -503,12 +531,27 @@ a:hover {
   }
 }
 
+@media (max-width: 1200px) {
+  .jpx-wp-wrapper,
+  #jpx-wp-front-container {
+    display: none !important;
+  }
+  body:has(.jpx-wp-wrapper, #jpx-wp-front-container) {
+    margin-top: 0 !important;
+    width: auto !important;
+  }
+}
+
 .adswitch_skin,
 #nn_skinl,
 #nn_skinr {
   position: fixed !important;
   top: 56px;
-  z-index: 1 !important;
+  z-index: 1;
+}
+
+body:has(.jpx-wp-wrapper, #jpx-wp-front-container, [id^="celtra-skin-container-"]) :is(.adswitch_skin, #nn_skinl, #nn_skinr) {
+  display: none !important;
 }
 
 #nn_skinl {
@@ -527,6 +570,18 @@ body:has(.st-sheet.is-hub) #nn_skinl {
 
 body:has(.st-sheet.is-hub) #nn_skinr {
   left: calc(50% + 500px);
+}
+
+@media (max-width: 1860px) {
+  body:not(:has(.st-sheet.is-hub)) :is(#nn_skinl, #nn_skinr):has(iframe[width="300"]) {
+    display: none !important;
+  }
+}
+
+@media (max-width: 1600px) {
+  body:has(.st-sheet.is-hub) :is(#nn_skinl, #nn_skinr):has(iframe[width="300"]) {
+    display: none !important;
+  }
 }
 
 @media (max-width: 1580px) {
@@ -2425,7 +2480,7 @@ dialog.st-export-dialog .st-import-footer {
 #sentry-feedback {
   --font-family: var(--st-font-ui);
   --font-size: 13px;
-  --z-index: 100000;
+  --z-index: 2147483646;
   --dialog-inset: 46px 12px auto auto;
   --dialog-padding: 18px;
   --dialog-border-radius: 6px;

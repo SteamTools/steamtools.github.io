@@ -535,6 +535,20 @@ test('built v2 HTML entrypoints & assets preserve theme FOUC guard, noindex, sha
     appCss.includes('#nn_skinl') && appCss.includes('#nn_skinr'),
     'app.css should style #nn_skinl and #nn_skinr skin slots',
   );
+  assert.match(
+    appCss,
+    /iframe\s*\{\s*color-scheme:\s*light;\s*\}/s,
+    'app.css must set color-scheme: light on iframes so transparent ad frames do not get an opaque white dark-mode canvas',
+  );
+  assert.match(
+    appCss,
+    /\.st-sheet\s+#nn_lb1\.st-ad-lb1\s*\{[^}]*margin-block-start:\s*0\s*!important;/s,
+    'app.css must neutralize injected div#nn_lb1 top margins inside .st-sheet',
+  );
+  assert.ok(
+    appCss.includes('.jpx-wp-wrapper') && appCss.includes('#jpx-wp-front-container'),
+    'app.css must guard layout and skin slots when JustPremium/GumGum wallpaper wrappers are active',
+  );
 
   const jsFiles = assets.filter((f) => f.endsWith('.js'));
   const nonSentryJsBytes = jsFiles
