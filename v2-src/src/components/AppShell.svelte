@@ -4,7 +4,7 @@
   import { isWebviewClient, trackEvent } from '../lib/bridge.ts';
   import { currencyStore } from '../lib/currency.svelte.ts';
   import { routerStore, type RouteId } from '../lib/router.svelte.ts';
-  import { syncSentryContext } from '../lib/sentry-bridge.ts';
+  import { syncSentryContext } from '../lib/diag-bridge.ts';
   import { themeStore } from '../lib/theme.svelte.ts';
 
   let { children }: { children: Snippet } = $props();
@@ -33,7 +33,7 @@
     if (feedbackLoading) return;
     feedbackLoading = true;
     try {
-      const { openSentryFeedback } = await import('../lib/sentry-feedback.ts');
+      const { openSentryFeedback } = await import('../lib/feedback-modal.ts');
       await openSentryFeedback();
     } finally {
       feedbackLoading = false;

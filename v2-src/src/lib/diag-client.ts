@@ -10,11 +10,12 @@ import {
   registerSentryContextSync,
   shouldSendToSentry,
   type SentryContextTags,
-} from './sentry-bridge.ts';
+} from './diag-bridge.ts';
 import { themeStore } from './theme.svelte.ts';
 
 export const SENTRY_DSN =
   'https://b68144c98d912ae0bab8f38b6719be4d@o4512471924408320.ingest.us.sentry.io/4512471951343616';
+export const SENTRY_TUNNEL_PATH = '/e';
 
 let initialized = false;
 
@@ -52,6 +53,7 @@ export function initSentry(options?: { allowLocalPreview?: boolean }): boolean {
 
   init({
     dsn: SENTRY_DSN,
+    tunnel: prod ? SENTRY_TUNNEL_PATH : undefined,
     environment: prod ? 'production' : 'development',
     release,
     dataCollection: {

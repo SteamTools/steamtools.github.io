@@ -20,7 +20,8 @@ export function isSentryDebugMode(search?: string): boolean {
     search ?? (typeof window !== 'undefined' ? window.location.search : '');
   if (!qs) return false;
   try {
-    return new URLSearchParams(qs).get('sentry_debug') === '1';
+    const params = new URLSearchParams(qs);
+    return params.get('st_diag') === '1' || params.get('sentry_debug') === '1';
   } catch {
     return false;
   }

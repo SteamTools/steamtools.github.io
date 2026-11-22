@@ -482,6 +482,11 @@ test('built v2 HTML entrypoints & assets preserve theme FOUC guard, noindex, sha
     0,
     'No .map files may be publicly shipped in v2/assets',
   );
+  assert.equal(
+    assets.filter((f) => /sentry/i.test(f)).length,
+    0,
+    'No asset filename in v2/assets may contain "sentry"',
+  );
 
   const hubSvelte = fs.readFileSync(
     path.join(REPO_ROOT, 'v2-src', 'src', 'views', 'HubView.svelte'),
@@ -518,7 +523,7 @@ test('built v2 HTML entrypoints & assets preserve theme FOUC guard, noindex, sha
 
   const jsFiles = assets.filter((f) => f.endsWith('.js'));
   const nonSentryJsBytes = jsFiles
-    .filter((f) => !f.startsWith('sentry-'))
+    .filter((f) => !f.startsWith('diag-') && !f.startsWith('feedback-modal-'))
     .reduce((acc, f) => acc + fs.statSync(path.join(assetDir, f)).size, 0);
   const jsBytes = jsFiles
     .reduce((acc, f) => acc + fs.statSync(path.join(assetDir, f)).size, 0);
@@ -532,4 +537,96 @@ test('built v2 HTML entrypoints & assets preserve theme FOUC guard, noindex, sha
   );
   assert.ok(jsBytes > 0 && jsBytes < 550_000, `Expected compact total split JS assets <550KB, got ${jsBytes}`);
   assert.ok(cssBytes > 0 && cssBytes < 80_000, `Expected compact CSS assets <80KB, got ${cssBytes}`);
+});
+
+test('telemetry-worker /e tunnel validates Origin/DSN, strips PII headers, and preserves binary PNG bytes', async () => {
+  const { default: worker } = await import('../v2-src/workers/telemetry-worker.mjs');
+  const expectedDsn =
+    'https://b68144c98d912ae0bab8f38b6719be4d@o4512471924408320.ingest.us.sentry.io/4512471951343616';
+  const expectedUpstreamUrl =
+    'https://o4512471924408320.ingest.us.sentry.io/api/4512471951343616/envelope/?sentry_version=7&sentry_key=b68144c98d912ae0bab8f38b6719be4d';
+
+  let upstreamCalls = 0;
+  let capturedRequest = null;
+  const mockEnv = {
+    _fetchImpl: async (url, init) => {
+      upstreamCalls += 1;
+      capturedRequest = { url, init };
+      return new Response('{"id":"abc"}', {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Sentry-Rate-Limits': '60:error:project',
+        },
+      });
+    },
+  };
+
+  // 1. Disallowed Origin -> 403
+  const badOriginRes = await worker.fetch(
+    new Request('https://steam.tools/e', {
+      method: 'POST',
+      headers: { Origin: 'https://evil.example' },
+      body: `{"dsn":"${expectedDsn}"}\n`,
+    }),
+    mockEnv,
+  );
+  assert.equal(badOriginRes.status, 403);
+  assert.equal(upstreamCalls, 0);
+
+  // 2. Unauthorized DSN -> 403 without calling upstream
+  const badDsnRes = await worker.fetch(
+    new Request('https://steam.tools/e', {
+      method: 'POST',
+      headers: { Origin: 'https://steam.tools' },
+      body: '{"dsn":"https://attacker@o1.ingest.sentry.io/999"}\n',
+    }),
+    mockEnv,
+  );
+  assert.equal(badDsnRes.status, 403);
+  assert.equal(upstreamCalls, 0);
+
+  // 3. Non-JSON envelope line 1 -> 400
+  const badJsonRes = await worker.fetch(
+    new Request('https://steam.tools/e', {
+      method: 'POST',
+      headers: { Origin: 'https://steam.tools' },
+      body: 'not-json\n',
+    }),
+    mockEnv,
+  );
+  assert.equal(badJsonRes.status, 400);
+  assert.equal(upstreamCalls, 0);
+
+  // 4. Valid envelope with binary PNG payload preserves raw bytes and strips cookie/IP headers
+  const enc = new TextEncoder();
+  const headerPart = enc.encode(
+    `{"dsn":"${expectedDsn}"}\n{"type":"attachment","length":12,"filename":"screenshot.png"}\n`,
+  );
+  const pngBytes = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0xff, 0xd8, 0x00, 0xfe]);
+  const fullPayload = new Uint8Array(headerPart.length + pngBytes.length);
+  fullPayload.set(headerPart, 0);
+  fullPayload.set(pngBytes, headerPart.length);
+
+  const okRes = await worker.fetch(
+    new Request('https://www.steam.tools/e', {
+      method: 'POST',
+      headers: {
+        Origin: 'https://www.steam.tools',
+        Cookie: 'st_session=secret',
+        'CF-Connecting-IP': '203.0.113.42',
+        'User-Agent': 'SteamToolsTest/1.0',
+      },
+      body: fullPayload,
+    }),
+    mockEnv,
+  );
+  assert.equal(okRes.status, 200);
+  assert.equal(okRes.headers.get('x-sentry-rate-limits'), '60:error:project');
+  assert.equal(upstreamCalls, 1);
+  assert.equal(capturedRequest.url, expectedUpstreamUrl);
+  assert.equal(capturedRequest.init.headers.get('cookie'), null);
+  assert.equal(capturedRequest.init.headers.get('cf-connecting-ip'), null);
+  assert.equal(capturedRequest.init.headers.get('user-agent'), 'SteamToolsTest/1.0');
+  assert.deepEqual(new Uint8Array(capturedRequest.init.body), fullPayload);
 });

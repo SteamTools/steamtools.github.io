@@ -2,7 +2,7 @@ import { mount } from 'svelte';
 import App from './App.svelte';
 import { ALL_ROUTES } from './lib/route-logic.ts';
 import { routerStore, type RouteId } from './lib/router.svelte.ts';
-import { shouldSendToSentry } from './lib/sentry-bridge.ts';
+import { shouldSendToSentry } from './lib/diag-bridge.ts';
 import './styles/app.css';
 
 if (typeof HTMLElement !== 'undefined' && !Object.hasOwn(HTMLElement.prototype, 'popover')) {
@@ -21,7 +21,7 @@ if (target) {
 }
 
 if (shouldSendToSentry()) {
-  void import('./lib/sentry.ts').then((m) => {
+  void import('./lib/diag-client.ts').then((m) => {
     m.initSentry();
   });
 }

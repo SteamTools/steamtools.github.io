@@ -111,6 +111,12 @@ export default defineConfig({
         mosaticon: path.resolve(__dirname, 'mosaticon/index.html'),
         itemvalue: path.resolve(__dirname, 'itemvalue/index.html'),
       },
+      output: {
+        chunkFileNames(chunkInfo) {
+          const safeName = (chunkInfo.name || 'chunk').replace(/sentry/gi, 'diag');
+          return `assets/${safeName}-[hash].js`;
+        },
+      },
     },
   },
 });

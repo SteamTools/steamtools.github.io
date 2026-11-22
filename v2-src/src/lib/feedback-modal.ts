@@ -5,8 +5,8 @@ import {
 } from '@sentry/svelte';
 import { currencyStore } from './currency.svelte.ts';
 import { routerStore } from './router.svelte.ts';
-import { initSentry, updateSentryContext } from './sentry.ts';
-import { registerSentryThemeSync } from './sentry-bridge.ts';
+import { initSentry, updateSentryContext } from './diag-client.ts';
+import { registerSentryThemeSync } from './diag-bridge.ts';
 import { themeStore } from './theme.svelte.ts';
 
 type FeedbackIntegrationInstance = NonNullable<ReturnType<typeof getFeedback>>;
@@ -23,6 +23,7 @@ function ensureFeedbackIntegration(): FeedbackIntegrationInstance | undefined {
   if (!feedbackRegistered && !getFeedback()) {
     addIntegration(
       feedbackSyncIntegration({
+        id: 'st-feedback-host',
         autoInject: false,
         colorScheme: themeStore.effectiveScheme,
         enableScreenshot: true,
