@@ -348,6 +348,8 @@ a:hover {
 }
 
 .st-topbar {
+  position: relative;
+  z-index: 10;
   width: min(1240px, 100%);
   display: flex;
   flex-wrap: wrap;
@@ -448,6 +450,8 @@ a:hover {
 
 /* Main Centered Sheet (#container DNA) */
 .st-sheet {
+  position: relative;
+  z-index: 10;
   width: min(1240px, 100%);
   flex: 1 0 auto;
   display: flex;
@@ -466,6 +470,77 @@ a:hover {
 
 .st-topbar.is-hub {
   width: min(980px, 100%);
+}
+
+/* NetworkN / Celtra Ad Slots & Skin Takeover Stacking */
+.st-ad-lb1 {
+  margin-inline: auto;
+  text-align: center;
+}
+
+.st-ad-lb1 iframe {
+  vertical-align: bottom;
+}
+
+.st-ad-lb1:has(iframe:not([style*="display: none"]):not([height="0"]):not([height="1"])) {
+  margin-block-end: 8px;
+}
+
+#celtra-skin-container-background {
+  z-index: 0 !important;
+}
+
+#celtra-skin-container-top,
+#celtra-skin-container-left,
+#celtra-skin-container-right {
+  z-index: 1 !important;
+}
+
+@media (max-width: 1440px) {
+  #celtra-skin-container-left,
+  #celtra-skin-container-right {
+    display: none !important;
+  }
+}
+
+.adswitch_skin,
+#nn_skinl,
+#nn_skinr {
+  position: fixed !important;
+  top: 56px;
+  z-index: 1 !important;
+}
+
+#nn_skinl {
+  right: calc(50% + 630px);
+  left: auto !important;
+}
+
+#nn_skinr {
+  left: calc(50% + 630px);
+  right: auto !important;
+}
+
+body:has(.st-sheet.is-hub) #nn_skinl {
+  right: calc(50% + 500px);
+}
+
+body:has(.st-sheet.is-hub) #nn_skinr {
+  left: calc(50% + 500px);
+}
+
+@media (max-width: 1580px) {
+  body:not(:has(.st-sheet.is-hub)) :is(.adswitch_skin, #nn_skinl, #nn_skinr) {
+    display: none !important;
+  }
+}
+
+@media (max-width: 1320px) {
+  .adswitch_skin,
+  #nn_skinl,
+  #nn_skinr {
+    display: none !important;
+  }
 }
 
 /* Form Controls & Buttons */

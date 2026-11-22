@@ -185,7 +185,7 @@
       </div>
     {/if}
 
-    <div id="nn_lb1" style="margin: 0 auto 8px; text-align: center;"></div>
+    <div id="nn_lb1" class="st-ad-lb1"></div>
 
     {@render children()}
   </main>

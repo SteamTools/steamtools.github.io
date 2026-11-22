@@ -492,6 +492,30 @@ test('built v2 HTML entrypoints & assets preserve theme FOUC guard, noindex, sha
     'HubView footer should not include the legacy Feedback link',
   );
 
+  const appCss = fs.readFileSync(
+    path.join(REPO_ROOT, 'v2-src', 'src', 'styles', 'app.css'),
+    'utf8',
+  );
+  assert.match(
+    appCss,
+    /\.st-topbar\s*\{[^}]*position:\s*relative;[^}]*z-index:\s*10;/s,
+    '.st-topbar must establish a z-index: 10 stacking context above ad skins',
+  );
+  assert.match(
+    appCss,
+    /\.st-sheet\s*\{[^}]*position:\s*relative;[^}]*z-index:\s*10;/s,
+    '.st-sheet must establish a z-index: 10 stacking context above ad skins',
+  );
+  assert.match(
+    appCss,
+    /#celtra-skin-container-background\s*\{[^}]*z-index:\s*0\s*!important;/s,
+    '#celtra-skin-container-background must stay behind the sheet',
+  );
+  assert.ok(
+    appCss.includes('#nn_skinl') && appCss.includes('#nn_skinr'),
+    'app.css should style #nn_skinl and #nn_skinr skin slots',
+  );
+
   const jsFiles = assets.filter((f) => f.endsWith('.js'));
   const nonSentryJsBytes = jsFiles
     .filter((f) => !f.startsWith('sentry-'))
