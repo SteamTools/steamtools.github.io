@@ -914,6 +914,23 @@ test('all classic v1 tool pages include a Try v2 link to their matching /v2/ rou
   }
 });
 
+test('all v1 tool pages and v2 Hub point Donate links to Ko-fi without legacy PayPal links', () => {
+  const donateFiles = [
+    'v2-src/src/views/HubView.svelte',
+    'itemvalue/index.html',
+    'cards/index.html',
+    'mosaticon/index.html',
+    'emoticons/index.html',
+    'backgrounds/index.html',
+    'games/index.html',
+  ];
+  for (const relPath of donateFiles) {
+    const content = fs.readFileSync(path.join(REPO_ROOT, relPath), 'utf8');
+    assert.ok(content.includes('href="https://ko-fi.com/ehsankia"'), `${relPath} missing Ko-fi donate link`);
+    assert.ok(!content.includes('paypal.com/donate'), `${relPath} still contains legacy PayPal link`);
+  }
+});
+
 test('Sentry setup discloses usage in privacy policy and restricts tracePropagationTargets away from API/CDN hosts', () => {
   const privacyHtml = fs.readFileSync(path.join(REPO_ROOT, 'privacy.html'), 'utf8');
   assert.ok(

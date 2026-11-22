@@ -129,7 +129,7 @@
       &middot;
       <a href="/privacy.html">Privacy</a>
       &middot;
-      <a target="_blank" rel="noopener noreferrer" href="https://www.paypal.com/donate/?business=HLRYRKCXRYX7C">Donate</a>
+      <a target="_blank" rel="noopener noreferrer" href="https://ko-fi.com/ehsankia">Donate</a>
     </div>
   </div>
   <div class="st-affiliates">
