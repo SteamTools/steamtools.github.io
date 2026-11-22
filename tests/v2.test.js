@@ -492,15 +492,38 @@ test('built v2 HTML entrypoints & assets preserve theme FOUC guard, noindex, sha
     path.join(REPO_ROOT, 'v2-src', 'src', 'views', 'HubView.svelte'),
     'utf8',
   );
+  const appShellSvelte = fs.readFileSync(
+    path.join(REPO_ROOT, 'v2-src', 'src', 'components', 'AppShell.svelte'),
+    'utf8',
+  );
   assert.ok(
-    !hubSvelte.includes('steamcommunity.com/groups/steam_tools'),
-    'HubView footer should not include the legacy Feedback link',
+    !hubSvelte.includes('steamcommunity.com/groups/steam_tools') &&
+      !appShellSvelte.includes('steamcommunity.com/groups/steam_tools'),
+    'Hub/AppShell footer should not include the legacy Feedback link',
+  );
+  assert.ok(
+    !hubSvelte.includes('steamcustomizer.com') && !hubSvelte.includes('steamsignature.com'),
+    'HubView.svelte should not list defunct/non-reciprocal affiliate links',
+  );
+
+  const childrenIdx = appShellSvelte.indexOf('{@render children()}');
+  const lb1WrapIdx = appShellSvelte.indexOf('<div class="st-ad-lb1-wrap">');
+  const lb1Idx = appShellSvelte.indexOf('<div id="nn_lb1" class="st-ad-lb1"></div>');
+  const hubIfIdx = appShellSvelte.indexOf('{#if isHub}');
+  const footerIdx = appShellSvelte.indexOf('<footer class="st-footer">');
+  assert.ok(
+    childrenIdx !== -1 &&
+      lb1WrapIdx > childrenIdx &&
+      lb1Idx > lb1WrapIdx &&
+      hubIfIdx > lb1Idx &&
+      footerIdx > hubIfIdx,
+    'AppShell.svelte must place persistent .st-ad-lb1-wrap/#nn_lb1 after {@render children()} and outside {#if isHub} before .st-footer',
   );
 
   const v1IndexHtml = fs.readFileSync(path.join(REPO_ROOT, 'index.html'), 'utf8');
   for (const [label, content] of [
     ['index.html', v1IndexHtml],
-    ['HubView.svelte', hubSvelte],
+    ['AppShell.svelte', appShellSvelte],
   ]) {
     assert.ok(
       !content.includes('steamcustomizer.com') && !content.includes('steamsignature.com'),
@@ -518,13 +541,13 @@ test('built v2 HTML entrypoints & assets preserve theme FOUC guard, noindex, sha
   );
   assert.match(
     appCss,
-    /\.st-topbar\s*\{[^}]*position:\s*relative;[^}]*z-index:\s*10;/s,
-    '.st-topbar must establish a z-index: 10 stacking context above ad skins',
+    /\.st-topbar\s*\{[^}]*position:\s*relative;[^}]*z-index:\s*20;/s,
+    '.st-topbar must establish a z-index: 20 stacking context above ad skins',
   );
   assert.match(
     appCss,
-    /\.st-sheet\s*\{[^}]*position:\s*relative;[^}]*z-index:\s*10;/s,
-    '.st-sheet must establish a z-index: 10 stacking context above ad skins',
+    /\.st-sheet\s*\{[^}]*position:\s*relative;[^}]*z-index:\s*20;/s,
+    '.st-sheet must establish a z-index: 20 stacking context above ad skins',
   );
   assert.match(
     appCss,
@@ -534,6 +557,14 @@ test('built v2 HTML entrypoints & assets preserve theme FOUC guard, noindex, sha
   assert.ok(
     appCss.includes('#nn_skinl') && appCss.includes('#nn_skinr'),
     'app.css should style #nn_skinl and #nn_skinr skin slots',
+  );
+  assert.ok(
+    appCss.includes('.st-ad-lb1-wrap') &&
+      appCss.includes('max-width: calc(50% - 636px)') &&
+      appCss.includes('iframe[width="301"]') &&
+      appCss.includes('iframe[width="250"]') &&
+      appCss.includes(':not([id^="sp_message"])'),
+    'app.css must include generalized ad-sandbox wrappers, geometric side-skin clamps, all slot width breakpoints, and GDPR modal preservation',
   );
   assert.match(
     appCss,

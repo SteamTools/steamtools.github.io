@@ -916,7 +916,7 @@ test('all classic v1 tool pages include a Try v2 link to their matching /v2/ rou
 
 test('all v1 tool pages and v2 Hub point Donate links to Ko-fi without legacy PayPal links', () => {
   const donateFiles = [
-    'v2-src/src/views/HubView.svelte',
+    'v2-src/src/components/AppShell.svelte',
     'itemvalue/index.html',
     'cards/index.html',
     'mosaticon/index.html',

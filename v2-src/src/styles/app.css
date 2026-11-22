@@ -361,7 +361,7 @@ a:hover {
 
 .st-topbar {
   position: relative;
-  z-index: 10;
+  z-index: 20;
   width: min(1240px, 100%);
   display: flex;
   flex-wrap: wrap;
@@ -463,7 +463,7 @@ a:hover {
 /* Main Centered Sheet (#container DNA) */
 .st-sheet {
   position: relative;
-  z-index: 10;
+  z-index: 20;
   width: min(1240px, 100%);
   flex: 1 0 auto;
   display: flex;
@@ -484,10 +484,23 @@ a:hover {
   width: min(980px, 100%);
 }
 
-/* NetworkN / Celtra / JustPremium / GumGum Ad Slots & Skin Takeover Stacking */
+/* NetworkN / Celtra / JustPremium / GumGum / Galaxy Ad Sandbox & Skin Stacking */
+.st-ad-lb1-wrap {
+  margin-block-start: auto;
+  width: 100%;
+  max-width: 100%;
+  overflow: clip;
+  text-align: center;
+}
+
+.st-ad-lb1-wrap:has(iframe:not([style*="display: none"]):not([height="0"]):not([height="1"])) {
+  padding-block-start: 12px;
+}
+
 .st-ad-lb1,
 .st-sheet #nn_lb1.st-ad-lb1 {
   margin-block-start: 0 !important;
+  margin-block-end: 0;
   margin-inline: auto;
   text-align: center;
 }
@@ -496,22 +509,28 @@ a:hover {
   vertical-align: bottom;
 }
 
-.st-ad-lb1:has(iframe:not([style*="display: none"]):not([height="0"]):not([height="1"])) {
-  margin-block-end: 8px;
-}
-
-/* Collapse the in-sheet #nn_lb1 loader box (without display:none) when a full-page skin/wallpaper is active */
-body:has(.jpx-wp-wrapper, #jpx-wp-front-container, [id^="celtra-skin-container-"]) .st-sheet #nn_lb1.st-ad-lb1 {
+/* Collapse the in-sheet #nn_lb1 loader box (without display:none, and preserving
+ * .st-ad-lb1-wrap margin-block-start: auto so Hub footer stays pinned at the bottom)
+ * when an out-of-page skin/wallpaper is active. Do NOT include .galaxy-loaded because
+ * Galaxy Board renders its expandable creative inside #nn_lb1. */
+body:is(.bfa-loaded, :has(.jpx-wp-wrapper, #jpx-wp-front-container, [id^="celtra-skin-container-"])) :is(.st-ad-lb1-wrap, .st-sheet #nn_lb1.st-ad-lb1) {
   height: 0 !important;
   min-height: 0 !important;
-  margin: 0 !important;
+  padding: 0 !important;
+  margin-block-end: 0 !important;
   overflow: clip !important;
   opacity: 0 !important;
   pointer-events: none !important;
 }
 
-body:has(.jpx-wp-wrapper, #jpx-wp-front-container) {
+body:is(.bfa-loaded, :has(.jpx-wp-wrapper, #jpx-wp-front-container)) {
   background: transparent !important;
+}
+
+/* Generic z-index cap on body-level skin/wallpaper wrappers, excluding GDPR consent
+ * modals ([id^="sp_message"]), native dialogs, and the feedback host */
+body > :is([id*="skin"], [class*="skin"], [id*="wallpaper"], [class*="wallpaper"], [id^="celtra"], .jpx-wp-wrapper):not([id^="sp_message"]):not(dialog):not(#st-feedback-host) {
+  z-index: 1;
 }
 
 #celtra-skin-container-background {
@@ -531,14 +550,22 @@ body:has(.jpx-wp-wrapper, #jpx-wp-front-container) {
   }
 }
 
-@media (max-width: 1200px) {
-  .jpx-wp-wrapper,
-  #jpx-wp-front-container {
-    display: none !important;
-  }
-  body:has(.jpx-wp-wrapper, #jpx-wp-front-container) {
-    margin-top: 0 !important;
+/* Below 1260px (.st-sheet 1240px + 16px shell padding), zero side gutters remain:
+ * lock body geometry and hide full-page wallpaper/skin wrappers without touching
+ * GDPR dialogs or browser extensions */
+@media (max-width: 1260px) {
+  body {
     width: auto !important;
+    margin-block-start: 0 !important;
+    padding-block-start: 0 !important;
+  }
+  .jpx-wp-wrapper,
+  #jpx-wp-front-container,
+  [id^="celtra-skin-"],
+  [id*="skin-container"],
+  [class*="skin-container"],
+  [class*="wallpaper"] {
+    display: none !important;
   }
 }
 
@@ -548,9 +575,15 @@ body:has(.jpx-wp-wrapper, #jpx-wp-front-container) {
   position: fixed !important;
   top: 56px;
   z-index: 1;
+  max-width: calc(50% - 636px);
+  overflow: clip;
 }
 
-body:has(.jpx-wp-wrapper, #jpx-wp-front-container, [id^="celtra-skin-container-"]) :is(.adswitch_skin, #nn_skinl, #nn_skinr) {
+body:has(.st-sheet.is-hub) :is(.adswitch_skin, #nn_skinl, #nn_skinr) {
+  max-width: calc(50% - 506px);
+}
+
+body:is(.bfa-loaded, :has(.jpx-wp-wrapper, #jpx-wp-front-container, [id^="celtra-skin-container-"])) :is(.adswitch_skin, #nn_skinl, #nn_skinr) {
   display: none !important;
 }
 
@@ -572,14 +605,26 @@ body:has(.st-sheet.is-hub) #nn_skinr {
   left: calc(50% + 500px);
 }
 
-@media (max-width: 1860px) {
-  body:not(:has(.st-sheet.is-hub)) :is(#nn_skinl, #nn_skinr):has(iframe[width="300"]) {
+@media (max-width: 1880px) {
+  body:not(:has(.st-sheet.is-hub)) :is(#nn_skinl, #nn_skinr):has(iframe[width="300"], iframe[width="301"]) {
     display: none !important;
   }
 }
 
-@media (max-width: 1600px) {
-  body:has(.st-sheet.is-hub) :is(#nn_skinl, #nn_skinr):has(iframe[width="300"]) {
+@media (max-width: 1620px) {
+  body:has(.st-sheet.is-hub) :is(#nn_skinl, #nn_skinr):has(iframe[width="300"], iframe[width="301"]) {
+    display: none !important;
+  }
+}
+
+@media (max-width: 1780px) {
+  body:not(:has(.st-sheet.is-hub)) :is(#nn_skinl, #nn_skinr):has(iframe[width="250"]) {
+    display: none !important;
+  }
+}
+
+@media (max-width: 1520px) {
+  body:has(.st-sheet.is-hub) :is(#nn_skinl, #nn_skinr):has(iframe[width="250"]) {
     display: none !important;
   }
 }
@@ -1007,8 +1052,8 @@ body:has(.st-sheet.is-hub) #nn_skinr {
 
 /* Footer */
 .st-footer {
-  margin-top: auto;
-  padding-top: 16px;
+  margin-block-start: 0;
+  padding-block-start: 16px;
   text-align: center;
   font-size: 12px;
   color: var(--st-text-muted);

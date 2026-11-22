@@ -58,7 +58,6 @@
   ];
 
   let lastSyncText = $state<string>('');
-  const year = new Date().getFullYear();
 
   onMount(() => {
     try {
@@ -116,25 +115,3 @@
     </li>
   {/each}
 </ul>
-
-<footer class="st-footer">
-  <div class="st-footer-credits">
-    <div>
-      Website by <a target="_blank" rel="noopener noreferrer" href="https://ehsankia.com">Ehsan Kia</a>
-      &middot;
-      <a target="_blank" rel="noopener noreferrer" href="https://steam.tools">steam.tools</a> &copy; 2013-{year}
-    </div>
-    <div>
-      Powered by <a target="_blank" rel="noopener noreferrer" href="https://steampowered.com">Steam</a>
-      &middot;
-      <a href="/privacy.html">Privacy</a>
-      &middot;
-      <a target="_blank" rel="noopener noreferrer" href="https://ko-fi.com/ehsankia">Donate</a>
-    </div>
-  </div>
-  <div class="st-affiliates">
-    <span>Affiliates:</span>
-    <a target="_blank" rel="noopener noreferrer" href="https://steamladder.com/">SteamLadder</a>
-    <a target="_blank" rel="noopener noreferrer" href="https://twitch.center">TwitchCenter</a>
-  </div>
-</footer>
