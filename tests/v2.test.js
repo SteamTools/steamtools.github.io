@@ -12,6 +12,10 @@ import {
   resolveMetaSchemeContent,
 } from '../v2-src/src/lib/theme-logic.ts';
 import {
+  isFirstPartyFetchHost,
+  shouldDropSentryEvent,
+} from '../v2-src/src/lib/diag-filter.ts';
+import {
   formatDurationAge,
   formatIsoDate,
   normalizeForSearch,
@@ -689,4 +693,146 @@ test('telemetry-worker /e tunnel validates Origin/DSN, strips PII headers, and p
   assert.equal(capturedRequest.init.headers.get('cf-connecting-ip'), null);
   assert.equal(capturedRequest.init.headers.get('user-agent'), 'SteamToolsTest/1.0');
   assert.deepEqual(new Uint8Array(capturedRequest.init.body), fullPayload);
+});
+
+test('Sentry beforeSend filter drops ad/extension/translate noise while keeping first-party errors', () => {
+  assert.equal(isFirstPartyFetchHost('api.steam.tools'), true);
+  assert.equal(isFirstPartyFetchHost('cdn.steam.tools'), true);
+  assert.equal(isFirstPartyFetchHost('steamcommunity.com'), true);
+  assert.equal(isFirstPartyFetchHost('shared.fastly.steamstatic.com'), true);
+  assert.equal(isFirstPartyFetchHost('localhost:4173'), true);
+  assert.equal(isFirstPartyFetchHost('ads.example.net'), false);
+  assert.equal(isFirstPartyFetchHost('tracker.example.com'), false);
+
+  // 1. Third-party ad fetch rejection masked by Sentry fetch Proxy in diag-client-*.js
+  assert.equal(
+    shouldDropSentryEvent({
+      exception: {
+        values: [
+          {
+            type: 'TypeError',
+            value: 'Failed to fetch (bidder.example-ads.com)',
+            stacktrace: {
+              frames: [
+                { filename: 'https://ad-sdk.example.com/prebid.js' },
+                { filename: 'chrome-extension://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/content.js' },
+                { filename: 'https://steam.tools/v2/assets/diag-client-ABC123.js' },
+              ],
+            },
+          },
+        ],
+      },
+    }),
+    true,
+  );
+
+  // 2. Eval/<anonymous> ad collector rejection with __sentry_fetch_url_host__ on originalException
+  assert.equal(
+    shouldDropSentryEvent(
+      {
+        exception: {
+          values: [
+            {
+              type: 'TypeError',
+              value: 'Failed to fetch',
+              stacktrace: {
+                frames: [
+                  { filename: '<anonymous>' },
+                  { filename: 'https://steam.tools/v2/assets/diag-client-ABC123.js' },
+                ],
+              },
+            },
+          ],
+        },
+      },
+      { originalException: { __sentry_fetch_url_host__: 'collector.example-ads.com' } },
+    ),
+    true,
+  );
+
+  // 3. Browser-injected script (e.g. Chrome Translate) credited to bare document URL /v2/
+  assert.equal(
+    shouldDropSentryEvent({
+      exception: {
+        values: [
+          {
+            type: 'Error',
+            value: 'SyntheticTranslateErr',
+            stacktrace: {
+              frames: [
+                { filename: 'https://steam.tools/v2/', function: 'zi' },
+                { filename: 'https://steam.tools/v2/' },
+              ],
+            },
+          },
+        ],
+      },
+    }),
+    true,
+  );
+
+  // 4. Genuine SteamTools v2 bundle error (even if an extension wrapped a lower frame)
+  assert.equal(
+    shouldDropSentryEvent({
+      exception: {
+        values: [
+          {
+            type: 'TypeError',
+            value: 'Cannot read properties of undefined',
+            stacktrace: {
+              frames: [
+                { filename: 'https://steam.tools/v2/assets/ItemValueView-XYZ789.js' },
+                { filename: 'chrome-extension://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/content.js' },
+                { filename: 'https://steam.tools/v2/assets/diag-client-ABC123.js' },
+              ],
+            },
+          },
+        ],
+      },
+    }),
+    false,
+  );
+
+  // 5. Genuine shared /js/ script error
+  assert.equal(
+    shouldDropSentryEvent({
+      exception: {
+        values: [
+          {
+            type: 'Error',
+            value: 'SteamTools import failure',
+            stacktrace: {
+              frames: [{ filename: 'https://steam.tools/js/steamtools-import.js' }],
+            },
+          },
+        ],
+      },
+    }),
+    false,
+  );
+
+  // 6. Genuine first-party fetch error targeting api.steam.tools from our bundle
+  assert.equal(
+    shouldDropSentryEvent({
+      exception: {
+        values: [
+          {
+            type: 'TypeError',
+            value: 'Failed to fetch (api.steam.tools)',
+            stacktrace: {
+              frames: [
+                { filename: 'https://steam.tools/v2/assets/ItemValueView-XYZ789.js' },
+                { filename: 'https://steam.tools/v2/assets/diag-client-ABC123.js' },
+              ],
+            },
+          },
+        ],
+      },
+    }),
+    false,
+  );
+
+  // 7. Non-error events (user feedback / transactions) are never dropped
+  assert.equal(shouldDropSentryEvent({ type: 'feedback' }), false);
+  assert.equal(shouldDropSentryEvent({ type: 'transaction' }), false);
 });

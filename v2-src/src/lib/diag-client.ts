@@ -11,6 +11,7 @@ import {
   shouldSendToSentry,
   type SentryContextTags,
 } from './diag-bridge.ts';
+import { shouldDropSentryEvent } from './diag-filter.ts';
 import { themeStore } from './theme.svelte.ts';
 
 export const SENTRY_DSN =
@@ -68,8 +69,8 @@ export function initSentry(options?: { allowLocalPreview?: boolean }): boolean {
     // Strictly avoid injecting sentry-trace / baggage onto third-party CDNs or cross-origin API hosts.
     tracePropagationTargets: [/^https:\/\/(?:www\.)?steam\.tools\/v2\//],
     allowUrls: [
-      /https?:\/\/(?:www\.)?steam\.tools\//,
-      /https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?\//,
+      /https?:\/\/(?:www\.)?steam\.tools\/(?:v2\/assets|js)\//,
+      /https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?\/(?:v2\/assets|src|js)\//,
     ],
     denyUrls: [
       /extensions\//i,
@@ -80,6 +81,8 @@ export function initSentry(options?: { allowLocalPreview?: boolean }): boolean {
       /kumo\.network-n\.com/i,
       /googlesyndication\.com/i,
       /doubleclick\.net/i,
+      /amazon-adsystem\.com/i,
+      /pubmatic\.com/i,
       /justpremium\.com/i,
       /gumgum\.com/i,
       /privacy-mgmt\.com/i,
@@ -95,6 +98,12 @@ export function initSentry(options?: { allowLocalPreview?: boolean }): boolean {
       /^Non-Error promise rejection captured/,
       /GUMGUM/i,
     ],
+    beforeSend(event, hint) {
+      if (shouldDropSentryEvent(event, hint)) {
+        return null;
+      }
+      return event;
+    },
     ...(transmit ? {} : { transport: () => createNoopTransport() }),
   });
 

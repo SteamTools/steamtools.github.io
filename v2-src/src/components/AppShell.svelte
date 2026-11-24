@@ -147,6 +147,20 @@
         </span>
       </button>
 
+      <a
+        href="https://ko-fi.com/ehsankia"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="st-btn st-btn-sm st-donate-btn"
+        aria-label="Support Steam.Tools on Ko-fi"
+        title="Support Steam.Tools on Ko-fi"
+      >
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+        </svg>
+        <span class="st-donate-label">Donate</span>
+      </a>
+
       <button
         type="button"
         id="st-feedback-btn"
@@ -204,14 +218,13 @@
             Powered by <a target="_blank" rel="noopener noreferrer" href="https://steampowered.com">Steam</a>
             &middot;
             <a href="/privacy.html">Privacy</a>
-            &middot;
-            <a target="_blank" rel="noopener noreferrer" href="https://ko-fi.com/ehsankia">Donate</a>
           </div>
         </div>
         <div class="st-affiliates">
           <span>Affiliates:</span>
           <a target="_blank" rel="noopener noreferrer" href="https://steamladder.com/">SteamLadder</a>
           <a target="_blank" rel="noopener noreferrer" href="https://twitch.center">TwitchCenter</a>
+          <a target="_blank" rel="noopener noreferrer" href="https://nook.lol">Nook.lol</a>
         </div>
       </footer>
     {/if}

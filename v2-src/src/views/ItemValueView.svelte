@@ -433,7 +433,9 @@
         passKey = '';
         passTs = '';
         passExpiresAt = 0;
-        resetTurnstileWidget();
+        if (!usedTurnstile) {
+          resetTurnstileWidget();
+        }
         statusMsg = 'Verification expired or failed. Complete Turnstile again or use Import from Steam.';
         showImportCta = true;
         trackEvent('fetch_err', { app: 'itemvalue', a: appid, b: errCode || 'captcha_fail' });
@@ -508,7 +510,7 @@
         a: appid,
         b: errCode || (status ? `http_${status}` : 'net_err'),
       });
-      if (!hasValidPass) {
+      if (!hasValidPass && !usedTurnstile) {
         resetTurnstileWidget();
       }
     }
