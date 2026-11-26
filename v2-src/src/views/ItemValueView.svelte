@@ -63,6 +63,7 @@
   let turnstileWidgetId: string | null = null;
   let turnstileRenderedTheme: 'light' | 'dark' | null = null;
   let turnstileNeedsRefresh = false;
+  let pendingFetchAfterTurnstile = $state(false);
   let passKey = $state('');
   let passTs = $state('');
   let passExpiresAt = $state(0);
@@ -153,7 +154,8 @@
     const cfg = getCfg();
     const api = await loadTurnstileApi();
     if (!api || !turnstileContainerEl) {
-      statusMsg = 'Captcha widget failed to load — click Import from Steam (no captcha) to load your items.';
+      pendingFetchAfterTurnstile = false;
+      statusMsg = 'Anti-bot check failed to load — click Import from Steam (no captcha) to load your items.';
       showImportCta = true;
       trackEvent('turnstile_err', { app: 'itemvalue', a: 'script_load' });
       return;
@@ -175,6 +177,10 @@
       callback: (token: string) => {
         turnstileToken = token || '';
         turnstileNeedsRefresh = false;
+        if (pendingFetchAfterTurnstile && turnstileToken && !isLoading) {
+          pendingFetchAfterTurnstile = false;
+          startFetchSubmit();
+        }
       },
       'expired-callback': () => {
         turnstileToken = '';
@@ -188,7 +194,8 @@
       },
       'error-callback': () => {
         turnstileToken = '';
-        statusMsg = 'Captcha check failed. Use Import from Steam (no captcha) or reload.';
+        pendingFetchAfterTurnstile = false;
+        statusMsg = 'Anti-bot check failed — click Import from Steam (no captcha) or reload.';
         showImportCta = true;
         trackEvent('turnstile_err', { app: 'itemvalue', a: 'widget_err' });
       },
@@ -254,13 +261,23 @@
       return;
     }
     if (!hasValidPass && !turnstileToken) {
-      statusMsg = turnstileConfigured
-        ? 'Please complete the verification check first, or click Import from Steam.'
-        : 'Verification sitekey is not configured — use Import from Steam instead.';
-      showImportCta = true;
+      if (turnstileConfigured) {
+        pendingFetchAfterTurnstile = true;
+        statusMsg = 'Waiting for anti-bot check to finish (or click Import from Steam)...';
+        showImportCta = true;
+        if (turnstileWidgetId === null) {
+          void mountTurnstile(themeStore.effectiveScheme);
+        } else if (turnstileNeedsRefresh) {
+          resetTurnstileWidget();
+        }
+      } else {
+        statusMsg = 'Anti-bot sitekey is not configured — use Import from Steam instead.';
+        showImportCta = true;
+      }
       return;
     }
 
+    pendingFetchAfterTurnstile = false;
     cancelPendingRetry();
     items = [];
     showImportCta = false;
@@ -529,6 +546,7 @@
     const imp = getImporter();
     const cfg = getCfg();
     if (!imp) return;
+    pendingFetchAfterTurnstile = false;
     cancelPendingRetry();
     imp.openImportDialog({
       mode: 'itemvalue',
@@ -677,7 +695,7 @@
         if (TOP_6_APPS_META.some((a) => a.appid === appPart)) {
           userIdInput = name;
           selectedAppid = appPart;
-          statusMsg = `Complete the verification check and click Fetch to load ${name}, or click Import from Steam.`;
+          statusMsg = `Click Fetch to load ${name}, or click Import from Steam.`;
         }
       }
     }
