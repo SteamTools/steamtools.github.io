@@ -62,6 +62,7 @@
   let turnstileToken = $state('');
   let turnstileWidgetId: string | null = null;
   let turnstileRenderedTheme: 'light' | 'dark' | null = null;
+  let turnstileNeedsRefresh = false;
   let passKey = $state('');
   let passTs = $state('');
   let passExpiresAt = $state(0);
@@ -137,6 +138,7 @@
 
   function resetTurnstileWidget() {
     turnstileToken = '';
+    turnstileNeedsRefresh = false;
     if (window.turnstile && turnstileWidgetId !== null) {
       try {
         window.turnstile.reset(turnstileWidgetId);
@@ -172,10 +174,17 @@
       appearance: 'interaction-only',
       callback: (token: string) => {
         turnstileToken = token || '';
+        turnstileNeedsRefresh = false;
       },
       'expired-callback': () => {
         turnstileToken = '';
         trackEvent('turnstile_err', { app: 'itemvalue', a: 'expired' });
+        if (hasValidPass) return;
+        if (typeof document !== 'undefined' && document.hidden) {
+          turnstileNeedsRefresh = true;
+        } else {
+          resetTurnstileWidget();
+        }
       },
       'error-callback': () => {
         turnstileToken = '';
@@ -683,11 +692,19 @@
       });
     }
 
+    const handleVisibilityChange = () => {
+      if (!document.hidden && turnstileNeedsRefresh && !hasValidPass && !turnstileToken) {
+        resetTurnstileWidget();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     if (!hasValidPass && turnstileConfigured) {
       void mountTurnstile(themeStore.effectiveScheme);
     }
 
     return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       cancelPendingRetry();
       if (window.turnstile && turnstileWidgetId !== null) {
         try {
