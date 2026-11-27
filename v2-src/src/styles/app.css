@@ -1116,7 +1116,8 @@ body:has(.st-sheet.is-hub) #nn_skinr {
   gap: 8px 12px;
 }
 
-.st-deck-row + .st-deck-row {
+.st-deck-row + .st-deck-row,
+.st-panel > .st-deck-row:not(:first-child) {
   margin-top: 8px;
   padding-top: 8px;
   border-top: 1px solid var(--st-border);

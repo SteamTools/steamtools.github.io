@@ -339,6 +339,36 @@
     );
   });
 
+  async function resolvePlayerProfile(steamid: string) {
+    try {
+      const cfg = getCfg();
+      const userResp = await apiRequestWithFailover(
+        '/info',
+        { method: 'GET', params: { user: steamid } },
+        { preferredBase: cfg.GAMES_API_BASE },
+      );
+      const playerObj =
+        userResp?.data?.response?.players?.[0] ||
+        userResp?.data?.players?.[0] ||
+        userResp?.data;
+      const resolvedName = String(playerObj?.personaname || playerObj?.name || '').trim();
+      const resolvedAvatar = String(playerObj?.avatarmedium || playerObj?.avatar || '').trim();
+      if (!resolvedName && !resolvedAvatar) return;
+      players = players.map((p) =>
+        p.steamid === steamid
+          ? {
+              ...p,
+              name: resolvedName || p.name,
+              avatar: resolvedAvatar || p.avatar,
+            }
+          : p,
+      );
+      persistPlayers();
+    } catch {
+      // Keep steamid fallback if Steam profile resolution fails
+    }
+  }
+
   onMount(() => {
     try {
       const savedIds = JSON.parse(window.localStorage.getItem('ids') || '[]');
@@ -352,15 +382,26 @@
           const u = savedUsers?.[sid] || {};
           restored.push({
             steamid: sid,
-            name: String(u.name || sid),
-            avatar: String(u.avatar || ''),
+            name: String(u.name || u.personaname || sid),
+            avatar: String(u.avatar || u.avatarmedium || ''),
             selected: u.selected !== false,
             privateProfile: Boolean(savedPrivates?.[sid]),
             loaded: false,
           });
         }
         players = restored;
-        void Promise.all(restored.filter((p) => !p.privateProfile).map((p) => fetchOwnedForPlayer(p.steamid)));
+        void Promise.all(
+          restored.map(async (p) => {
+            const jobs: Promise<unknown>[] = [];
+            if (!p.avatar || p.name === p.steamid) {
+              jobs.push(resolvePlayerProfile(p.steamid));
+            }
+            if (!p.privateProfile) {
+              jobs.push(fetchOwnedForPlayer(p.steamid));
+            }
+            await Promise.all(jobs);
+          }),
+        );
       }
     } catch {
       // Ignore malformed storage
