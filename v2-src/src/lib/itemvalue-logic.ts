@@ -1,21 +1,22 @@
 export interface AppMeta {
   appid: string;
   name: string;
+  shortName: string;
   contextid: string;
   iconFile: string;
 }
 
 export const TOP_6_APPS_META: readonly AppMeta[] = [
-  { appid: '753', name: 'Steam', contextid: '6', iconFile: '135dc1ac1cd9763dfc8ad52f4e880d2ac058a36c.jpg' },
-  { appid: '730', name: 'Counter-Strike 2', contextid: '2', iconFile: 'd1159d1a4d0e18da4d74f85dbb4934d7a92ace2b.ico' },
-  { appid: '440', name: 'Team Fortress 2', contextid: '2', iconFile: '033bdd91842b6aca0633ee1e5f3e6b82f2e8962f.ico' },
-  { appid: '570', name: 'Dota 2', contextid: '2', iconFile: 'c0d15684e6c186289b50dfe083f5c562c57e8fb6.ico' },
-  { appid: '252490', name: 'Rust', contextid: '2', iconFile: 'acf87ad23570b3c81f8c9cfc19544a07edd8b632.ico' },
-  { appid: '322330', name: "Don't Starve Together", contextid: '1', iconFile: '5176d189ff929acc8d29a2e5f0466e18798db436.ico' },
-  { appid: '304930', name: 'Unturned', contextid: '2', iconFile: 'e18009fb628b35953826efe47dc3be556b689f4c.jpg' },
-  { appid: '578080', name: 'PUBG: BATTLEGROUNDS', contextid: '2', iconFile: '609f27278aa70697c13bf99f32c5a0248c381f9d.jpg' },
-  { appid: '218620', name: 'PAYDAY 2', contextid: '2', iconFile: 'a6abc0d0c1e79c0b5b0f5c8ab81ce9076a542414.jpg' },
-  { appid: '232090', name: 'Killing Floor 2', contextid: '2', iconFile: '15837cefb378766e9916548f8591b6eb490b9e52.jpg' },
+  { appid: '753', name: 'Steam', shortName: 'Steam', contextid: '6', iconFile: '135dc1ac1cd9763dfc8ad52f4e880d2ac058a36c.jpg' },
+  { appid: '730', name: 'Counter-Strike 2', shortName: 'CS2', contextid: '2', iconFile: 'd1159d1a4d0e18da4d74f85dbb4934d7a92ace2b.ico' },
+  { appid: '440', name: 'Team Fortress 2', shortName: 'TF2', contextid: '2', iconFile: '033bdd91842b6aca0633ee1e5f3e6b82f2e8962f.ico' },
+  { appid: '570', name: 'Dota 2', shortName: 'Dota 2', contextid: '2', iconFile: 'c0d15684e6c186289b50dfe083f5c562c57e8fb6.ico' },
+  { appid: '252490', name: 'Rust', shortName: 'Rust', contextid: '2', iconFile: 'acf87ad23570b3c81f8c9cfc19544a07edd8b632.ico' },
+  { appid: '322330', name: "Don't Starve Together", shortName: 'DST', contextid: '1', iconFile: '5176d189ff929acc8d29a2e5f0466e18798db436.ico' },
+  { appid: '304930', name: 'Unturned', shortName: 'Unturned', contextid: '2', iconFile: 'e18009fb628b35953826efe47dc3be556b689f4c.jpg' },
+  { appid: '578080', name: 'PUBG: BATTLEGROUNDS', shortName: 'PUBG', contextid: '2', iconFile: '609f27278aa70697c13bf99f32c5a0248c381f9d.jpg' },
+  { appid: '218620', name: 'PAYDAY 2', shortName: 'PAYDAY 2', contextid: '2', iconFile: 'a6abc0d0c1e79c0b5b0f5c8ab81ce9076a542414.jpg' },
+  { appid: '232090', name: 'Killing Floor 2', shortName: 'KF2', contextid: '2', iconFile: '15837cefb378766e9916548f8591b6eb490b9e52.jpg' },
 ];
 
 export const APP_NAME_MAP: Record<string, string> = Object.fromEntries(

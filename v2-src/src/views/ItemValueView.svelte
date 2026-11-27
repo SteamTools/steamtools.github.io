@@ -36,7 +36,7 @@
   let isLoading = $state(false);
   let isStaleData = $state(false);
   let showImportCta = $state(false);
-  let statusMsg = $state('Import your profile or click Import from Steam');
+  let statusMsg = $state('Enter a SteamID above or click Manual import');
   let helpMode = $state<0 | 1 | 2 | 'profile'>(0);
   let profileName = $state('');
 
@@ -155,7 +155,7 @@
     const api = await loadTurnstileApi();
     if (!api || !turnstileContainerEl) {
       pendingFetchAfterTurnstile = false;
-      statusMsg = 'Anti-bot check failed to load — click Import from Steam (no captcha) to load your items.';
+      statusMsg = 'Anti-bot check failed to load — click Manual import (no captcha) to load your items.';
       showImportCta = true;
       trackEvent('turnstile_err', { app: 'itemvalue', a: 'script_load' });
       return;
@@ -195,7 +195,7 @@
       'error-callback': () => {
         turnstileToken = '';
         pendingFetchAfterTurnstile = false;
-        statusMsg = 'Anti-bot check failed — click Import from Steam (no captcha) or reload.';
+        statusMsg = 'Anti-bot check failed — click Manual import (no captcha) or reload.';
         showImportCta = true;
         trackEvent('turnstile_err', { app: 'itemvalue', a: 'widget_err' });
       },
@@ -256,14 +256,14 @@
     if (isLoading) return;
     const cleanId = userIdInput.trim();
     if (!cleanId) {
-      statusMsg = 'Enter your SteamID64, custom URL name, or Steam profile link first, or click Import from Steam.';
+      statusMsg = 'Enter your SteamID64, custom URL name, or Steam profile link first, or click Manual import.';
       steamIdInputEl?.focus();
       return;
     }
     if (!hasValidPass && !turnstileToken) {
       if (turnstileConfigured) {
         pendingFetchAfterTurnstile = true;
-        statusMsg = 'Waiting for anti-bot check to finish (or click Import from Steam)...';
+        statusMsg = 'Waiting for anti-bot check to finish (or click Manual import)...';
         showImportCta = true;
         if (turnstileWidgetId === null) {
           void mountTurnstile(themeStore.effectiveScheme);
@@ -271,7 +271,7 @@
           resetTurnstileWidget();
         }
       } else {
-        statusMsg = 'Anti-bot sitekey is not configured — use Import from Steam instead.';
+        statusMsg = 'Anti-bot sitekey is not configured — use Manual import instead.';
         showImportCta = true;
       }
       return;
@@ -530,7 +530,7 @@
       showImportCta = true;
       statusMsg = errReason
         ? String(errReason)
-        : 'Something went wrong — try again later or use Import from Steam.';
+        : 'Something went wrong — try again later or use Manual import.';
       trackEvent('fetch_err', {
         app: 'itemvalue',
         a: appid,
@@ -695,7 +695,7 @@
         if (TOP_6_APPS_META.some((a) => a.appid === appPart)) {
           userIdInput = name;
           selectedAppid = appPart;
-          statusMsg = `Click Fetch to load ${name}, or click Import from Steam.`;
+          statusMsg = `Click Fetch to load ${name}, or click Manual import.`;
         }
       }
     }
@@ -704,7 +704,7 @@
       cfg.attachSteamIdPasteGuard(steamIdInputEl, {
         onJsonPaste: (text) => openImportModal(text),
         onOversizedPaste: () => {
-          statusMsg = 'Pasted text is too long for a SteamID — click Import from Steam to paste JSON.';
+          statusMsg = 'Pasted text is too long for a SteamID — click Manual import to paste JSON.';
           showImportCta = true;
         },
       });
@@ -735,7 +735,8 @@
   });
 </script>
 
-<section class="st-panel" aria-label="Inventory Fetch and Import Controls">
+<section class="st-panel" aria-label="Inventory Controls, Games, and Filters">
+  <!-- Row 1: SteamID Fetch + Manual import + Verified pass + Profile links -->
   <div class="st-deck-row">
     <form
       class="st-deck-group"
@@ -753,7 +754,7 @@
           type="text"
           maxlength="256"
           class="st-input"
-          style="width: min(260px, 58vw);"
+          style="width: min(240px, 56vw);"
           placeholder="SteamID64, custom URL, or profile link"
           autocorrect="off"
           autocapitalize="none"
@@ -764,16 +765,46 @@
         </button>
       </div>
       <button type="button" class="st-btn" onclick={() => openImportModal()}>
-        Import from Steam
+        Manual import
       </button>
+      {#if hasValidPass}
+        <span
+          class="st-pass-badge"
+          title="Verification pass active — no captcha needed for follow-up fetches."
+        >
+          <span class="st-pass-dot" aria-hidden="true"></span>
+          Verified pass
+        </span>
+      {/if}
     </form>
 
-    <div
-      class="st-game-picker"
-      style="flex-basis: 100%; margin-top: 4px; padding-top: 8px; border-top: 1px solid var(--st-border);"
-      role="group"
-      aria-label="Select game"
-    >
+    {#if profileName}
+      <div class="st-profile-links">
+        <a href={getProfileInventoryUrl(profileName, appidLoaded)} target="_blank" rel="noopener noreferrer">
+          Steam Inventory ↗
+        </a>
+        <span style="color: var(--st-text-muted);">&middot;</span>
+        <a href={`https://steamdb.info/calculator/?player=${encodeURIComponent(profileName)}`} target="_blank" rel="noopener noreferrer">
+          SteamDB ↗
+        </a>
+      </div>
+    {/if}
+  </div>
+
+  {#if !hasValidPass}
+    <div style="margin-top: 8px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px;">
+      <div bind:this={turnstileContainerEl}></div>
+      {#if !turnstileConfigured}
+        <span style="font-size: 12px; color: var(--st-text-muted);">
+          Anti-bot check unavailable — use <strong>Manual import</strong> (no captcha).
+        </span>
+      {/if}
+    </div>
+  {/if}
+
+  <!-- Row 2: Compact 10-game selector -->
+  <div class="st-deck-row">
+    <div class="st-game-picker" role="group" aria-label="Select game">
       {#each TOP_6_APPS_META as app}
         <button
           type="button"
@@ -783,74 +814,28 @@
           title={app.name}
           onclick={() => selectApp(app.appid)}
         >
-          <img src={getAppIconUrl(app.appid)} alt="" width="20" height="20" />
-          <span>{app.appid === '753' ? 'Steam' : app.name}</span>
+          <img src={getAppIconUrl(app.appid)} alt="" width="17" height="17" />
+          <span>{app.shortName}</span>
         </button>
       {/each}
     </div>
   </div>
 
-  {#if !hasValidPass}
-    <div style="margin-top: 8px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px;">
-      <div bind:this={turnstileContainerEl}></div>
-      {#if !turnstileConfigured}
-        <span style="font-size: 12px; color: var(--st-text-muted);">
-          Turnstile sitekey not configured — use <strong>Import from Steam</strong> (no captcha).
-        </span>
-      {/if}
-    </div>
-  {:else}
-    <div style="margin-top: 6px; font-size: 12px; color: var(--st-text-muted);">
-      Verification pass active — no captcha needed for follow-up fetches.
-    </div>
-  {/if}
-</section>
-
-{#if statusMsg || helpMode !== 0 || showImportCta}
-  <div class="st-alert" class:is-warn={showImportCta} role="status" aria-live="polite">
-    <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px;">
-      {#if statusMsg}
-        <span>{statusMsg}</span>
-      {/if}
-      {#if helpMode === 1}
-        <span>
-          Make sure your
-          <a href="https://steamcommunity.com/my/edit/settings" target="_blank" rel="noopener noreferrer">
-            inventory privacy
-          </a>
-          is set to public, or click Import from Steam.
-        </span>
-      {:else if helpMode === 2}
-        <span>
-          Try pasting the
-          <a href="https://steamcommunity.com/my/" target="_blank" rel="noopener noreferrer">
-            Steam profile URL
-          </a>.
-        </span>
-      {:else if helpMode === 'profile' && profileName}
-        <span>
-          <a href={getProfileInventoryUrl(profileName, appidLoaded)} target="_blank" rel="noopener noreferrer">
-            Steam Inventory
-          </a>
-          &middot;
-          <a href={`https://steamrep.com/search?q=${encodeURIComponent(profileName)}`} target="_blank" rel="noopener noreferrer">
-            SteamRep
-          </a>
-        </span>
-      {/if}
-    </div>
-    {#if showImportCta}
-      <button type="button" class="st-btn st-btn-sm st-btn-primary" onclick={() => openImportModal()}>
-        Import Directly (No Captcha)
-      </button>
-    {/if}
-  </div>
-{/if}
-
-{#if items.length > 0}
-  <section class="st-panel" aria-label="Inventory Summary and Filters">
+  <!-- Row 3: Unified summary, valuation toggles, filter, CSV, and view mode -->
+  {#if items.length > 0}
     <div class="st-deck-row">
       <div class="st-deck-group">
+        <span class="st-iv-summary">
+          <strong>Total:</strong>
+          <span class="st-stat-val">{currencyStore.formatUsd(filteredSummary.totalUsd)}</span>
+          <span class="st-iv-summary-meta">
+            ({filteredSummary.totalCount.toLocaleString()} items &middot; {filteredSummary.filtered.length.toLocaleString()} unique)
+          </span>
+        </span>
+        {#if isStaleData}
+          <span class="st-pill is-loading">Cached snapshot (Steam throttled)</span>
+        {/if}
+
         <div class="st-seg-group" role="group" aria-label="Valuation options">
           <button
             type="button"
@@ -884,19 +869,39 @@
           </button>
         </div>
 
-        <span>
-          <strong>Total:</strong>
-          <span class="st-stat-val">{currencyStore.formatUsd(filteredSummary.totalUsd)}</span>
-          ({filteredSummary.totalCount.toLocaleString()} items)
-        </span>
-        {#if isStaleData}
-          <span class="st-pill is-loading">Cached snapshot (Steam throttled)</span>
+        {#if appidLoaded === '753'}
+          <div class="st-seg-group" role="group" aria-label="Steam item subtype">
+            {#each ITEM_SUBTYPES_753 as st}
+              <button
+                type="button"
+                class="st-btn st-btn-sm"
+                class:is-pressed={subtype === st}
+                aria-pressed={subtype === st}
+                onclick={() => { subtype = st; currentPage = 1; }}
+              >
+                {st === 'all' ? 'All' : st.charAt(0).toUpperCase() + st.slice(1)}
+              </button>
+            {/each}
+          </div>
         {/if}
       </div>
 
       <div class="st-deck-group">
-        <button type="button" class="st-btn st-btn-sm" onclick={exportCsv}>
-          Export CSV
+        <label for="st-iv-filter" class="st-visually-hidden">Filter items</label>
+        <input
+          id="st-iv-filter"
+          type="search"
+          class="st-input"
+          style="width: min(190px, 50vw);"
+          placeholder="Filter item, game, rarity..."
+          bind:value={searchQuery}
+          oninput={() => { currentPage = 1; }}
+          autocorrect="off"
+          autocapitalize="none"
+          spellcheck="false"
+        />
+        <button type="button" class="st-btn st-btn-sm" onclick={exportCsv} title="Export filtered items to CSV">
+          CSV
         </button>
         <div class="st-seg-group" role="group" aria-label="Display mode">
           <button
@@ -921,45 +926,41 @@
         </div>
       </div>
     </div>
+  {/if}
+</section>
 
-    <div class="st-deck-row">
-      <div class="st-deck-group">
-        {#if appidLoaded === '753'}
-          <div class="st-seg-group" role="group" aria-label="Steam item subtype">
-            {#each ITEM_SUBTYPES_753 as st}
-              <button
-                type="button"
-                class="st-btn st-btn-sm"
-                class:is-pressed={subtype === st}
-                aria-pressed={subtype === st}
-                onclick={() => { subtype = st; currentPage = 1; }}
-              >
-                {st === 'all' ? 'All' : st.charAt(0).toUpperCase() + st.slice(1)}
-              </button>
-            {/each}
-          </div>
-        {/if}
-
-        <label for="st-iv-filter" class="st-visually-hidden">Filter items</label>
-        <input
-          id="st-iv-filter"
-          type="search"
-          class="st-input"
-          style="width: min(220px, 60vw);"
-          placeholder="Filter item, game, rarity..."
-          bind:value={searchQuery}
-          oninput={() => { currentPage = 1; }}
-          autocorrect="off"
-          autocapitalize="none"
-          spellcheck="false"
-        />
-      </div>
-
-      <span style="font-size: 12px; color: var(--st-text-muted);">
-        {filteredSummary.filtered.length.toLocaleString()} unique items
-      </span>
+{#if statusMsg || helpMode === 1 || helpMode === 2 || showImportCta}
+  <div class="st-alert" class:is-warn={showImportCta} role="status" aria-live="polite">
+    <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px;">
+      {#if statusMsg}
+        <span>{statusMsg}</span>
+      {/if}
+      {#if helpMode === 1}
+        <span>
+          Make sure your
+          <a href="https://steamcommunity.com/my/edit/settings" target="_blank" rel="noopener noreferrer">
+            inventory privacy
+          </a>
+          is set to public, or click Manual import.
+        </span>
+      {:else if helpMode === 2}
+        <span>
+          Try pasting the
+          <a href="https://steamcommunity.com/my/" target="_blank" rel="noopener noreferrer">
+            Steam profile URL
+          </a>.
+        </span>
+      {/if}
     </div>
-  </section>
+    {#if showImportCta}
+      <button type="button" class="st-btn st-btn-sm st-btn-primary" onclick={() => openImportModal()}>
+        Manual import (No Captcha)
+      </button>
+    {/if}
+  </div>
+{/if}
+
+{#if items.length > 0}
 
   {#if useTable}
     <div role="status" aria-live="polite" class="st-visually-hidden">{sortAnnouncement}</div>
