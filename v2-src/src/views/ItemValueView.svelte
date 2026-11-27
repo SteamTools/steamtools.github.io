@@ -787,6 +787,10 @@
         <a href={`https://steamdb.info/calculator/?player=${encodeURIComponent(profileName)}`} target="_blank" rel="noopener noreferrer">
           SteamDB ↗
         </a>
+        <span style="color: var(--st-text-muted);">&middot;</span>
+        <a href={`https://rep.tf/${encodeURIComponent(profileName)}`} target="_blank" rel="noopener noreferrer">
+          Rep.tf ↗
+        </a>
       </div>
     {/if}
   </div>
