@@ -825,21 +825,10 @@
     </div>
   </div>
 
-  <!-- Row 3: Unified summary, valuation toggles, filter, CSV, and view mode -->
+  <!-- Row 3: Unified valuation toggles, summary, filter, CSV, and view mode -->
   {#if items.length > 0}
     <div class="st-deck-row">
       <div class="st-deck-group">
-        <span class="st-iv-summary">
-          <strong>Total:</strong>
-          <span class="st-stat-val">{currencyStore.formatUsd(filteredSummary.totalUsd)}</span>
-          <span class="st-iv-summary-meta">
-            ({filteredSummary.totalCount.toLocaleString()} items &middot; {filteredSummary.filtered.length.toLocaleString()} unique)
-          </span>
-        </span>
-        {#if isStaleData}
-          <span class="st-pill is-loading">Cached snapshot (Steam throttled)</span>
-        {/if}
-
         <div class="st-seg-group" role="group" aria-label="Valuation options">
           <button
             type="button"
@@ -887,6 +876,17 @@
               </button>
             {/each}
           </div>
+        {/if}
+
+        <span class="st-iv-summary">
+          <strong>Total:</strong>
+          <span class="st-stat-val">{currencyStore.formatUsd(filteredSummary.totalUsd)}</span>
+          <span class="st-iv-summary-meta">
+            ({filteredSummary.totalCount.toLocaleString()} items &middot; {filteredSummary.filtered.length.toLocaleString()} unique)
+          </span>
+        </span>
+        {#if isStaleData}
+          <span class="st-pill is-loading">Cached snapshot (Steam throttled)</span>
         {/if}
       </div>
 
