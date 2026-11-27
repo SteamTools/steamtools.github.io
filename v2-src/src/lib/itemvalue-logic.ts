@@ -12,6 +12,10 @@ export const TOP_6_APPS_META: readonly AppMeta[] = [
   { appid: '570', name: 'Dota 2', contextid: '2', iconFile: 'c0d15684e6c186289b50dfe083f5c562c57e8fb6.ico' },
   { appid: '252490', name: 'Rust', contextid: '2', iconFile: 'acf87ad23570b3c81f8c9cfc19544a07edd8b632.ico' },
   { appid: '322330', name: "Don't Starve Together", contextid: '1', iconFile: '5176d189ff929acc8d29a2e5f0466e18798db436.ico' },
+  { appid: '304930', name: 'Unturned', contextid: '2', iconFile: 'e18009fb628b35953826efe47dc3be556b689f4c.jpg' },
+  { appid: '578080', name: 'PUBG: BATTLEGROUNDS', contextid: '2', iconFile: '609f27278aa70697c13bf99f32c5a0248c381f9d.jpg' },
+  { appid: '218620', name: 'PAYDAY 2', contextid: '2', iconFile: 'a6abc0d0c1e79c0b5b0f5c8ab81ce9076a542414.jpg' },
+  { appid: '232090', name: 'Killing Floor 2', contextid: '2', iconFile: '15837cefb378766e9916548f8591b6eb490b9e52.jpg' },
 ];
 
 export const APP_NAME_MAP: Record<string, string> = Object.fromEntries(
@@ -51,10 +55,14 @@ export const RARITY_SORT: Record<string, number> = {
   Common: 10,
   Uncommon: 20,
   Rare: 30,
+  Epic: 35,
+  Exceptional: 38,
   Mythical: 40,
+  'Master Crafted': 45,
   Immortal: 50,
   Legendary: 60,
   Arcana: 70,
+  Precious: 75,
 };
 
 export const QUALITY_SORT: Record<string, Record<string, number>> = {
@@ -110,6 +118,10 @@ export const VIS_COLS_BY_APP: Record<string, readonly ItemColumnKey[]> = {
   '570': ['image', 'name', 'quality', 'rarity', 'count', 'price'],
   '252490': ['image', 'name', 'count', 'price'],
   '322330': ['image', 'name', 'type', 'rarity', 'count', 'price'],
+  '304930': ['image', 'name', 'rarity', 'count', 'price'],
+  '578080': ['image', 'name', 'rarity', 'count', 'price'],
+  '218620': ['image', 'name', 'quality', 'rarity', 'count', 'price'],
+  '232090': ['image', 'name', 'quality', 'rarity', 'count', 'price'],
 };
 
 export interface RawInventoryItem {

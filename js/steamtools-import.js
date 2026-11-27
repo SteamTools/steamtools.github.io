@@ -607,7 +607,11 @@
       '440': 'Team Fortress 2',
       '570': 'Dota 2',
       '252490': 'Rust',
-      '322330': "Don't Starve Together"
+      '322330': "Don't Starve Together",
+      '304930': 'Unturned',
+      '578080': 'PUBG: BATTLEGROUNDS',
+      '218620': 'PAYDAY 2',
+      '232090': 'Killing Floor 2'
     };
     return map[k] || ('App ' + k);
   }
@@ -620,7 +624,11 @@
       '440': 'TF2',
       '570': 'Dota 2',
       '252490': 'Rust',
-      '322330': 'DST'
+      '322330': 'DST',
+      '304930': 'Unturned',
+      '578080': 'PUBG',
+      '218620': 'PAYDAY 2',
+      '232090': 'KF2'
     };
     return shortMap[k] || getAppDisplayName(k);
   }
@@ -660,7 +668,11 @@
       { appid: '440', name: 'Team Fortress 2' },
       { appid: '570', name: 'Dota 2' },
       { appid: '252490', name: 'Rust' },
-      { appid: '322330', name: "Don't Starve Together" }
+      { appid: '322330', name: "Don't Starve Together" },
+      { appid: '304930', name: 'Unturned' },
+      { appid: '578080', name: 'PUBG: BATTLEGROUNDS' },
+      { appid: '218620', name: 'PAYDAY 2' },
+      { appid: '232090', name: 'Killing Floor 2' }
     ];
     for (var ai = 0; ai < topApps.length; ai++) {
       appOptionsHtml += '<option value="' + String(topApps[ai].appid) + '">' + String(topApps[ai].name) + '</option>';

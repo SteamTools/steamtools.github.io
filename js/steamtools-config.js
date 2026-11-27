@@ -30,7 +30,11 @@
     { appid: '440', name: 'Team Fortress 2', contextid: '2' },
     { appid: '570', name: 'Dota 2', contextid: '2' },
     { appid: '252490', name: 'Rust', contextid: '2' },
-    { appid: '322330', name: "Don't Starve Together", contextid: '1' }
+    { appid: '322330', name: "Don't Starve Together", contextid: '1' },
+    { appid: '304930', name: 'Unturned', contextid: '2' },
+    { appid: '578080', name: 'PUBG: BATTLEGROUNDS', contextid: '2' },
+    { appid: '218620', name: 'PAYDAY 2', contextid: '2' },
+    { appid: '232090', name: 'Killing Floor 2', contextid: '2' }
   ];
 
   var CURRENCY_DATA = [
@@ -81,7 +85,11 @@
     '440': '2',
     '570': '2',
     '252490': '2',
-    '322330': '1'
+    '322330': '1',
+    '304930': '2',
+    '578080': '2',
+    '218620': '2',
+    '232090': '2'
   };
 
   function trimTrailingSlashes(url) {

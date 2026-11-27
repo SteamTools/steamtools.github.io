@@ -118,7 +118,11 @@ angular.module('valueApp', ['ui.bootstrap'])
 		"440",
 		"570",
 		"252490",
-		"322330"
+		"322330",
+		"304930",
+		"578080",
+		"218620",
+		"232090"
 	];
 
 	$scope.typeMap = {
@@ -127,7 +131,11 @@ angular.module('valueApp', ['ui.bootstrap'])
 		'440': "Team Fortress 2",
 		'570': "Dota 2",
 		'252490': "Rust",
-		'322330': "Don't Starve Together"
+		'322330': "Don't Starve Together",
+		'304930': "Unturned",
+		'578080': "PUBG: BATTLEGROUNDS",
+		'218620': "PAYDAY 2",
+		'232090': "Killing Floor 2"
 	};
 
 	$scope.iconMap = {
@@ -136,7 +144,11 @@ angular.module('valueApp', ['ui.bootstrap'])
 		'440': "033bdd91842b6aca0633ee1e5f3e6b82f2e8962f",
 		'570': "c0d15684e6c186289b50dfe083f5c562c57e8fb6",
 		'252490': "acf87ad23570b3c81f8c9cfc19544a07edd8b632",
-		'322330': "5176d189ff929acc8d29a2e5f0466e18798db436"
+		'322330': "5176d189ff929acc8d29a2e5f0466e18798db436",
+		'304930': "e18009fb628b35953826efe47dc3be556b689f4c.jpg",
+		'578080': "609f27278aa70697c13bf99f32c5a0248c381f9d.jpg",
+		'218620': "a6abc0d0c1e79c0b5b0f5c8ab81ce9076a542414.jpg",
+		'232090': "15837cefb378766e9916548f8591b6eb490b9e52.jpg"
 	};
 
 	$scope.ts = false;
@@ -201,8 +213,8 @@ angular.module('valueApp', ['ui.bootstrap'])
 	$timeout(function() { initTurnstile(0); }, 0);
 
 	$scope.getIcon = function(appid) {
-		var ext = appid === '753' ? '.jpg' : '.ico';
-		var ico = $scope.iconMap[appid] + ext;
+		var raw = $scope.iconMap[appid] || '';
+		var ico = raw.indexOf('.') !== -1 ? raw : (raw + (appid === '753' ? '.jpg' : '.ico'));
 		return "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/" + appid + "/" + ico;
 	};
 
@@ -760,7 +772,11 @@ angular.module('valueApp', ['ui.bootstrap'])
 		'440': [0, 1, 4, 6, 7],
 		'570': [0, 1, 4, 5, 6, 7],
 		'252490': [0, 1, 6, 7],
-		'322330': [0, 1, 3, 5, 6, 7]
+		'322330': [0, 1, 3, 5, 6, 7],
+		'304930': [0, 1, 5, 6, 7],
+		'578080': [0, 1, 5, 6, 7],
+		'218620': [0, 1, 4, 5, 6, 7],
+		'232090': [0, 1, 4, 5, 6, 7]
 	};
 
 	// Create the table
