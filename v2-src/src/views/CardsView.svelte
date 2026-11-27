@@ -616,7 +616,7 @@
             target="_blank"
             rel="noopener noreferrer"
           >
-            Steam Profile
+            Steam Profile ↗
           </a>
           <button
             type="button"
@@ -631,11 +631,13 @@
         </button>
       {/if}
 
-      <div class="st-status-pills" aria-label="Loaded user data status">
-        <span class="st-pill {statusPillClass(userData.games)}">Games</span>
-        <span class="st-pill {statusPillClass(userData.cards)}">Cards</span>
-        <span class="st-pill {statusPillClass(userData.badges)}">Badges</span>
-      </div>
+      {#if userLoaded || userData.games > 0 || userData.cards > 0 || userData.badges > 0}
+        <div class="st-status-pills" aria-label="Loaded user data status">
+          <span class="st-pill {statusPillClass(userData.games)}">Games</span>
+          <span class="st-pill {statusPillClass(userData.cards)}">Cards</span>
+          <span class="st-pill {statusPillClass(userData.badges)}">Badges</span>
+        </div>
+      {/if}
     </div>
 
     <div class="st-deck-group">
@@ -644,8 +646,8 @@
           Paste Game List
         </button>
       {/if}
-      <button type="button" class="st-btn st-btn-sm st-btn-primary" onclick={() => openInventoryImporter()}>
-        {userLoaded ? (userMoreItems ? `Add Inventory Page ${userNextPage}` : 'Update / Add Inventory') : 'Import from Steam'}
+      <button type="button" class="st-btn st-btn-sm" onclick={() => openInventoryImporter()}>
+        {userLoaded ? (userMoreItems ? `Add Inventory Page ${userNextPage}` : 'Update Inventory') : 'Manual import'}
       </button>
       <button type="button" class="st-btn st-btn-sm" onclick={() => levelCalcDlg?.open()}>
         Level Calculator
@@ -662,20 +664,18 @@
   <div class="st-deck-row">
     <div class="st-deck-group">
       <label for="st-cards-search" class="st-visually-hidden">Search card sets by title or AppID</label>
-      <div class="st-join">
-        <input
-          id="st-cards-search"
-          type="search"
-          class="st-input"
-          style="width: min(230px, 58vw);"
-          placeholder="Search game or AppID..."
-          bind:value={searchQuery}
-          oninput={() => { if (tableScrollEl) tableScrollEl.scrollTop = 0; }}
-          autocorrect="off"
-          autocapitalize="none"
-          spellcheck="false"
-        />
-      </div>
+      <input
+        id="st-cards-search"
+        type="search"
+        class="st-input"
+        style="width: min(210px, 54vw);"
+        placeholder="Search game or AppID..."
+        bind:value={searchQuery}
+        oninput={() => { if (tableScrollEl) tableScrollEl.scrollTop = 0; }}
+        autocorrect="off"
+        autocapitalize="none"
+        spellcheck="false"
+      />
 
       <div class="st-seg-group" role="group" aria-label="Set types">
         <button
@@ -792,57 +792,56 @@
       </button>
     </div>
   </div>
+
+  {#if dataLoaded}
+    <div class="st-deck-row st-panel-stats" aria-label="Catalog and Profile Summary">
+      <div class="st-stats-items">
+        <span>Synced <strong>{formatRelativeTime(meta.time)}</strong></span>
+        {#if meta.data_median_age}
+          <span>Median age <strong class="st-stat-val">{formatDurationAge(meta.data_median_age)}</strong></span>
+        {/if}
+        <span><strong class="st-stat-val">{meta.game_count.toLocaleString()}</strong> games</span>
+        <span><strong class="st-stat-val">{meta.card_count.toLocaleString()}</strong> cards</span>
+        <span><strong class="st-stat-val">{meta.bg_count.toLocaleString()}</strong> bgs</span>
+        <span><strong class="st-stat-val">{meta.emote_count.toLocaleString()}</strong> emotes</span>
+      </div>
+      <div class="st-stats-items">
+        <span>Showing <strong class="st-stat-val">{filteredRows.length.toLocaleString()}</strong> / {allRows.length.toLocaleString()} sets</span>
+      </div>
+    </div>
+  {/if}
+
+  {#if userLoaded}
+    <div class="st-deck-row st-panel-stats" aria-label="User Profile Stats">
+      <div class="st-stats-items">
+        {#if userStale}
+          <span class="st-pill is-loading">Cached snapshot (Steam rate-limited)</span>
+        {/if}
+        {#if userData.badges > 2}
+          <span>Level <strong class="st-stat-val">{userProfile.level}</strong> ({userProfile.xp.toLocaleString()} XP)</span>
+          <span>
+            <strong class="st-stat-val">{userSummary.badge_count.toLocaleString()}</strong> badges
+            (cost ~<strong class="st-stat-val">{currencyStore.formatUsd(userSummary.badge_worth)}</strong>)
+          </span>
+        {/if}
+        {#if userData.games > 2}
+          <span>
+            <strong class="st-stat-val">{userSummary.game_count.toLocaleString()}</strong> STC games
+            (drops ~<strong class="st-stat-val">{currencyStore.formatUsd(userSummary.game_worth)}</strong>)
+          </span>
+        {/if}
+        {#if userData.cards > 2}
+          <span>
+            <strong class="st-stat-val">{userSummary.card_count.toLocaleString()}</strong> cards
+            (worth ~<strong class="st-stat-val">{currencyStore.formatUsd(userSummary.card_worth)}</strong>)
+          </span>
+          <span><strong class="st-stat-val">{userProfile.bg_count.toLocaleString()}</strong> bgs</span>
+          <span><strong class="st-stat-val">{userProfile.emote_count.toLocaleString()}</strong> emotes</span>
+        {/if}
+      </div>
+    </div>
+  {/if}
 </section>
-
-<!-- Stats Strip -->
-{#if dataLoaded}
-  <section class="st-stats-bar" aria-label="Catalog and Profile Summary">
-    <div class="st-stats-items">
-      <span>Synced <strong>{formatRelativeTime(meta.time)}</strong></span>
-      {#if meta.data_median_age}
-        <span>Median age <strong class="st-stat-val">{formatDurationAge(meta.data_median_age)}</strong></span>
-      {/if}
-      <span><strong class="st-stat-val">{meta.game_count.toLocaleString()}</strong> games</span>
-      <span><strong class="st-stat-val">{meta.card_count.toLocaleString()}</strong> cards</span>
-      <span><strong class="st-stat-val">{meta.bg_count.toLocaleString()}</strong> bgs</span>
-      <span><strong class="st-stat-val">{meta.emote_count.toLocaleString()}</strong> emotes</span>
-    </div>
-    <div class="st-stats-items">
-      <span>Showing <strong class="st-stat-val">{filteredRows.length.toLocaleString()}</strong> of {allRows.length.toLocaleString()} sets</span>
-    </div>
-  </section>
-{/if}
-
-{#if userLoaded}
-  <section class="st-stats-bar" aria-label="User Profile Stats">
-    <div class="st-stats-items">
-      {#if userStale}
-        <span class="st-pill is-loading">Cached snapshot (Steam rate-limited)</span>
-      {/if}
-      {#if userData.badges > 2}
-        <span>Level <strong class="st-stat-val">{userProfile.level}</strong> ({userProfile.xp.toLocaleString()} XP)</span>
-        <span>
-          <strong class="st-stat-val">{userSummary.badge_count.toLocaleString()}</strong> badges
-          (cost ~<strong class="st-stat-val">{currencyStore.formatUsd(userSummary.badge_worth)}</strong>)
-        </span>
-      {/if}
-      {#if userData.games > 2}
-        <span>
-          <strong class="st-stat-val">{userSummary.game_count.toLocaleString()}</strong> STC games
-          (drops ~<strong class="st-stat-val">{currencyStore.formatUsd(userSummary.game_worth)}</strong>)
-        </span>
-      {/if}
-      {#if userData.cards > 2}
-        <span>
-          <strong class="st-stat-val">{userSummary.card_count.toLocaleString()}</strong> cards
-          (worth ~<strong class="st-stat-val">{currencyStore.formatUsd(userSummary.card_worth)}</strong>)
-        </span>
-        <span><strong class="st-stat-val">{userProfile.bg_count.toLocaleString()}</strong> bgs</span>
-        <span><strong class="st-stat-val">{userProfile.emote_count.toLocaleString()}</strong> emotes</span>
-      {/if}
-    </div>
-  </section>
-{/if}
 
 {#if dataError}
   <div class="st-alert is-error" role="alert">

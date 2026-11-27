@@ -377,17 +377,8 @@
   });
 </script>
 
-<div class="st-tool-header" style:--tool-accent="var(--st-color-games)">
-  <h1>Steam Game Filter</h1>
-  <span class="st-pill">
-    {filteredGames.length.toLocaleString()} {filteredGames.length === 1 ? 'game' : 'games'}
-  </span>
-  {#if loadingShards}
-    <span class="st-pill is-loading">Loading game metadata...</span>
-  {/if}
-</div>
-
-<section class="st-panel" aria-label="Players">
+<section class="st-panel" aria-label="Players and Game Filters">
+  <!-- Row 1: Players -->
   <form
     class="st-deck-row"
     onsubmit={(e) => {
@@ -396,19 +387,21 @@
     }}
   >
     <div class="st-deck-group">
-      <label class="st-visually-hidden" for="st-games-user">Steam ID or Profile URL</label>
-      <input
-        id="st-games-user"
-        name="steamUser"
-        type="text"
-        class="st-input"
-        style="flex: 1 1 220px; max-width: 340px; min-width: 170px;"
-        placeholder="SteamID64, vanity ID, or profile URL"
-        bind:value={userInput}
-      />
-      <button type="submit" class="st-btn st-btn-sm st-btn-primary" disabled={addingUser}>
-        {addingUser ? 'Adding...' : 'Add Player'}
-      </button>
+      <label for="st-games-user" style="font-weight: 600;">Player:</label>
+      <div class="st-join">
+        <input
+          id="st-games-user"
+          name="steamUser"
+          type="text"
+          class="st-input"
+          style="width: min(230px, 52vw);"
+          placeholder="SteamID64, vanity ID, or profile URL"
+          bind:value={userInput}
+        />
+        <button type="submit" class="st-btn st-btn-primary" disabled={addingUser}>
+          {addingUser ? 'Adding...' : 'Add'}
+        </button>
+      </div>
 
       {#if authSteamId}
         <button
@@ -427,15 +420,27 @@
           Sign in with Steam
         </a>
       {/if}
+
+      {#if players.length > 0}
+        <button type="button" class="st-btn st-btn-sm" onclick={clearAllPlayers}>
+          Clear
+        </button>
+      {/if}
     </div>
 
     <div class="st-deck-group">
       {#if statusMsg}
         <span style="font-size: 12px; color: var(--st-text-muted);">{statusMsg}</span>
       {/if}
-      {#if players.length > 0}
-        <button type="button" class="st-btn st-btn-sm" onclick={clearAllPlayers}>
-          Clear Players
+      {#if loadingShards}
+        <span class="st-pill is-loading">Loading metadata...</span>
+      {/if}
+      <span class="st-pill">
+        {filteredGames.length.toLocaleString()} {filteredGames.length === 1 ? 'game' : 'games'}
+      </span>
+      {#if filteredGames.length > 0}
+        <button type="button" class="st-btn st-btn-sm" onclick={exportFilteredGames}>
+          Export List
         </button>
       {/if}
     </div>
@@ -506,14 +511,9 @@
         </div>
       {/each}
     </div>
-  {:else}
-    <p style="margin: 8px 0 0; font-size: 12.5px; color: var(--st-text-muted);">
-      Add one or more public Steam profiles above (for example your ID and a friend's) to find shared games.
-    </p>
   {/if}
-</section>
 
-<section class="st-panel" aria-label="Game Feature Filters">
+  <!-- Row 2: Search + Match + Category Flags -->
   <div class="st-deck-row">
     <div class="st-deck-group">
       <label class="st-visually-hidden" for="st-games-search">Filter games</label>
@@ -522,7 +522,7 @@
         name="gameSearch"
         type="search"
         class="st-input"
-        style="flex: 1 1 210px; max-width: 340px; min-width: 160px;"
+        style="width: min(220px, 52vw);"
         placeholder="Filter game title or AppID..."
         bind:value={query}
       />
@@ -552,16 +552,9 @@
       {/if}
     </div>
 
-    <div class="st-deck-group">
-      <span style="font-size: 11.5px; color: var(--st-text-muted);">
-        Click flag once: <strong>+ require</strong> &middot; twice: <strong>&minus; exclude</strong> &middot; third: clear
-      </span>
-      {#if filteredGames.length > 0}
-        <button type="button" class="st-btn st-btn-sm" onclick={exportFilteredGames}>
-          Export List
-        </button>
-      {/if}
-    </div>
+    <span style="font-size: 11.5px; color: var(--st-text-muted);">
+      Flags: <strong>+</strong> require &middot; <strong>&minus;</strong> exclude &middot; 3rd click clears
+    </span>
   </div>
 
   <div class="st-flag-grid" style="margin-top: 8px;" role="group" aria-label="Steam category filters (click once to include, twice to exclude)">

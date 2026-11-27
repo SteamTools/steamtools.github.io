@@ -1122,6 +1122,11 @@ body:has(.st-sheet.is-hub) #nn_skinr {
   border-top: 1px solid var(--st-border);
 }
 
+.st-panel-stats {
+  font-size: 12px;
+  color: var(--st-text-muted);
+}
+
 .st-deck-group {
   display: flex;
   flex-wrap: wrap;

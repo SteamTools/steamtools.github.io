@@ -382,22 +382,6 @@
   });
 </script>
 
-<div class="st-tool-header" style:--tool-accent="var(--st-color-emotes)">
-  <h1>Emotes Gallery</h1>
-  {#if isLoading}
-    <span class="st-pill is-loading">Loading catalog...</span>
-  {:else}
-    <span class="st-pill">
-      {filteredItems.length.toLocaleString()} / {allItems.length.toLocaleString()} emoticons
-    </span>
-  {/if}
-  {#if ownedSet.size > 0}
-    <span class="st-pill" style="border-color: var(--st-color-cards); color: var(--st-color-cards);">
-      {ownedSet.size.toLocaleString()} owned
-    </span>
-  {/if}
-</div>
-
 {#if loadError}
   <div class="st-alert is-danger" role="alert">
     <span>{loadError}</span>
@@ -414,7 +398,7 @@
         name="filter"
         type="search"
         class="st-input"
-        style="flex: 1 1 200px; max-width: 340px; min-width: 160px;"
+        style="width: min(220px, 54vw);"
         placeholder="Filter name, :emote:, or game..."
         bind:value={query}
         oninput={resetPagination}
@@ -532,29 +516,31 @@
     </div>
   {/if}
 
-  <div class="st-deck-row" style="margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--st-border);">
+  <div class="st-deck-row">
     <div class="st-deck-group">
       <label class="st-visually-hidden" for="st-em-steamid">Steam ID</label>
-      <input
-        id="st-em-steamid"
-        name="steamid"
-        type="text"
-        class="st-input"
-        style="width: 195px;"
-        placeholder="SteamID64 or Profile URL"
-        bind:this={steamInputEl}
-        bind:value={importSteamId}
-      />
-      <button
-        type="button"
-        class="st-btn st-btn-sm st-btn-primary"
-        disabled={fetchingOwned}
-        onclick={fetchOwnedForUser}
-      >
-        {fetchingOwned ? 'Loading...' : 'Fetch Owned'}
-      </button>
+      <div class="st-join">
+        <input
+          id="st-em-steamid"
+          name="steamid"
+          type="text"
+          class="st-input"
+          style="width: 190px;"
+          placeholder="SteamID64 or Profile URL"
+          bind:this={steamInputEl}
+          bind:value={importSteamId}
+        />
+        <button
+          type="button"
+          class="st-btn st-btn-primary"
+          disabled={fetchingOwned}
+          onclick={fetchOwnedForUser}
+        >
+          {fetchingOwned ? 'Loading...' : 'Fetch Owned'}
+        </button>
+      </div>
       <button type="button" class="st-btn st-btn-sm" onclick={openSteamImport}>
-        Import from Steam
+        Manual import
       </button>
       {#if authSteamId}
         <button type="button" class="st-btn st-btn-sm" onclick={handleLogout}>
@@ -568,46 +554,57 @@
           Sign in with Steam
         </a>
       {/if}
+
+      {#if ownedSet.size > 0}
+        <div class="st-seg-group" role="group" aria-label="Ownership filter">
+          <button
+            type="button"
+            class="st-btn st-btn-sm"
+            class:is-pressed={ownedMode === 'all'}
+            onclick={() => { ownedMode = 'all'; resetPagination(); }}
+          >
+            All
+          </button>
+          <button
+            type="button"
+            class="st-btn st-btn-sm"
+            class:is-pressed={ownedMode === 'owned'}
+            onclick={() => { ownedMode = 'owned'; resetPagination(); }}
+          >
+            Owned
+          </button>
+          <button
+            type="button"
+            class="st-btn st-btn-sm"
+            class:is-pressed={ownedMode === 'unowned'}
+            onclick={() => { ownedMode = 'unowned'; resetPagination(); }}
+          >
+            Unowned
+          </button>
+        </div>
+        <button type="button" class="st-btn st-btn-sm" onclick={clearOwned}>
+          Clear
+        </button>
+      {/if}
     </div>
 
-    {#if ownedSet.size > 0 || ownedStatus}
-      <div class="st-deck-group">
-        {#if ownedSet.size > 0}
-          <div class="st-seg-group" role="group" aria-label="Ownership filter">
-            <button
-              type="button"
-              class="st-btn st-btn-sm"
-              class:is-pressed={ownedMode === 'all'}
-              onclick={() => { ownedMode = 'all'; resetPagination(); }}
-            >
-              All
-            </button>
-            <button
-              type="button"
-              class="st-btn st-btn-sm"
-              class:is-pressed={ownedMode === 'owned'}
-              onclick={() => { ownedMode = 'owned'; resetPagination(); }}
-            >
-              Owned
-            </button>
-            <button
-              type="button"
-              class="st-btn st-btn-sm"
-              class:is-pressed={ownedMode === 'unowned'}
-              onclick={() => { ownedMode = 'unowned'; resetPagination(); }}
-            >
-              Unowned
-            </button>
-          </div>
-          <button type="button" class="st-btn st-btn-sm" onclick={clearOwned}>
-            Clear Owned
-          </button>
-        {/if}
-        {#if ownedStatus}
-          <span style="font-size: 12px; color: var(--st-text-muted);">{ownedStatus}</span>
-        {/if}
-      </div>
-    {/if}
+    <div class="st-deck-group">
+      {#if ownedStatus}
+        <span style="font-size: 12px; color: var(--st-text-muted);">{ownedStatus}</span>
+      {/if}
+      {#if ownedSet.size > 0}
+        <span class="st-pill" style="border-color: var(--st-color-cards); color: var(--st-color-cards);">
+          {ownedSet.size.toLocaleString()} owned
+        </span>
+      {/if}
+      {#if isLoading}
+        <span class="st-pill is-loading">Loading catalog...</span>
+      {:else}
+        <span class="st-pill">
+          {filteredItems.length.toLocaleString()} / {allItems.length.toLocaleString()} emotes
+        </span>
+      {/if}
+    </div>
   </div>
 </section>
 

@@ -827,27 +827,6 @@
 
 <svelte:window onkeydown={handleKeyDown} />
 
-<div class="st-tool-header" style:--tool-accent="var(--st-color-mosaticon)">
-  <h1>Mosaticon</h1>
-  <span class="st-pill">
-    {cols} &times; {rows}
-  </span>
-  <span
-    class="st-pill"
-    style:border-color={charCounts.showcaseOk ? undefined : 'var(--st-danger)'}
-    style:color={charCounts.showcaseOk ? undefined : 'var(--st-danger)'}
-    title="Steam Profile Showcase limit is 8,000 characters; Comments limit is 800 characters"
-  >
-    Showcase: {charCounts.total.toLocaleString()} / {SHOWCASE_LIMIT.toLocaleString()}
-  </span>
-  {#if resolvingColors}
-    <span class="st-pill is-loading">Resolving colors...</span>
-  {/if}
-  {#if catalogLoaded}
-    <span class="st-pill">Sprites ready</span>
-  {/if}
-</div>
-
 {#if errorMsg}
   <div class="st-alert is-danger" role="alert">
     <span>{errorMsg}</span>
@@ -974,7 +953,7 @@
     </section>
 
     <section class="st-panel" style="margin-bottom: 0;">
-      <div class="st-deck-group" style="margin-bottom: 6px;">
+      <div class="st-join" style="display: flex; width: 100%; margin-bottom: 6px;">
         <label class="st-visually-hidden" for="st-mos-steamid">Steam ID</label>
         <input
           id="st-mos-steamid"
@@ -987,7 +966,7 @@
         />
         <button
           type="button"
-          class="st-btn st-btn-sm st-btn-primary"
+          class="st-btn st-btn-primary"
           disabled={fetchingEmotes}
           onclick={fetchOwnedEmotes}
         >
@@ -996,7 +975,7 @@
       </div>
       <div class="st-deck-group" style="margin-bottom: 8px;">
         <button type="button" class="st-btn st-btn-sm" onclick={openSteamImport}>
-          Import Steam Inventory
+          Manual import
         </button>
         <button type="button" class="st-btn st-btn-sm" onclick={clearIdbCache}>
           Clear Cache
@@ -1126,10 +1105,22 @@
 
   <section class="st-mos-stage" aria-label="Mosaic Canvas">
     <div class="st-deck-row" style="margin-bottom: 8px; font-size: 12px; color: #b7c6d4;">
-      <div>
-        Left-click to draw, right-click to erase.
+      <div class="st-deck-group">
+        <span>Left-click draw · Right-click erase</span>
+        <span class="st-pill">{cols} &times; {rows}</span>
+        <span
+          class="st-pill"
+          style:border-color={charCounts.showcaseOk ? undefined : 'var(--st-danger)'}
+          style:color={charCounts.showcaseOk ? undefined : 'var(--st-danger)'}
+          title="Steam Profile Showcase limit is 8,000 characters; Comments limit is 800 characters"
+        >
+          {charCounts.total.toLocaleString()} / {SHOWCASE_LIMIT.toLocaleString()} chars
+        </span>
+        {#if resolvingColors}
+          <span class="st-pill is-loading">Resolving colors...</span>
+        {/if}
         {#if hoverInfo}
-          <span style="margin-left: 8px; color: #8fd3ff;">{hoverInfo}</span>
+          <span style="color: #8fd3ff;">{hoverInfo}</span>
         {/if}
       </div>
       <div class="st-deck-group">
