@@ -6,8 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, '../..');
-const V2_DIR = path.resolve(REPO_ROOT, 'v2');
-const V2_ASSETS_DIR = path.resolve(V2_DIR, 'assets');
+const ASSETS_DIR = path.resolve(REPO_ROOT, 'assets');
 
 function cleanupMapFiles(dirPath) {
   if (!fs.existsSync(dirPath)) return 0;
@@ -97,7 +96,7 @@ try {
       console.log('[sentry] Not authenticated; skipping sourcemap upload and cleaning .map files.');
     } else {
       const release = resolveRelease();
-      const injectRes = runSentry(sentryBin, ['sourcemap', 'inject', V2_ASSETS_DIR], sentryEnv, true);
+      const injectRes = runSentry(sentryBin, ['sourcemap', 'inject', ASSETS_DIR], sentryEnv, true);
       if (injectRes.status !== 0) {
         exitCode = injectRes.status || 1;
       } else {
@@ -106,11 +105,11 @@ try {
           [
             'sourcemap',
             'upload',
-            V2_ASSETS_DIR,
+            ASSETS_DIR,
             '--release',
             release,
             '--url-prefix',
-            '~/v2/assets/',
+            '~/assets/',
           ],
           sentryEnv,
           true,
@@ -122,8 +121,8 @@ try {
     }
   }
 } finally {
-  const removed = cleanupMapFiles(V2_DIR);
-  console.log(`[sentry] Cleaned ${removed} .map file(s) from v2/.`);
+  const removed = cleanupMapFiles(ASSETS_DIR);
+  console.log(`[sentry] Cleaned ${removed} .map file(s) from assets/.`);
 }
 
 if (exitCode !== 0) {

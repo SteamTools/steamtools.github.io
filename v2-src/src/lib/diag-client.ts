@@ -67,10 +67,10 @@ export function initSentry(options?: { allowLocalPreview?: boolean }): boolean {
     integrations: [browserTracingIntegration()],
     tracesSampleRate: prod ? 0.1 : 1.0,
     // Strictly avoid injecting sentry-trace / baggage onto third-party CDNs or cross-origin API hosts.
-    tracePropagationTargets: [/^https:\/\/(?:www\.)?steam\.tools\/v2\//],
+    tracePropagationTargets: [/^https:\/\/(?:www\.)?steam\.tools\//],
     allowUrls: [
-      /https?:\/\/(?:www\.)?steam\.tools\/(?:v2\/assets|js)\//,
-      /https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?\/(?:v2\/assets|src|js)\//,
+      /https?:\/\/(?:www\.)?steam\.tools\/(?:(?:v2\/)?assets|js)\//,
+      /https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?\/(?:(?:v2\/)?assets|src|js)\//,
     ],
     denyUrls: [
       /extensions\//i,

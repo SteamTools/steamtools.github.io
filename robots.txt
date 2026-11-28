@@ -1,4 +1,6 @@
 User-agent: *
+Disallow: /v1/
+Disallow: /v2/
 Disallow: /cards/*
 Allow: /cards/$
 Allow: /cards/index.html

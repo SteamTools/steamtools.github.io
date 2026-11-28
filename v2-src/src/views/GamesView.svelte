@@ -456,7 +456,7 @@
       {:else}
         <a
           class="st-btn st-btn-sm"
-          href={getCfg().getLoginUrl(typeof window !== 'undefined' ? window.location.href : '/v2/games/')}
+          href={getCfg().getLoginUrl(typeof window !== 'undefined' ? window.location.href : '/games/')}
         >
           Sign in with Steam
         </a>

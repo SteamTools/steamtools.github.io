@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="mosaticonApp">
+<head>
+	<!-- NetworkN -->
+	<script async src="https://kumo.network-n.com/dist/app.js" site="steam-tools"></script>
+
+	<meta charset="UTF-8">
+	<meta name="robots" content="noindex, nofollow">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="description" content="Generate a mosaic of your chosen image using the Steam emoticons you own.">
+	<meta name="keywords" content="Steam,mosaic,emoticons,image,inventory">
+	<meta name="referrer" content="no-referrer-when-downgrade">
+	<meta name="author" content="Ehsan Kia">
+	<title>Mosaticon</title>
+
+	<link rel="shortcut icon" href="/favicon.ico">
+	<link href="bootstrap-2.1.0.min.css" rel="stylesheet">
+	<link href="hotkeys.min.css" rel="stylesheet">
+	<link rel="stylesheet" href="style.css?v=20261118b">
+	<link rel="stylesheet" href="/css/steamtools-import.css?v=20261121c">
+</head>
+<body ng-controller="mosaticonCtrl" ng-cloak>
+	<div class="corner" style="left: 25px;">
+		<a class="topbutton" href="../">&laquo; Hub</a>
+		<a class="topbutton st-v2-link" href="/mosaticon/" title="Try the redesigned v2 interface with dark mode">Try v2 &rarr;</a>
+	</div>
+	<div class="corner" style="right: 25px;">
+		<a target="_blank" rel="noopener noreferrer" href="https://twitter.com/SteamTools"><img src="/img/twitter.png" alt="Twitter" width="25" height="25"></a>
+		<a target="_blank" rel="noopener noreferrer" href="https://steamcommunity.com/groups/steam_tools"><img src="/img/steam.png" alt="Steam Group" width="25" height="25"></a>
+		<a class="topbutton" id="feedback"  href="https://steamcommunity.com/groups/steam_tools">Feedback</a>
+		<a class="topbutton" id="donate" target="_blank" rel="noopener noreferrer" href="https://ko-fi.com/ehsankia">Donate</a>
+	</div>
+
+	<div id="container">
+		<div id="stepbox">
+			<div style="margin: 10px"><b>Step one:</b> Load your emoticons</div>
+			<form id="addinput" class="mos-form-row form-horizontal" ng-submit="loadEmoticons()">
+				<div class="input-prepend input-append" style="margin-bottom:0;">
+					<label for="mos-userid" class="add-on" style="display:inline-block;margin-bottom:0;">SteamID</label>
+					<input id="mos-userid" style="width: 155px" maxlength="256" type="text" ng-model="UserID" placeholder="SteamID, custom URL, or :emote:" autocorrect="off" autocapitalize="none" spellcheck="false">
+					<button class="btn btn-inverse" type="submit">Load Emotes</button>
+				</div>
+				<button class="btn" type="button" ng-click="loadInventory()" title="Instant Local Import (works for private/large inventories & saves API quota)">Import Emotes…</button>
+			</form>
+			<div class="emotebox" ng-right-click="">
+				<span id="error" role="status" aria-live="polite" aria-atomic="true">{{status}}</span>
+				<div id="help"></div>
+				<div ng-show="showImportCta" style="margin: 6px 0;">
+					<button type="button" class="btn btn-small btn-primary" ng-click="loadInventory()">Import Emotes from Steam</button>
+				</div>
+				<span style="color: white" ng-if="!status">{{emoticons.length}} emoticon(s) loaded<br></span>
+				<div ng-show="emoticons.length > 0 && !status">
+					<span style="color: #999">(left click to select / right click to disable)</span>
+					<br>
+					<form id="filterinput" class="input-prepend form-horizontal">
+						<label for="mos-emote-filter" class="add-on" style="color: black;display:inline-block;margin-bottom:0;">Filter</label>
+						<input id="mos-emote-filter" class="span2" type="text" ng-model="emoteFilter" ng-model-options="{ debounce: 120 }" autocorrect="off" autocapitalize="none" spellcheck="false">
+					</form>
+				</div>
+				<img class="emote" alt=":{{e.name}}:" width="18" height="18" loading="lazy" ng-repeat="e in emoticons | filter:{disable: false} | filter:emoteFilter track by e.name"
+					ng-src="{{EMOTE_IMG_BASE}}/{{e.name}}"
+					ng-click="selectEmote($event, e)" ng-right-click="toggleEmote(e)" draggable="false"
+					ng-class="{select: e.select}" tooltip-popup-delay='200' tooltip-placement="top" tooltip=":{{e.name}}:" />
+			</div>
+			<div class="emotebox" style="background-color: #363; padding: 0 4px;" ng-right-click="">
+				<span ng-if="usedEmotes.length > 0" style="color: white">Used Emotes<br></span>
+				<img class="emote" alt=":{{e.name}}:" width="18" height="18" loading="lazy" ng-repeat="e in usedEmotes track by e.name"
+					ng-src="{{EMOTE_IMG_BASE}}/{{e.name}}"
+					ng-click="selectEmote($event, e)" ng-right-click="toggleEmote(e)" draggable="false"
+					ng-class="{select: e.select}" tooltip-popup-delay='200' tooltip-placement="top" tooltip=":{{e.name}}:" />
+			</div>
+			<div class="emotebox" style="background-color: #633; padding: 0 4px;" ng-right-click="">
+				<span ng-if="(emoticons | filter:{disable: true}).length > 0"
+					style="color: white">Disabled Emotes<br></span>
+				<img class="emote" alt=":{{e.name}}:" width="18" height="18" loading="lazy" ng-repeat="e in emoticons | filter:{disable: true} track by e.name"
+					ng-src="{{EMOTE_IMG_BASE}}/{{e.name}}"
+					ng-click="selectEmote($event, e)" ng-right-click="toggleEmote(e)" draggable="false"
+					ng-class="{select: e.select}" tooltip-popup-delay='200' tooltip-placement="top" tooltip=":{{e.name}}:" />
+			</div>
+			<div ng-if="emoticons.length > 0" style="text-align: center; margin-top: 6px;">
+				<div class="btn-group" style="display: inline-block; vertical-align: middle; margin: 4px 2px;">
+					<button class="btn" ng-click="disableAll()">Disable All</button>
+					<button class="btn" ng-click="enableAll()">Enable All</button>
+				</div>
+				<div class="mos-ctrl-group">
+					<span class="mos-addon" style="width: 44px">Sort</span>
+					<div class="btn-group">
+						<button type="button" class="btn" ng-model="sortMode" ng-click="sortByHue()" btn-radio="'hue'">Hue</button>
+						<button type="button" class="btn" ng-model="sortMode" ng-click="sortByLength()" btn-radio="'char'">Chars</button>
+						<button type="button" class="btn" ng-model="sortMode" ng-click="sortByGame()" btn-radio="'game'">Game</button>
+					</div>
+				</div>
+			</div>
+
+			<div ng-show="processedEmotes && emoticons.length > 0">
+				<div style="margin-top: 16px;"><b>Step two:</b> Load Image or Blank Canvas</div>
+				<div class="mos-form-row" style="margin-top: 8px;">
+					<span class="btn btn-default btn-file">
+						<input type="file" id="imageLoader">
+					</span>
+					<button type="button" class="btn" ng-click="blankCanvas()">Blank Canvas</button>
+				</div>
+				<canvas id="imageCanvas" width="200" ng-show="imageLoaded" style="margin-top: 6px;"></canvas>
+			</div>
+
+			<div ng-show="imageLoaded || blankLoaded" style="margin-top: 8px;">
+				<div class="mos-dim-row">
+					<span class="mos-dim-label">Width:</span>
+					<input type="number" min="1" max="50" ng-model="width.value" ng-change="imageLoaded ? updateUpscale() : resizeBlank()">
+					<input type="range" min="1" max="50" step="1" ng-model="width.value"
+						ng-mousedown="wSliderActive=1" ng-mouseup="wSliderActive=0; updateUpscale()">
+				</div>
+				<div class="mos-dim-row">
+					<span class="mos-dim-label">Height:</span>
+					<input type="number" min="1" max="50" ng-model="height.value" ng-disabled="!blankLoaded" ng-change="resizeBlank()">
+					<input type="range" min="1" max="50" step="1" ng-model="height.value" ng-disabled="!blankLoaded"
+						ng-mousedown="hSliderActive=1" ng-mouseup="hSliderActive=0; updateUpscale()">
+				</div>
+			</div>
+		</div>
+		<div id="preview" ng-show="processedEmotes && emoticons.length > 0">
+			<div>
+				<button class="btn btn-inverse action-btn" ng-click="importMenu()" title="Import mosaic text">Import</button>
+				<button class="btn btn-inverse action-btn" ng-click="exportMosaic()">Export</button>
+			</div>
+			<div ng-show="imageLoaded" style="margin-top: 4px;">
+				<div class="mos-ctrl-group">
+					<span class="mos-addon" style="width: 100px">Compare Mode</span>
+					<div class="btn-group">
+						<button type="button" class="btn" ng-model="compareMode" btn-radio="'rgb'">RGB</button>
+						<button type="button" class="btn" ng-model="compareMode" btn-radio="'lab'">Lab</button>
+						<button type="button" class="btn" ng-model="compareMode" btn-radio="'hsl'">HSL</button>
+					</div>
+				</div>
+				<div class="mos-ctrl-group">
+					<span class="mos-addon" style="width: 60px">Quality</span>
+					<div class="btn-group">
+						<button type="button" class="btn" ng-model="quality" btn-radio="'1'">1</button>
+						<button type="button" class="btn" ng-model="quality" btn-radio="'2'">2</button>
+						<button type="button" class="btn" ng-model="quality" btn-radio="'3'">3</button>
+					</div>
+				</div>
+			</div>
+			<div class="mos-tool-bar" ng-show="imageLoaded || blankLoaded">
+				<button type="button" class="btn tool-btn" ng-model="tool" ng-click="undo()" ng-disabled="undoHistory.length == 0" aria-label="Undo" title="Undo">
+					<i class="icon-unshare" aria-hidden="true"></i>
+				</button>
+				<div class="mos-ctrl-group mos-tool-group" style="margin:0;">
+					<span class="mos-addon">Tool</span>
+					<div class="btn-group">
+						<button type="button" class="btn tool-btn" ng-model="tool" btn-radio="'pen'" aria-label="Pen tool" aria-pressed="{{tool === 'pen'}}" title="Pen tool"><i class="icon-pencil" aria-hidden="true"></i></button>
+						<button type="button" class="btn tool-btn" ng-model="tool" btn-radio="'line'" aria-label="Line tool" aria-pressed="{{tool === 'line'}}" title="Line tool"><i class="icon-vector-path-line" aria-hidden="true"></i></button>
+						<button type="button" class="btn tool-btn" ng-model="tool" btn-radio="'rect'" aria-label="Rectangle tool" aria-pressed="{{tool === 'rect'}}" title="Rectangle tool"><i class="icon-vector-path-square" aria-hidden="true"></i></button>
+						<button type="button" class="btn tool-btn" ng-model="tool" btn-radio="'circ'" aria-label="Circle tool" aria-pressed="{{tool === 'circ'}}" title="Circle tool"><i class="icon-vector-path-circle" aria-hidden="true"></i></button>
+						<button type="button" class="btn tool-btn" ng-model="tool" btn-radio="'move'" aria-label="Move tool" aria-pressed="{{tool === 'move'}}" title="Move tool"><i class="icon-move" aria-hidden="true"></i></button>
+						<button type="button" class="btn tool-btn" ng-model="tool" btn-radio="'fill'" aria-label="Fill bucket tool" aria-pressed="{{tool === 'fill'}}" title="Fill bucket tool"><i class="icon-tint" aria-hidden="true"></i></button>
+					</div>
+				</div>
+				<div class="btn-group" style="margin:0; display:inline-flex;">
+					<button type="button" class="btn tool-btn" ng-click="horizontalFlip()" aria-label="Flip mosaic horizontally" title="Flip horizontally"><i class="icon-text-width" aria-hidden="true"></i></button>
+					<button type="button" class="btn tool-btn" ng-click="verticalFlip()" aria-label="Flip mosaic vertically" title="Flip vertically"><i class="icon-text-height" aria-hidden="true"></i></button>
+				</div>
+			</div>
+			<div style="font-size: 10px; margin-top: 2px;" ng-show="imageLoaded || blankLoaded">Press <b>?</b> for keyboard shortcuts</div>
+			<div class="mosaic-scroll-wrap" role="region" aria-label="Emoticon mosaic canvas" tabindex="0">
+				<div ng-mousedown="mouseDown($event)" ng-mouseup="mouseUp()"
+					id="mosaic" ng-show="mosaic" ng-style="{'width': ((mosaic[0] ? mosaic[0].length : width.value) * 18) + 'px'}">
+					<div class="mosaic-row" ng-repeat="row in mosaic track by $index">
+						<img alt=":{{e.name}}:" width="18" height="18" ng-repeat="e in row track by $index"
+							ng-right-click="toggleEmote(e)"
+							ng-src="{{EMOTE_IMG_BASE}}/{{e.name}}" draggable="false"
+							onmousedown="if (event.preventDefault) event.preventDefault()">
+					</div>
+				</div>
+			</div>
+			<div style="margin-top: 8px;">
+				<span><b>Character count:</b> {{charCount}}</span>
+				<div style="font-size: 10px;"><b>Limits: </b>Showcase = 8000, Comment = 800</div>
+			</div>
+		</div>
+	</div>
+	<div id="nn_skinl" class="adswitch_skin"></div>
+	<div id="nn_skinr" class="adswitch_skin"></div>
+
+	<script type="text/ng-template" id="importMenu.html">
+		<div class="modal-header" style="text-align: center;">
+			<h3 class="modal-title">Import Mosaic</h3>
+		</div>
+		<div style="text-align: center;">
+			<textarea class="form-control" ng-model="data.text" style="width: min(400px, 90%); height: 300px; margin: 10px"></textarea>
+		</div>
+		<div class="modal-footer" style="text-align: center">
+			<button class="btn" ng-click="closeModal()">Cancel</button>
+			<button class="btn btn-success" ng-click="importMosaic()">Import</button>
+		</div>
+	</script>
+
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.10/angular.min.js" integrity="sha384-w00wP54lz1yheNCj2qHsYSAzvnOwattZOVdRTD+va3MGP+jgpNaJLQ68RSHJhnOc" crossorigin="anonymous"></script>
+	<script src="hotkeys.min.js"></script>
+	<script src="ui-bootstrap-tpls-0.12.0.min.js"></script>
+	<script src="kdTree.min.js"></script>
+	<script src="colors.js?v=20261118b"></script>
+	<script src="/js/steamtools-config.js?v=20261121c"></script>
+	<script src="/js/import-worker.js?v=20261118b"></script>
+	<script src="/js/steamtools-import.js?v=20261121b"></script>
+	<script src="main.js?v=20261118b"></script>
+
+	<!-- Start of StatCounter Code for Default Guide -->
+	<script>
+		var sc_project=9905430;
+		var sc_invisible=1;
+		var sc_security="89ce89e8";
+	</script>
+	<script async src="https://secure.statcounter.com/counter/counter.js"></script>
+	<noscript><div class="statcounter"><a title="create counter"
+	href="https://statcounter.com/free-hit-counter/"
+	target="_blank" rel="noopener noreferrer"><img class="statcounter"
+	src="https://c.statcounter.com/9905430/0/89ce89e8/1/"
+	alt="create counter" width="1" height="1"></a></div></noscript>
+	<!-- End of StatCounter Code for Default Guide -->
+
+</body>
+</html>

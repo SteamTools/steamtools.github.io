@@ -47,7 +47,16 @@ function serveRepoRootAssets(): Plugin {
     }
     const rawUrl = req.url || '/';
     const pathname = decodeURIComponent(rawUrl.split('?')[0]);
-    if (pathname.startsWith('/v2/') || pathname === '/v2') {
+    // Let Vite handle root app routes; only serve shared static assets and /v1/ from repo root.
+    if (
+      !pathname.startsWith('/js/') &&
+      !pathname.startsWith('/css/') &&
+      !pathname.startsWith('/img/') &&
+      !pathname.startsWith('/v1/') &&
+      pathname !== '/v1' &&
+      pathname !== '/favicon.ico' &&
+      pathname !== '/privacy.html'
+    ) {
       next();
       return;
     }
@@ -89,16 +98,28 @@ function serveRepoRootAssets(): Plugin {
   };
 }
 
+function cleanRootAssetsDir(): Plugin {
+  return {
+    name: 'clean-root-assets-dir',
+    buildStart() {
+      const assetsDir = path.resolve(REPO_ROOT, 'assets');
+      if (fs.existsSync(assetsDir)) {
+        fs.rmSync(assetsDir, { recursive: true, force: true });
+      }
+    },
+  };
+}
+
 export default defineConfig({
-  base: '/v2/',
+  base: '/',
   publicDir: false,
   define: {
     __ST_SENTRY_RELEASE__: JSON.stringify(resolveSentryRelease()),
   },
-  plugins: [svelte(), serveRepoRootAssets()],
+  plugins: [svelte(), serveRepoRootAssets(), cleanRootAssetsDir()],
   build: {
-    outDir: path.resolve(__dirname, '../v2'),
-    emptyOutDir: true,
+    outDir: path.resolve(__dirname, '..'),
+    emptyOutDir: false,
     sourcemap: 'hidden',
     target: 'es2022',
     rollupOptions: {

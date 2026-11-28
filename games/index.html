@@ -1,172 +1,37 @@
-<!DOCTYPE HTML>
-<html lang="en-US" ng-app="Steam">
+<!doctype html>
+<html lang="en">
 <head>
-	<!-- NetworkN -->
-	<script async src="https://kumo.network-n.com/dist/app.js" site="steam-tools"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <script>
+  try {
+    var s = localStorage.getItem("color-scheme");
+    if (s === "light" || s === "dark") document.querySelector('meta[name="color-scheme"]').content = s;
+  } catch (e) {}
+  </script>
+  <meta name="description" content="View the intersection of Steam users' game libraries and filter shared games by multiplayer, co-op, controller support, platform, free-to-play, and more.">
+  <meta name="keywords" content="Steam,games,filter,coop,multiplayer,intersection,friends,tools">
+  <meta name="author" content="Ehsan Kia">
+  <meta name="referrer" content="no-referrer-when-downgrade">
+  <title>Steam Game Filter — steam.tools</title>
 
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<meta name="description" content="See the intersection of your Steam games with someone else's, and filter them by categories.">
-	<meta name="keywords" content="Steam,games,filter,compare,intersection">
-	<meta name="author" content="Ehsan Kia">
-	<title>Game Filter</title>
+  <!-- NetworkN -->
+  <script async src="https://kumo.network-n.com/dist/app.js" site="steam-tools"></script>
 
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js" integrity="sha384-WksqwlT8hWlAsDjVT3cRrnCjB7YvUzq8jcwbyvcUWsT2leBuNB5KOay2yMPL43EV" crossorigin="anonymous"></script>
-	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js" integrity="sha384-25OA1Qsy+8YnGp0IWGZ+Ej1rjq+GnXMxO+Vj4rGk/DYO9Qjx6zIPVP/5occ4ZdIR" crossorigin="anonymous"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.2/js/bootstrap.min.js" integrity="sha384-7sVK908dLMjOwvGD47EHg9cxk32sTpllx4Qqg0vzxEIlyBSsK9UauzrqZl8SPP0+" crossorigin="anonymous"></script>
-
-	<link rel="shortcut icon" href="/favicon.ico">
-	<link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" integrity="sha384-4FeI0trTH/PCsLWrGCD1mScoFu9Jf2NdknFdFoJhXZFwsvzZ3Bo5sAh7+zL8Xgnd" crossorigin="anonymous" rel="stylesheet">
-	<link rel="stylesheet" type="text/css" href="../css/steamtools-import.css?v=20261121c" media="all">
-	<link rel="stylesheet" type="text/css" href="style.css?v=20261118b" media="all">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geo&family=Oswald:wght@300;400;500&display=swap">
+  <link rel="stylesheet" href="/css/steamtools-import.css?v=20261121a">
+  <script type="module" crossorigin src="/assets/main-DE0bVpVK.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/main-BOMAd_pE.css">
 </head>
-<body ng-controller="SteamCtrl" ng-cloak>
-	<div class="corner" style="left: 25px;">
-		<a class="topbutton" href="../">&laquo; Hub</a>
-		<a class="topbutton st-v2-link" href="../v2/games/" title="Try the redesigned v2 interface with dark mode">Try v2 &rarr;</a>
-	</div>
-	<div class="corner" style="right: 25px;">
-		<a target="_blank" rel="noopener noreferrer" href="https://twitter.com/SteamTools"><img src="/img/twitter.png" alt="Twitter" width="25" height="25"></a>
-		<a target="_blank" rel="noopener noreferrer" href="https://steamcommunity.com/groups/steam_tools"><img src="/img/steam.png" alt="Steam Group" width="25" height="25"></a>
-		<a class="topbutton" id="feedback"  href="https://steamcommunity.com/groups/steam_tools">Feedback</a>
-		<a class="topbutton" id="donate" target="_blank" rel="noopener noreferrer" href="https://ko-fi.com/ehsankia">Donate</a>
-	</div>
+<body>
+  <div id="app" data-initial-route="games"></div>
 
-	<div id="nn_lb1" style="margin: 0px auto; text-align: center;"></div>
-
-	<div id="container">
-		<div id="user-selection">
-			<div style="margin-bottom: 8px; display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap;">
-				<a ng-href="[[steamLoginUrl]]" ng-show="!loggedIn"><img src="/img/steam_openid.png" alt="Sign in through Steam" width="114" height="43"></a>
-				<button type="button" class="btn btn-mini" ng-show="loggedIn" ng-click="userLogout()">Logout</button>
-			</div>
-			<div class="games-toolbar">
-				<button type="button" class="st-icon-btn" ng-click="deleteUsers()" aria-label="Remove selected users">
-					<i class="icon-trash icon-white" aria-hidden="true" rel="tooltip" data-placement="left" data-original-title="Remove selected"></i>
-				</button>
-				<form id="addinput" class="input-prepend input-append form-horizontal" ng-submit="addUser()">
-					<label for="games-steamid" class="add-on" style="display:inline-flex;align-items:center;margin-bottom:0;">SteamID</label>
-					<input id="games-steamid" style="width: min(240px, 100%);" maxlength="256" type="text" ng-model="UserID" autocorrect="off" autocapitalize="none" spellcheck="false">
-					<button type="submit" class="btn"><i class="icon-user" aria-hidden="true"></i> Add User</button>
-				</form>
-				<span class="games-info-icon" title="This tool allows you to see the intersection of your and your friends' games, and filter them using flags. Red border means profile is private.">
-					<i class="icon-info-sign icon-white" rel="tooltip" data-placement="right"
-					data-original-title="This tool allows you to see the intersection of your and your friends' games, and filter them using flags. Red border means profile is private." aria-hidden="true"></i>
-				</span>
-			</div>
-			<div ng-show="userError" role="status" aria-live="polite" style="color:#f88; font-size:12px; margin:4px 0; text-align:center;">[[userError]]</div>
-			<ul class="user-grid">
-				<li class="user [[userSelected(user.steamid)]] [[isPrivate(user.steamid)]]" ng-repeat="user in Users" fadey="500" draggable="true" ng-click="selectUser(user.steamid)">
-					<div class="user-card-head" ng-hide="user.loading">
-						<button type="button" class="st-icon-btn" ng-click="$event.stopPropagation(); showFriends(user.steamid,user.name)" aria-label="Friends list for [[user.name]]"><i class="icon-list" aria-hidden="true" rel="tooltip" data-placement="top" data-original-title="Friends list"></i></button>
-						<span class="name" title="[[user.name]]">[[user.name]]</span>
-						<button type="button" class="st-icon-btn" ng-click="$event.stopPropagation(); removeUser(user.steamid)" aria-label="Remove [[user.name]]"><i class="icon-remove" aria-hidden="true" rel="tooltip" data-placement="top" data-original-title="Remove"></i></button>
-					</div>
-					<div class="user-card-head" ng-show="user.loading" style="justify-content: center;">
-						<span class="name">Loading...</span>
-					</div>
-					<img class="user-avatar" ng-class="{'is-loading-spinner': user.loading}" ng-src="[[user.avatar]]" alt="[[user.name]]'s Avatar" width="64" height="64" draggable="false">
-				</li>
-			</ul>
-			<form id="importbtn" class="form-horizontal">
-				<button type="button" class="btn" ng-click="importGames()" ng-disabled="selectedUsers.length==0">
-					<i class="icon-download" aria-hidden="true"></i> Import Games</button>
-			</form>
-		</div>
-
-		<div id="filter-panel">
-			<div id="filter-title">Flags</div>
-
-			<button type="button" ng-click="f.singleplayer = 1 - (f.singleplayer || 0)" ng-class="{'label-success': f.singleplayer == 1}" aria-pressed="[[f.singleplayer == 1]]" class="label"><i ng-class="f.singleplayer == 1 && 'icon-check' || 'icon-plus-sign'" aria-hidden="true"></i> Single-Player</button>
-
-			<button type="button" ng-click="f.local_coop = 1 - (f.local_coop || 0)" ng-class="{'label-success': f.local_coop == 1}" aria-pressed="[[f.local_coop == 1]]" class="label"><i ng-class="f.local_coop == 1 && 'icon-check' || 'icon-plus-sign'" aria-hidden="true"></i> Local Co-op</button>
-
-			<button type="button" ng-click="f.coop = 1 - (f.coop || 0)" ng-class="{'label-success': f.coop == 1}" aria-pressed="[[f.coop == 1]]" class="label"><i ng-class="f.coop == 1 && 'icon-check' || 'icon-plus-sign'" aria-hidden="true"></i> Co-op</button>
-
-			<button type="button" ng-click="f.multiplayer = 1 - (f.multiplayer || 0)" ng-class="{'label-success': f.multiplayer == 1}" aria-pressed="[[f.multiplayer == 1]]" class="label"><i ng-class="f.multiplayer == 1 && 'icon-check' || 'icon-plus-sign'" aria-hidden="true"></i> Multi-Player</button>
-
-			<button type="button" ng-click="f.controller = 1 - (f.controller || 0)" ng-class="{'label-success': f.controller == 1}" aria-pressed="[[f.controller == 1]]" class="label"><i ng-class="f.controller == 1 && 'icon-check' || 'icon-plus-sign'" aria-hidden="true"></i> Controller</button>
-
-			<button type="button" ng-click="f.mac = 1 - (f.mac || 0)" ng-class="{'label-success': f.mac == 1}" aria-pressed="[[f.mac == 1]]" class="label"><i ng-class="f.mac == 1 && 'icon-check' || 'icon-plus-sign'" aria-hidden="true"></i> Mac</button>
-
-			<button type="button" ng-click="f.linux = 1 - (f.linux || 0)" ng-class="{'label-success': f.linux == 1}" aria-pressed="[[f.linux == 1]]" class="label"><i ng-class="f.linux == 1 && 'icon-check' || 'icon-plus-sign'" aria-hidden="true"></i> Linux</button>
-
-			<button type="button" ng-click="f.stc = 1 - (f.stc || 0)" ng-class="{'label-success': f.stc == 1}" aria-pressed="[[f.stc == 1]]" class="label"><i ng-class="f.stc == 1 && 'icon-check' || 'icon-plus-sign'" aria-hidden="true"></i> Trading Cards</button>
-
-			<button type="button" ng-click="f.achievements = 1 - (f.achievements || 0)" ng-class="{'label-success': f.achievements == 1}" aria-pressed="[[f.achievements == 1]]" class="label"><i ng-class="f.achievements == 1 && 'icon-check' || 'icon-plus-sign'" aria-hidden="true"></i> Achievements</button>
-
-			<button type="button" ng-click="f.workshop = 1 - (f.workshop || 0)" ng-class="{'label-success': f.workshop == 1}" aria-pressed="[[f.workshop == 1]]" class="label"><i ng-class="f.workshop == 1 && 'icon-check' || 'icon-plus-sign'" aria-hidden="true"></i> Workshop</button>
-
-			<button type="button" ng-click="f.free2play = 1 - (f.free2play || 0)" ng-class="{'label-success': f.free2play == 1}" aria-pressed="[[f.free2play == 1]]" class="label"><i ng-class="f.free2play == 1 && 'icon-check' || 'icon-plus-sign'" aria-hidden="true"></i> Free to Play</button>
-		</div>
-		<div id="game-list">
-			<div id="game-title">Filtered Games ([[gameList.length]])</div>
-			<div style="margin: 6px 0;" ng-show="fullGameList.length > 0">
-				<label for="games-search" class="st-visually-hidden">Search filtered games</label>
-				<input id="games-search" type="text" ng-model="gameSearch" placeholder="Search title..." style="width: 100%; box-sizing: border-box;" autocorrect="off" autocapitalize="none" spellcheck="false">
-			</div>
-			<ng:switch on="!!(gameStatus==1)">
-				<div class="game-text" ng:switch-when="true">Add and select at least one user, then import games.</div>
-			</ng:switch>
-			<ng:switch on="!!(gameStatus==2)">
-				<img ng:switch-when="true" src="img/loading2.gif" alt="Loading games..." width="220" height="19">
-			</ng:switch>
-			<div id="game-content">
-				<a ng-repeat="game in gameList | limitTo:gameLimit"
-					ng-href="https://store.steampowered.com/app/[[game]]" target="_blank" rel="noopener noreferrer">
-					<div class="game" draggable="true" ng-bind="getGameName(game)"></div>
-				</a>
-				<button type="button" class="btn btn-mini" ng-show="gameList.length > gameLimit" ng-click="showMoreGames()"
-					style="display: block; margin: 6px auto;">Show more ([[gameList.length - gameLimit]] more)</button>
-			</div>
-				<button ng-show="gameList.length>0" class="btn btn-inverse" ng-click="exportGames()"
-					style="display: block; margin: 8px auto 0;">Export List</button>
-		</div>
-	</div>
-	<dialog id="friendListModal" class="st-friends-dialog" closedby="any" aria-labelledby="myModalLabel">
-		<div class="modal-header">
-			<button type="button" class="close" ng-click="closeFriendsModal()" aria-label="Close friends dialog">&times;</button>
-			<h3 id="myModalLabel">[[selectedName]]'s Friends</h3>
-		</div>
-		<div class="modal-body nano">
-			<ng:switch on="!!(friendStatus==1)">
-				<div ng:switch-when="true"> Requesting Friendslist. </div>
-			</ng:switch>
-			<ng:switch on="!!(friendStatus==2)">
-				<div ng:switch-when="true"> No new friends found. </div>
-			</ng:switch>
-			<ng:switch on="!!(friendStatus==3)">
-				<div ng:switch-when="true"> Profile is private. </div>
-			</ng:switch>
-			<ul class="friend-grid">
-				<li class="friend [[friendSelected(friend.steamid)]]" ng-repeat="friend in Friends" fadey="500" draggable="true" ng-click="selectFriend(friend.steamid)">
-					<span class="name" title="[[friend.name]]">[[friend.name]]</span>
-					<img class="user-avatar" ng-src="[[friend.avatar]]" alt="[[friend.name]]'s Avatar" width="64" height="64" draggable="false">
-				</li>
-			</ul>
-		</div>
-		<div class="modal-footer">
-			<button type="button" class="btn" ng-click="closeFriendsModal()">Close</button>
-			<button type="button" class="btn btn-primary" ng-click="addFriends()" ng-disabled="selectedFriends.length==0">Add Selected</button>
-		</div>
-	</dialog>
-
-	<script type="text/javascript" src="../js/steamtools-config.js?v=20261121c"></script>
-	<script type="text/javascript" src="steam.js?v=20261118b"></script>
-
-	<!-- Start of StatCounter Code for Default Guide -->
-	<script>
-		var sc_project=9905430;
-		var sc_invisible=1;
-		var sc_security="89ce89e8";
-	</script>
-	<script async src="https://secure.statcounter.com/counter/counter.js"></script>
-	<noscript><div class="statcounter"><a title="create counter"
-	href="https://statcounter.com/free-hit-counter/"
-	target="_blank" rel="noopener noreferrer"><img class="statcounter"
-	src="https://c.statcounter.com/9905430/0/89ce89e8/1/"
-	alt="create counter" width="1" height="1"></a></div></noscript>
-	<!-- End of StatCounter Code for Default Guide -->
-
+  <script src="/js/steamtools-config.js?v=20261121b"></script>
+  <script src="/js/import-worker.js?v=20261121b"></script>
+  <script src="/js/steamtools-import.js?v=20261121b"></script>
 </body>
 </html>

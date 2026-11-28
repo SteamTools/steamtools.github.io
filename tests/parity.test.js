@@ -224,14 +224,14 @@ test('CFG manifest caching, API failover, CSV formula escaping, and gallery v2 u
   assert.strictEqual(priced440Fallback.usedBucketFallback, true);
 });
 
-test('Angular ng-app and ng-controller match main JS modules across all apps', () => {
+test('Angular ng-app and ng-controller match main JS modules across all v1 apps', () => {
   const apps = [
-    ['backgrounds/index.html', 'backgrounds/main.js'],
-    ['cards/index.html', 'cards/main.js'],
-    ['emoticons/index.html', 'emoticons/main.js'],
-    ['games/index.html', 'games/steam.js'],
-    ['itemvalue/index.html', 'itemvalue/main.js'],
-    ['mosaticon/index.html', 'mosaticon/main.js']
+    ['v1/backgrounds/index.html', 'v1/backgrounds/main.js'],
+    ['v1/cards/index.html', 'v1/cards/main.js'],
+    ['v1/emoticons/index.html', 'v1/emoticons/main.js'],
+    ['v1/games/index.html', 'v1/games/steam.js'],
+    ['v1/itemvalue/index.html', 'v1/itemvalue/main.js'],
+    ['v1/mosaticon/index.html', 'v1/mosaticon/main.js']
   ];
   for (const [htmlRel, jsRel] of apps) {
     const html = fs.readFileSync(path.join(REPO_ROOT, htmlRel), 'utf8');
@@ -898,31 +898,32 @@ test('CFG.track enforces host gate, event allowlist, field sanitization, and per
   assert.strictEqual(capped.length, 30);
 });
 
-test('all classic v1 tool pages include a Try v2 link to their matching /v2/ route', () => {
+test('all classic v1 tool pages include a Try v2 link to their matching root route and noindex', () => {
   const routes = [
-    ['itemvalue/index.html', '../v2/itemvalue/'],
-    ['cards/index.html', '../v2/cards/'],
-    ['mosaticon/index.html', '../v2/mosaticon/'],
-    ['emoticons/index.html', '../v2/emoticons/'],
-    ['backgrounds/index.html', '../v2/backgrounds/'],
-    ['games/index.html', '../v2/games/']
+    ['v1/itemvalue/index.html', '/itemvalue/'],
+    ['v1/cards/index.html', '/cards/'],
+    ['v1/mosaticon/index.html', '/mosaticon/'],
+    ['v1/emoticons/index.html', '/emoticons/'],
+    ['v1/backgrounds/index.html', '/backgrounds/'],
+    ['v1/games/index.html', '/games/']
   ];
   for (const [relHtml, expectedHref] of routes) {
     const html = fs.readFileSync(path.join(REPO_ROOT, relHtml), 'utf8');
     assert.ok(html.includes('class="topbutton st-v2-link"'), `${relHtml} missing .st-v2-link`);
     assert.ok(html.includes(`href="${expectedHref}"`), `${relHtml} missing href="${expectedHref}"`);
+    assert.ok(html.includes('noindex'), `${relHtml} should be noindex under /v1/`);
   }
 });
 
 test('all v1 tool pages and v2 Hub point Donate links to Ko-fi without legacy PayPal links', () => {
   const donateFiles = [
     'v2-src/src/components/AppShell.svelte',
-    'itemvalue/index.html',
-    'cards/index.html',
-    'mosaticon/index.html',
-    'emoticons/index.html',
-    'backgrounds/index.html',
-    'games/index.html',
+    'v1/itemvalue/index.html',
+    'v1/cards/index.html',
+    'v1/mosaticon/index.html',
+    'v1/emoticons/index.html',
+    'v1/backgrounds/index.html',
+    'v1/games/index.html',
   ];
   for (const relPath of donateFiles) {
     const content = fs.readFileSync(path.join(REPO_ROOT, relPath), 'utf8');

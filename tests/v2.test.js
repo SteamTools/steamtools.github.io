@@ -265,18 +265,22 @@ test('itemvalue-logic computes fee math, sorts rarity/quality, and escapes CSV f
   assert.ok(csv.includes('"\'=HYPERLINK(""bad"")"'));
 });
 
-test('router parses all 7 /v2/ subpaths cleanly', () => {
+test('router parses all 7 root and legacy /v2/ subpaths cleanly', () => {
+  assert.equal(parseRouteFromPathname('/'), 'hub');
+  assert.equal(parseRouteFromPathname('/index.html'), 'hub');
+  assert.equal(parseRouteFromPathname('/cards/'), 'cards');
+  assert.equal(parseRouteFromPathname('/cards'), 'cards');
+  assert.equal(parseRouteFromPathname('/emoticons/'), 'emoticons');
+  assert.equal(parseRouteFromPathname('/emoticons'), 'emoticons');
+  assert.equal(parseRouteFromPathname('/backgrounds/'), 'backgrounds');
+  assert.equal(parseRouteFromPathname('/backgrounds/index.html'), 'backgrounds');
+  assert.equal(parseRouteFromPathname('/games/'), 'games');
+  assert.equal(parseRouteFromPathname('/mosaticon/'), 'mosaticon');
+  assert.equal(parseRouteFromPathname('/itemvalue/'), 'itemvalue');
+  assert.equal(parseRouteFromPathname('/itemvalue'), 'itemvalue');
+  // Legacy /v2/ paths still parse cleanly
   assert.equal(parseRouteFromPathname('/v2/'), 'hub');
-  assert.equal(parseRouteFromPathname('/v2'), 'hub');
   assert.equal(parseRouteFromPathname('/v2/cards/'), 'cards');
-  assert.equal(parseRouteFromPathname('/v2/cards'), 'cards');
-  assert.equal(parseRouteFromPathname('/v2/emoticons/'), 'emoticons');
-  assert.equal(parseRouteFromPathname('/v2/emoticons'), 'emoticons');
-  assert.equal(parseRouteFromPathname('/v2/backgrounds/'), 'backgrounds');
-  assert.equal(parseRouteFromPathname('/v2/backgrounds/index.html'), 'backgrounds');
-  assert.equal(parseRouteFromPathname('/v2/games/'), 'games');
-  assert.equal(parseRouteFromPathname('/v2/mosaticon/'), 'mosaticon');
-  assert.equal(parseRouteFromPathname('/v2/itemvalue/'), 'itemvalue');
   assert.equal(parseRouteFromPathname('/v2/itemvalue'), 'itemvalue');
 });
 
@@ -455,22 +459,22 @@ test('mosaticon-logic encodes colors, matches blocks via KdTree, draws, flips, a
   assert.deepEqual(imported.cells, [':a:', ':b:', ':c:', ':d:']);
 });
 
-test('built v2 HTML entrypoints & assets preserve theme FOUC guard, noindex, shared UMD bridges, and compact size', () => {
+test('built root HTML entrypoints & assets preserve theme FOUC guard, indexability, shared UMD bridges, and compact size', () => {
   const routes = [
-    ['v2/index.html', 'hub'],
-    ['v2/cards/index.html', 'cards'],
-    ['v2/emoticons/index.html', 'emoticons'],
-    ['v2/backgrounds/index.html', 'backgrounds'],
-    ['v2/games/index.html', 'games'],
-    ['v2/mosaticon/index.html', 'mosaticon'],
-    ['v2/itemvalue/index.html', 'itemvalue'],
+    ['index.html', 'hub'],
+    ['cards/index.html', 'cards'],
+    ['emoticons/index.html', 'emoticons'],
+    ['backgrounds/index.html', 'backgrounds'],
+    ['games/index.html', 'games'],
+    ['mosaticon/index.html', 'mosaticon'],
+    ['itemvalue/index.html', 'itemvalue'],
   ];
 
   for (const [relPath, routeName] of routes) {
     const html = fs.readFileSync(path.join(REPO_ROOT, relPath), 'utf8');
     assert.ok(html.includes('<meta name="color-scheme" content="light dark">'), `${relPath} missing color-scheme meta`);
     assert.ok(html.includes('localStorage.getItem("color-scheme")'), `${relPath} missing FOUC inline script`);
-    assert.ok(html.includes('<meta name="robots" content="noindex, nofollow">'), `${relPath} missing noindex meta`);
+    assert.ok(!html.includes('noindex'), `${relPath} should be indexable at root`);
     assert.ok(html.includes(`data-initial-route="${routeName}"`), `${relPath} missing data-initial-route`);
     assert.ok(html.includes('src="/js/steamtools-config.js'), `${relPath} missing shared config script`);
     assert.ok(html.includes('src="/js/import-worker.js'), `${relPath} missing import worker script`);
@@ -479,17 +483,17 @@ test('built v2 HTML entrypoints & assets preserve theme FOUC guard, noindex, sha
     assert.ok(!html.includes('statcounter.com'), `${relPath} should not load StatCounter`);
   }
 
-  const assetDir = path.join(REPO_ROOT, 'v2', 'assets');
+  const assetDir = path.join(REPO_ROOT, 'assets');
   const assets = fs.readdirSync(assetDir);
   assert.equal(
     assets.filter((f) => f.endsWith('.map')).length,
     0,
-    'No .map files may be publicly shipped in v2/assets',
+    'No .map files may be publicly shipped in assets/',
   );
   assert.equal(
     assets.filter((f) => /sentry/i.test(f)).length,
     0,
-    'No asset filename in v2/assets may contain "sentry"',
+    'No asset filename in assets/ may contain "sentry"',
   );
 
   const hubSvelte = fs.readFileSync(
@@ -524,9 +528,9 @@ test('built v2 HTML entrypoints & assets preserve theme FOUC guard, noindex, sha
     'AppShell.svelte must place persistent .st-ad-lb1-wrap/#nn_lb1 after {@render children()} and outside {#if isHub} before .st-footer',
   );
 
-  const v1IndexHtml = fs.readFileSync(path.join(REPO_ROOT, 'index.html'), 'utf8');
+  const v1IndexHtml = fs.readFileSync(path.join(REPO_ROOT, 'v1', 'index.html'), 'utf8');
   for (const [label, content] of [
-    ['index.html', v1IndexHtml],
+    ['v1/index.html', v1IndexHtml],
     ['AppShell.svelte', appShellSvelte],
   ]) {
     assert.ok(

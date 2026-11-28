@@ -599,7 +599,7 @@
       {:else}
         <a
           class="st-btn st-btn-sm"
-          href={getCfg().getLoginUrl(typeof window !== 'undefined' ? window.location.href : '/v2/backgrounds/')}
+          href={getCfg().getLoginUrl(typeof window !== 'undefined' ? window.location.href : '/backgrounds/')}
         >
           Sign in with Steam
         </a>

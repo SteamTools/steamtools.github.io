@@ -28,10 +28,10 @@ const FETCH_ERROR_HOST_RE =
   /^(?:Failed to fetch|Load failed|NetworkError when attempting to fetch resource\.)\s*\(([^)]+)\)\s*$/i;
 
 const SENTRY_INTERNAL_FILENAME_RE =
-  /(?:\/v2\/assets\/diag-client-[^/?#]+\.js(?:[?#]|$)|node_modules\/@sentry\/)/i;
+  /(?:\/(?:v2\/)?assets\/diag-client-[^/?#]+\.js(?:[?#]|$)|node_modules\/@sentry\/)/i;
 
 const FIRST_PARTY_SCRIPT_RE =
-  /^(?:https?:\/\/(?:www\.)?steam\.tools\/(?:v2\/assets|js)\/|https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?\/(?:v2\/assets|src|js)\/|\/(?:v2\/assets|js)\/)/i;
+  /^(?:https?:\/\/(?:www\.)?steam\.tools\/(?:(?:v2\/)?assets|js)\/|https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?\/(?:(?:v2\/)?assets|src|js)\/|\/(?:(?:v2\/)?assets|js)\/)/i;
 
 export function isFirstPartyFetchHost(rawHost: string): boolean {
   const host = String(rawHost || '')

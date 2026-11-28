@@ -1495,13 +1495,13 @@
       _trackCount += 1;
 
       var path = (root && root.location && root.location.pathname) ? String(root.location.pathname) : '/';
-      var ver = opts.ver === 'v2' ? 'v2' : (opts.ver === 'v1' ? 'v1' : (/^\/v2(\/|$)/.test(path) ? 'v2' : 'v1'));
+      var ver = opts.ver === 'v2' ? 'v2' : (opts.ver === 'v1' ? 'v1' : (/^\/v1(\/|$)/.test(path) ? 'v1' : 'v2'));
       var rawApp = cleanTrackField(opts.app);
       if (!rawApp) {
         var m = /\/(itemvalue|cards|mosaticon|emoticons|backgrounds|games)(?:\/|$)/i.exec(path);
         if (m) {
           rawApp = m[1].toLowerCase();
-        } else if (path === '/' || path === '/v2' || path === '/v2/' || path === '/index.html' || path === '/v2/index.html') {
+        } else if (path === '/' || path === '/v1' || path === '/v1/' || path === '/v2' || path === '/v2/' || path === '/index.html' || path === '/v1/index.html' || path === '/v2/index.html') {
           rawApp = 'hub';
         }
       }
